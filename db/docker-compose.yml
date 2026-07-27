@@ -1,0 +1,55 @@
+# Local SQL Server for Rainmaker HRMS development.
+#
+# WHY NOT the azure-sql-edge container currently running as `multinet-db`:
+#   • It is the SQL Server 2019 engine (15.0.2000) and Azure SQL Edge is
+#     retired by Microsoft — it will not track the company's engine version.
+#   • RESTORE of a .bak taken on a NEWER engine is refused outright. If the
+#     company DB is SQL Server 2022 (16.x), the restore into Edge cannot work.
+#   • Several features the ERP may rely on are absent (SQL Agent, full-text).
+#
+# This compose file runs the real SQL Server 2022 image instead. On Apple
+# Silicon it is an amd64 image, so enable Rosetta first:
+#   Docker Desktop → Settings → General → "Use Rosetta for x86_64/amd64
+#   emulation on Apple Silicon" → Apply & restart.
+# Without Rosetta it falls back to QEMU and is painfully slow.
+#
+# Port 1433 collides with the running Edge container. Stop that first:
+#   docker stop multinet-db
+#
+# Bring up:   docker compose -f db/docker-compose.yml up -d
+# Logs:       docker compose -f db/docker-compose.yml logs -f
+# Tear down:  docker compose -f db/docker-compose.yml down          (keeps data)
+#             docker compose -f db/docker-compose.yml down -v       (wipes data)
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: rainmaker-mssql
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      # Local dev only. Read from the shell so it is never committed:
+      #   export MSSQL_SA_PASSWORD='...'   (see db/README.md)
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD in your shell first}
+      MSSQL_COLLATION: SQL_Latin1_General_CP1_CI_AS
+      TZ: Asia/Karachi
+    ports:
+      - "127.0.0.1:1433:1433"   # loopback only — never expose the DB on the LAN
+    volumes:
+      - mssql-data:/var/opt/mssql
+      # Drop the supervisor's .bak here; it appears inside the container at
+      # /backups, which is where db/restore.sh looks for it.
+      - ./backups:/backups
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+volumes:
+  mssql-data:
