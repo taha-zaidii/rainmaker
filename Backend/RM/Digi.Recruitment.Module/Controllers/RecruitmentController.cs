@@ -1048,7 +1048,13 @@ namespace Digi.Recruitment.Module.Controllers
         [HttpPost("Resume/Upload")]
         [AllowAnonymous]
         [AuditLog("RECRUITMENT", "Upload", "Resume")]
-        public async Task<IActionResult> UploadResume([FromForm] IFormFile file, [FromForm] int companyID)
+        [Consumes("multipart/form-data")]
+        // NOTE: no [FromForm] on the IFormFile — Swashbuckle throws
+        // SwaggerGeneratorException for that combination, which made the whole
+        // /swagger/v1/swagger.json document fail with a 500. IFormFile already
+        // binds from multipart form data by default, so the wire contract is
+        // unchanged. See github.com/domaindrivendev/Swashbuckle.AspNetCore#handle-forms-and-file-uploads
+        public async Task<IActionResult> UploadResume(IFormFile file, [FromForm] int companyID)
         {
             try
             {
