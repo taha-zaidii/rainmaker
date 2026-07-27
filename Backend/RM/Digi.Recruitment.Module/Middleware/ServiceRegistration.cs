@@ -1,5 +1,6 @@
 //using Digi.Admin.Module.Domain.Services;
 //using Digi.Admin.Module.Domain.Services.IServices;
+using Digi.Recruitment.Module.Domain.AI.Multinet;
 using Digi.Recruitment.Module.Domain.Repositories;
 using Digi.Recruitment.Module.Domain.Repositories.IRepositories;
 using Digi.Recruitment.Module.Domain.Services;
@@ -24,6 +25,12 @@ namespace Digi.Recruitment.Module.Middleware
         {
             // Register HttpClientFactory for AI services
             services.AddHttpClient();
+
+            // Multinet's own in-house AI service (hrms-ai-service): a metered,
+            // API-key-authenticated provider alongside the OpenAI / Anthropic /
+            // Google integrations, running on company GPUs. Off by default —
+            // enable it per environment with MultinetAI:Enabled.
+            services.AddMultinetAiService(configuration);
 
             // Register IDbConnection
             var connectionStringForDb = configuration.GetConnectionString("DefaultConnection");

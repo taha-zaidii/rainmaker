@@ -19,12 +19,25 @@
     <PackageReference Include="itext" Version="9.5.0" />
     <PackageReference Include="itext.pdfhtml" Version="6.3.1" />
     <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.5.0" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.11" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Digi.Shared\Digi.Shared.csproj" />
+  </ItemGroup>
+
+  <!--
+    The AI client's wire-level helpers (status→domain error mapping, error-body
+    parsing) are internal on purpose: nothing outside the client should depend on
+    the AI service's HTTP shape. They are still the highest-value things to test,
+    so the test assembly gets access rather than the API surface being widened.
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Digi.Recruitment.Module.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>
