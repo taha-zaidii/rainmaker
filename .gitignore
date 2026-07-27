@@ -1,0 +1,101 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Rainmaker HRMS — Recruitment Portal
+# Local-only repository. Nothing here is meant to leave this machine.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── SECRETS — never committed ────────────────────────────────────────────────
+# Real connection strings, JWT keys and AI API keys live in these files only.
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+# Team's cross-service config file — AddCentralConfiguration() loads it LAST,
+# so it overrides everything else. Assume it carries real connection strings.
+appsettings.central.json
+*.env
+.env
+.env.*
+!.env.example
+secrets.json
+# Firebase service-account private key shipped inside the source tree
+**/Domain/Config/*firebase-adminsdk*.json
+**/*-adminsdk-*.json
+
+# ── CANDIDATE PII — never committed, even to a private repo ─────────────────
+# (Resumes AND anything derived from them: parsed JSON, previews, exports.)
+storage/
+uploads/
+blobs/
+resumes/
+parsed/
+training_resume_data/
+**/wwwroot/storage/
+*.resume.json
+candidate_*.json
+
+# ── Database artifacts ──────────────────────────────────────────────────────
+*.bak
+*.trn
+*.mdf
+*.ldf
+*.bacpac
+db/backups/
+
+# ── .NET ────────────────────────────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pubxml.user
+.vs/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+TestResults/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+BenchmarkDotNet.Artifacts/
+
+# ── Node / Angular ──────────────────────────────────────────────────────────
+node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/
+.nx/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+.eslintcache
+
+# ── Editors / OS ────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+*.swp
+*~
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+
+# ── Logs & local scratch ────────────────────────────────────────────────────
+logs/
+*.log
+scratch/
+.scratchpad/

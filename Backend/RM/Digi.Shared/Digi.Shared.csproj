@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Domain\**" />
+    <EmbeddedResource Remove="Domain\**" />
+    <None Remove="Domain\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="DTOs\admin.module\SubscriptionFeaturesDto.cs" />
+    <Compile Remove="DTOs\admin.module\UserUpdateDto.cs" />
+    <Compile Remove="DTOs\hrm.module\EmployeeDto.cs" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="FirebaseAdmin" Version="3.4.0" />
+    <PackageReference Include="MailKit" Version="4.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
+    <PackageReference Include="MimeKit" Version="4.12.0" />
+  </ItemGroup>
+
+</Project>

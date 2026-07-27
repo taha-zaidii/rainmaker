@@ -1,0 +1,44 @@
+{
+  // ───────────────────────────────────────────────────────────────────────────
+  // TEMPLATE — copy to `appsettings.Development.json` and fill in real values.
+  //
+  //   cp appsettings.Development.json.example appsettings.Development.json
+  //
+  // `appsettings.Development.json` is gitignored: it is the ONLY place real
+  // secrets live on this machine. Never move these values into appsettings.json.
+  //
+  // Loaded automatically when ASPNETCORE_ENVIRONMENT=Development (both launch
+  // profiles set it). NOTE: Digi.Shared's AddCentralConfiguration() adds
+  // `appsettings.central.json` LAST if it finds one up the directory tree —
+  // that file would override everything here.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  "ConnectionStrings": {
+    // Local Docker SQL Server. Encrypt=False because the container's
+    // self-signed cert is not trusted by the host; loopback dev only.
+    "DefaultConnection": "Server=127.0.0.1,1433;Database=InternDB;User Id=sa;Password=<LOCAL_SA_PASSWORD>;Encrypt=False;TrustServerCertificate=True;Connect Timeout=10"
+
+    // Company DB (office network / VPN only — unreachable from home):
+    // "DefaultConnection": "Server=192.168.150.52;Database=InternDB;User Id=<USER>;Password=<PASSWORD>;Integrated Security=false;TrustServerCertificate=True"
+  },
+
+  "Jwt": {
+    // Must byte-for-byte match the Admin service that ISSUES the tokens,
+    // or every request 401s. Ask the team for the dev value.
+    "SecretKey": "<JWT_SIGNING_KEY_FROM_TEAM>"
+  },
+
+  "FileStorage": {
+    // The committed value is a Windows path (F:\...). macOS override:
+    "RootPath": "/Users/<you>/Documents/Multinet/rainmaker-hrms/.local/storage",
+    "IsCentralized": false
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Digi": "Debug"
+    }
+  }
+}

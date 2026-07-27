@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digi.Recruitment.Module", "Digi.Recruitment.Module\Digi.Recruitment.Module.csproj", "{532A897D-9B79-501E-B2A3-8232AF499B79}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digi.Shared", "Digi.Shared\Digi.Shared.csproj", "{F1A32880-89ED-CEAF-1262-C0CC95D69F13}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{532A897D-9B79-501E-B2A3-8232AF499B79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{532A897D-9B79-501E-B2A3-8232AF499B79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{532A897D-9B79-501E-B2A3-8232AF499B79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{532A897D-9B79-501E-B2A3-8232AF499B79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A32880-89ED-CEAF-1262-C0CC95D69F13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A32880-89ED-CEAF-1262-C0CC95D69F13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A32880-89ED-CEAF-1262-C0CC95D69F13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A32880-89ED-CEAF-1262-C0CC95D69F13}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {43197B3B-D3F5-4007-9EAA-22C99C833CDA}
+	EndGlobalSection
+EndGlobal
