@@ -178,6 +178,36 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         [JsonPropertyName("backend")] public string? Backend { get; set; }
     }
 
+    /// <summary>
+    /// GET /auth/verify — the only supported reachability probe.
+    ///
+    /// The ops endpoints (/health, /ready, /version) are deliberately 404 at the
+    /// nginx edge and answer only on-box, so this doubles as the portal's health
+    /// check. It costs zero GPU and returns in milliseconds, which is why it is
+    /// safe to call on every settings save.
+    /// </summary>
+    public sealed class KeyVerification
+    {
+        [JsonPropertyName("valid")] public bool Valid { get; set; }
+        [JsonPropertyName("service")] public string? Service { get; set; }
+        [JsonPropertyName("service_version")] public string? ServiceVersion { get; set; }
+        [JsonPropertyName("schema_version")] public string? SchemaVersion { get; set; }
+
+        /// <summary>
+        /// What this key is allowed to do, as slugs (see
+        /// <see cref="MultinetAiEndpoints.Capabilities"/>). Feature toggles are
+        /// driven from this rather than hard-coded, so the portal follows the
+        /// service as it gains features instead of needing a redeploy.
+        /// </summary>
+        [JsonPropertyName("capabilities")] public List<string> Capabilities { get; set; } = new();
+
+        /// <summary>The service adds fields over time; unknown ones are kept, never fatal.</summary>
+        [JsonExtensionData] public Dictionary<string, JsonElement>? Additional { get; set; }
+
+        public bool Supports(string capability) =>
+            Capabilities.Any(c => string.Equals(c, capability, StringComparison.OrdinalIgnoreCase));
+    }
+
     public sealed class CandidateIndexEntry
     {
         [JsonPropertyName("profile_id")] public string ProfileId { get; set; } = string.Empty;

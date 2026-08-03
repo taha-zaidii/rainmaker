@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
 namespace Digi.Recruitment.Module.Domain.AI.Multinet
@@ -46,7 +47,34 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
         public bool IsStub => false;
 
-        // ── Probes (open endpoints, no key) ──────────────────────────────────
+        // ── Key verification (the only probe that works through nginx) ───────
+
+        /// <summary>
+        /// GET auth/verify. Costs zero GPU and answers in milliseconds, so it is
+        /// both the "Test API Key" implementation and the portal's health check.
+        ///
+        /// A 401 comes back as an <see cref="AiErrorCode.Unauthorized"/> failure
+        /// rather than <c>valid: false</c>, which lets callers separate "the key
+        /// is wrong" from "we could not reach the service" — conflating those two
+        /// is what made the settings page report "API Key Invalid" for a fault
+        /// that had nothing to do with the key.
+        /// </summary>
+        public Task<AiResult<KeyVerification>> VerifyKeyAsync(
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default) =>
+            SendAsync<KeyVerification>(
+                () => new HttpRequestMessage(HttpMethod.Get, MultinetAiEndpoints.VerifyKey),
+                apiKey,
+                cancellationToken,
+                baseUriOverride);
+
+        // ── On-box probes ────────────────────────────────────────────────────
+        //
+        // /health, /ready and /version answer only on the AI service's own host.
+        // nginx returns 404 for them at https://ai.rainmaker.pk/hrms/*, so they
+        // are useful when running the service locally and useless in production.
+        // Nothing in a request path may gate on them — use VerifyKeyAsync.
 
         public Task<AiResult<ServiceHealth>> GetHealthAsync(CancellationToken cancellationToken = default) =>
             SendAsync<ServiceHealth>(() => new HttpRequestMessage(HttpMethod.Get, "health"), null, cancellationToken);
@@ -76,7 +104,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    return AiResult<ServiceReadiness>.Fail(MapError(response.StatusCode, body));
+                    return AiResult<ServiceReadiness>.Fail(MapError(response, body));
                 }
 
                 var readiness = Deserialize<ServiceReadiness>(body);
@@ -97,6 +125,115 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
         public Task<AiResult<ServiceVersion>> GetVersionAsync(CancellationToken cancellationToken = default) =>
             SendAsync<ServiceVersion>(() => new HttpRequestMessage(HttpMethod.Get, "version"), null, cancellationToken);
+
+        // ── Job requisition generation ───────────────────────────────────────
+
+        public async Task<AiResult<JobRequisitionResult>> GenerateJobRequisitionAsync(
+            JobRequisitionRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+            {
+                return AiResult<JobRequisitionResult>.Fail(
+                    AiErrorCode.BadRequest, "No job requisition request was supplied.");
+            }
+
+            // The service's only hard requirement. Checking here saves a recruiter
+            // a 30-second wait for a rejection we can see coming.
+            if (string.IsNullOrWhiteSpace(request.JobTitle))
+            {
+                return AiResult<JobRequisitionResult>.Fail(
+                    AiErrorCode.BadRequest,
+                    "A job title is required before a job description can be generated.");
+            }
+
+            var result = await SendAsync<JobRequisitionResult>(
+                () => JsonRequest(MultinetAiEndpoints.GenerateJobRequisition, request),
+                apiKey,
+                cancellationToken,
+                baseUriOverride).ConfigureAwait(false);
+
+            if (result.IsFailure)
+            {
+                return result;
+            }
+
+            var generated = result.Value!;
+            if (generated.Data is null)
+            {
+                return ContractViolation<JobRequisitionResult>(
+                    "The AI service reported success but returned no job requisition data.");
+            }
+
+            EnforceAdvisoryInvariants(generated);
+
+            _logger.LogInformation(
+                "Job requisition generated for '{JobTitle}' in {ElapsedMs} ms (cache {Cache}, " +
+                "experience from {ExperienceSource}, category from {CategorySource}).",
+                request.JobTitle,
+                generated.ExecutionTimeMs ?? 0,
+                generated.Meta?.CacheHit == true ? "hit" : "miss",
+                generated.Meta?.ExperienceSource ?? "model",
+                generated.Meta?.JobCategorySource ?? "model");
+
+            return result;
+        }
+
+        /// <summary>
+        /// Re-asserts the rules that make AI-assisted hiring lawful, at our own
+        /// boundary rather than trusting the service to have held them.
+        ///
+        /// The service does enforce these, and in normal operation this method
+        /// changes nothing. It exists because the failure it guards against is
+        /// not "a field looks odd" but "the portal published a discriminatory job
+        /// advert", and the cost of a redundant check is three comparisons. A
+        /// regression upstream, a proxy rewriting a response, or a future version
+        /// relaxing a rule would otherwise reach a recruiter's screen unchallenged.
+        ///
+        /// Anything corrected here is logged at Error: it means the contract was
+        /// violated and the AI team needs the case.
+        /// </summary>
+        private void EnforceAdvisoryInvariants(JobRequisitionResult generated)
+        {
+            // Age is a protected attribute. An AI proposing an age band in a job
+            // advert is discriminatory and indefensible under the EU AI Act's
+            // high-risk hiring rules. It is never displayed, whatever arrives.
+            var ageLimits = generated.Data?.Requirements?.AgeLimits;
+            if (ageLimits?.HasValue == true)
+            {
+                _logger.LogError(
+                    "The AI service returned age limits ({Min}–{Max}) on a job requisition. " +
+                    "This violates the integration contract and has been discarded. " +
+                    "Report this to the AI team with the request payload.",
+                    ageLimits.Minimum, ageLimits.Maximum);
+
+                generated.Data!.Requirements!.AgeLimits = null;
+            }
+
+            var publishing = generated.Data?.Publishing;
+            if (publishing is null)
+            {
+                return;
+            }
+
+            // A human publishes. The AI never does.
+            if (publishing.IsPublicJob == true)
+            {
+                _logger.LogError(
+                    "The AI service marked a generated requisition as public. Forced back to private.");
+                publishing.IsPublicJob = false;
+            }
+
+            if (!string.Equals(publishing.Status, "Draft", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError(
+                    "The AI service returned requisition status '{Status}' instead of 'Draft'. Forced to Draft.",
+                    publishing.Status ?? "(none)");
+                publishing.Status = "Draft";
+            }
+        }
 
         // ── The core integration ─────────────────────────────────────────────
 
@@ -147,7 +284,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                         new MediaTypeHeaderValue(ResumeUploadValidator.ContentTypeFor(extension));
                     form.Add(filePart, UploadFieldName, Path.GetFileName(fileName));
 
-                    return new HttpRequestMessage(HttpMethod.Post, "api/v1/parser/extract")
+                    return new HttpRequestMessage(HttpMethod.Post, MultinetAiEndpoints.ExtractResume)
                     {
                         Content = form
                     };
@@ -193,13 +330,80 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             return result;
         }
 
+        public async Task<AiResult<ParseResumeResult>> ExtractResumeByUrlAsync(
+            string documentUrl,
+            string? candidateId = null,
+            string? applicationId = null,
+            string? requisitionId = null,
+            string? companyId = null,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(documentUrl))
+            {
+                return AiResult<ParseResumeResult>.Fail(
+                    AiErrorCode.BadRequest, "No document URL was supplied.");
+            }
+
+            var payload = new
+            {
+                document_url = documentUrl,
+                candidate_id = candidateId,
+                application_id = applicationId,
+                requisition_id = requisitionId,
+                company_id = companyId
+            };
+
+            var result = await SendAsync<ParseResumeResult>(
+                () => JsonRequest(MultinetAiEndpoints.ExtractResumeByUrl, payload),
+                apiKey,
+                cancellationToken,
+                baseUriOverride).ConfigureAwait(false);
+
+            if (result.IsFailure)
+            {
+                return result;
+            }
+
+            var parsed = result.Value!;
+            if (parsed.Data is null)
+            {
+                return ContractViolation<ParseResumeResult>(
+                    "The AI service returned success but no profile data.");
+            }
+
+            var schemaVersion = parsed.Meta?.SchemaVersion;
+            if (!ProfileSchemaVersions.IsCompatible(schemaVersion))
+            {
+                _logger.LogError(
+                    "ProfileSchema version mismatch: service reported '{Actual}', this build supports '{Supported}'.",
+                    schemaVersion ?? "(none)", ProfileSchemaVersions.Supported);
+
+                return ContractViolation<ParseResumeResult>(
+                    $"The AI service returned ProfileSchema '{schemaVersion ?? "unknown"}' but this build " +
+                    $"supports '{ProfileSchemaVersions.Supported}'. Refusing to store a profile that may be " +
+                    "misinterpreted — the integration needs updating.");
+            }
+
+            var flagged = parsed.Meta?.FieldsNeedingReview() ?? Array.Empty<string>();
+            _logger.LogInformation(
+                "Parse (URL) succeeded via {Route} in {WallMs:0} ms; {FlaggedCount} field(s) flagged for review: {Flagged}",
+                parsed.Meta?.ExtractionRoute ?? "unknown",
+                parsed.Meta?.TotalWallMs ?? 0,
+                flagged.Count,
+                flagged.Count == 0 ? "none" : string.Join(", ", flagged));
+
+            return result;
+        }
+
         // ── Matching and scoring ─────────────────────────────────────────────
 
         public Task<AiResult<CandidateIndexResult>> ListCandidatesAsync(
             string? apiKey = null,
             CancellationToken cancellationToken = default) =>
             SendAsync<CandidateIndexResult>(
-                () => new HttpRequestMessage(HttpMethod.Get, "api/v1/candidates"), apiKey, cancellationToken);
+                () => new HttpRequestMessage(HttpMethod.Get, "candidates"), apiKey, cancellationToken);
 
         public Task<AiResult<RankResult>> RankAsync(
             string jobDescription,
@@ -224,7 +428,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             }
 
             return SendAsync<RankResult>(
-                () => JsonRequest("api/v1/matching/rank", new { jd_text = jd, top_k = topK }),
+                () => JsonRequest(MultinetAiEndpoints.RankCandidates, new { jd_text = jd, top_k = topK }),
                 apiKey,
                 cancellationToken);
         }
@@ -252,18 +456,29 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             }
 
             return SendAsync<ScoreResult>(
-                () => JsonRequest("api/v1/scoring/score", new { profile_id = id, jd_text = jd }),
+                () => JsonRequest(MultinetAiEndpoints.ScoreCandidate, new { profile_id = id, jd_text = jd }),
                 apiKey,
                 cancellationToken);
         }
 
         // ── Plumbing ─────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Outgoing payloads OMIT nulls rather than sending them. The contract is
+        /// deliberately tolerant of incomplete ERP data and asks callers to leave
+        /// a field out when it has no value; an explicit null is a weaker but
+        /// still different statement, and omission is what it documents.
+        /// </summary>
+        private static readonly JsonSerializerOptions RequestJson = new()
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         private static HttpRequestMessage JsonRequest(string path, object payload) =>
             new(HttpMethod.Post, path)
             {
                 Content = new StringContent(
-                    JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+                    JsonSerializer.Serialize(payload, RequestJson), Encoding.UTF8, "application/json")
             };
 
         /// <summary>
@@ -275,13 +490,27 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         private async Task<AiResult<T>> SendAsync<T>(
             Func<HttpRequestMessage> requestFactory,
             string? apiKey,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Uri? baseUriOverride = null)
         {
             var effectiveKey = string.IsNullOrWhiteSpace(apiKey) ? _options.ApiKey : apiKey;
 
             try
             {
                 using var request = requestFactory();
+
+                // The portal is multi-tenant: each company stores its own AI
+                // endpoint, so the client's configured BaseAddress is only a
+                // default. An absolute RequestUri overrides it for this call
+                // while keeping the pooled handler, the retry policy and the
+                // timeout — all of which we still want.
+                if (baseUriOverride is not null &&
+                    request.RequestUri is not null &&
+                    !request.RequestUri.IsAbsoluteUri)
+                {
+                    request.RequestUri = MultinetAiEndpoints.Combine(
+                        baseUriOverride, request.RequestUri.ToString());
+                }
 
                 if (!string.IsNullOrWhiteSpace(effectiveKey))
                 {
@@ -297,7 +526,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = MapError(response.StatusCode, body);
+                    var error = MapError(response, body);
                     _logger.LogWarning(
                         "AI service {Method} {Path} → {Status} {Code}: {Message}",
                         request.Method, request.RequestUri, (int)response.StatusCode, error.Code, error.Message);
@@ -381,13 +610,33 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         }
 
         /// <summary>
+        /// Maps an HTTP failure onto the domain, reading the <c>Retry-After</c>
+        /// header as well as the body. Prefer this overload wherever a response
+        /// is in hand — the header is the service's own instruction and beats
+        /// any schedule we would invent.
+        /// </summary>
+        internal static AiError MapError(HttpResponseMessage response, string? body) =>
+            MapError(response.StatusCode, body, ReadRetryAfterHeader(response));
+
+        /// <summary>
         /// Maps an HTTP failure onto the domain. Retryability is the important
         /// output: a 422 is a verdict about the document and must never be
         /// retried, while a 5xx or 408 is worth another attempt.
         /// </summary>
-        internal static AiError MapError(HttpStatusCode status, string? body)
+        internal static AiError MapError(HttpStatusCode status, string? body) =>
+            MapError(status, body, null);
+
+        internal static AiError MapError(HttpStatusCode status, string? body, TimeSpan? retryAfterHeader)
         {
-            var (serviceCode, serviceMessage) = ReadErrorDetail(body);
+            var (serviceCode, serviceMessage, retryAfterSeconds) = ReadErrorPayload(body);
+
+            // Header first, body second. Both are the service telling us how long
+            // to wait; the header is the HTTP-standard form, the body field is
+            // what this service actually sends on a 429.
+            var retryAfter = retryAfterHeader
+                             ?? (retryAfterSeconds is > 0
+                                 ? TimeSpan.FromSeconds(retryAfterSeconds.Value)
+                                 : (TimeSpan?)null);
 
             return status switch
             {
@@ -406,11 +655,17 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                     "The API key is not permitted to use this endpoint.",
                     (int)status, false, serviceCode),
 
+                // A 404 from the edge means the base URL is wrong far more often
+                // than it means anything else, and nginx's own body is a bare
+                // "Not Found" that tells an administrator nothing. Our message
+                // wins here; the service code is still kept for the logs.
                 HttpStatusCode.NotFound => new AiError(
                     serviceCode == "unknown_profile_id" ? AiErrorCode.UnknownProfileId : AiErrorCode.BadRequest,
                     serviceCode == "unknown_profile_id"
                         ? "The AI service has no parsed profile with that id."
-                        : serviceMessage ?? "The requested AI endpoint does not exist.",
+                        : "No AI endpoint exists at that address. The API Endpoint should be the versioned " +
+                          "base URL, for example https://ai.rainmaker.pk/hrms/api/v1 — the backend appends " +
+                          "the rest of the path itself.",
                     (int)status, false, serviceCode),
 
                 HttpStatusCode.RequestEntityTooLarge => new AiError(
@@ -450,15 +705,22 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                 HttpStatusCode.RequestTimeout => new AiError(
                     AiErrorCode.Timeout, "The AI service timed out.", (int)status, true, serviceCode),
 
+                // Not a fault: the GPU processes work serially, so a 429 is the
+                // service queueing us politely and saying for how long.
                 HttpStatusCode.TooManyRequests => new AiError(
-                    AiErrorCode.NotReady,
-                    "The AI service is rate limiting us. The work will be retried.",
-                    (int)status, true, serviceCode),
+                    AiErrorCode.Busy,
+                    retryAfter is null
+                        ? "The AI service is busy with another request. The work will be retried."
+                        : "The AI service is busy with another request. Retrying in about " +
+                          $"{Math.Ceiling(retryAfter.Value.TotalSeconds):0} seconds.",
+                    (int)status, true, serviceCode ?? "busy", retryAfter),
 
                 HttpStatusCode.ServiceUnavailable => new AiError(
                     AiErrorCode.NotReady,
-                    "The AI service is not ready to accept work.",
-                    (int)status, true, serviceCode ?? "not_ready"),
+                    serviceCode == "llm_unreachable"
+                        ? "The AI service's model backend is not responding. The work will be retried."
+                        : "The AI service is not ready to accept work.",
+                    (int)status, true, serviceCode ?? "not_ready", retryAfter),
 
                 _ when (int)status >= 500 => new AiError(
                     AiErrorCode.InternalError,
@@ -473,48 +735,116 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         }
 
         /// <summary>
-        /// Reads <c>{"detail": {"error": ..., "message": ...}}</c>. One path (400,
-        /// missing filename) returns <c>detail</c> as a bare string, so both
-        /// shapes are handled; anything else yields nulls rather than throwing,
-        /// because an unparseable error body must not mask the status code.
+        /// Convenience wrapper kept for callers that do not care about the
+        /// retry hint. See <see cref="ReadErrorPayload"/> for the shapes handled.
         /// </summary>
         internal static (string? Code, string? Message) ReadErrorDetail(string? body)
         {
+            var (code, message, _) = ReadErrorPayload(body);
+            return (code, message);
+        }
+
+        /// <summary>
+        /// Reads an error body. The service uses TWO shapes and both have to be
+        /// understood, which is easy to get wrong because only one is obvious:
+        ///
+        ///   401 / 422  →  {"detail": {"error": "<slug>", "message": "..."}}
+        ///   400        →  {"detail": "No filename provided."}          (bare string)
+        ///   429        →  {"error": "busy", "retry_after_s": 12}       (root level)
+        ///   503 / 500  →  {"error": "llm_unreachable"}                 (root level)
+        ///
+        /// Reading only <c>detail</c> silently discards the 429 wait hint and the
+        /// 503 slug — which is exactly the information needed to behave well
+        /// against a single-flight GPU.
+        ///
+        /// Anything unparseable yields nulls rather than throwing: a mangled body
+        /// (an nginx HTML error page, say) must never mask the status code.
+        /// </summary>
+        internal static (string? Code, string? Message, int? RetryAfterSeconds) ReadErrorPayload(string? body)
+        {
             if (string.IsNullOrWhiteSpace(body))
             {
-                return (null, null);
+                return (null, null, null);
             }
 
             try
             {
                 using var document = JsonDocument.Parse(body);
-                if (!document.RootElement.TryGetProperty("detail", out var detail))
+                var root = document.RootElement;
+
+                if (root.ValueKind != JsonValueKind.Object)
                 {
-                    return (null, null);
+                    return (null, null, null);
                 }
 
-                switch (detail.ValueKind)
+                int? retryAfterSeconds = null;
+                if (root.TryGetProperty("retry_after_s", out var retry))
                 {
-                    case JsonValueKind.String:
-                        return (null, detail.GetString());
-
-                    case JsonValueKind.Object:
-                        var code = detail.TryGetProperty("error", out var e) && e.ValueKind == JsonValueKind.String
-                            ? e.GetString()
-                            : null;
-                        var message = detail.TryGetProperty("message", out var m) && m.ValueKind == JsonValueKind.String
-                            ? m.GetString()
-                            : null;
-                        return (code, message);
-
-                    default:
-                        return (null, null);
+                    if (retry.ValueKind == JsonValueKind.Number && retry.TryGetInt32(out var seconds))
+                    {
+                        retryAfterSeconds = seconds;
+                    }
+                    else if (retry.ValueKind == JsonValueKind.String &&
+                             int.TryParse(retry.GetString(), out var parsedSeconds))
+                    {
+                        retryAfterSeconds = parsedSeconds;
+                    }
                 }
+
+                if (root.TryGetProperty("detail", out var detail))
+                {
+                    switch (detail.ValueKind)
+                    {
+                        case JsonValueKind.String:
+                            return (null, detail.GetString(), retryAfterSeconds);
+
+                        case JsonValueKind.Object:
+                            return (
+                                ReadString(detail, "error"),
+                                ReadString(detail, "message"),
+                                retryAfterSeconds);
+                    }
+                }
+
+                return (ReadString(root, "error"), ReadString(root, "message"), retryAfterSeconds);
             }
             catch (JsonException)
             {
-                return (null, null);
+                return (null, null, null);
             }
+        }
+
+        private static string? ReadString(JsonElement element, string propertyName) =>
+            element.TryGetProperty(propertyName, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+
+        /// <summary>
+        /// Reads the standard <c>Retry-After</c> header in either of its forms —
+        /// delta-seconds or an HTTP date. A date already in the past yields zero
+        /// rather than a negative delay.
+        /// </summary>
+        private static TimeSpan? ReadRetryAfterHeader(HttpResponseMessage response)
+        {
+            var retryAfter = response.Headers.RetryAfter;
+
+            if (retryAfter is null)
+            {
+                return null;
+            }
+
+            if (retryAfter.Delta is { } delta)
+            {
+                return delta;
+            }
+
+            if (retryAfter.Date is { } date)
+            {
+                var wait = date - DateTimeOffset.UtcNow;
+                return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
+            }
+
+            return null;
         }
 
         /// <summary>

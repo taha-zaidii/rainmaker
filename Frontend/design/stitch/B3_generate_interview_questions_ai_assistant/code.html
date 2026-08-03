@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Generate Interview Questions - Rainmaker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#d7deee",
+                        "on-surface": "#191c1e",
+                        "outline": "#737686",
+                        "tertiary-container": "#5b626f",
+                        "tertiary-fixed": "#dce2f3",
+                        "surface-bright": "#f8f9fb",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "surface-tint": "#1353d8",
+                        "on-primary-fixed": "#00174d",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#b5c4ff",
+                        "background": "#f8f9fb",
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary-fixed": "#341100",
+                        "tertiary": "#434a57",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f3f4f6",
+                        "surface-container-highest": "#e1e2e4",
+                        "surface-container": "#edeef0",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "primary": "#003fb1",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-container-high": "#e7e8ea",
+                        "on-surface-variant": "#434654",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-variant": "#e1e2e4",
+                        "surface-dim": "#d9dadc",
+                        "on-secondary-container": "#5c2400",
+                        "secondary-container": "#fd761a",
+                        "secondary": "#9d4300",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1a56db",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f3",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#ffdbca",
+                        "on-secondary-fixed-variant": "#783200",
+                        "on-tertiary-fixed": "#151c27",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#dbe1ff",
+                        "outline-variant": "#c3c5d7",
+                        "surface": "#f8f9fb",
+                        "secondary-fixed-dim": "#ffb690"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-lg": "24px",
+                        "container-margin": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "stack-xs": "4px",
+                        "stack-xl": "48px",
+                        "unit": "4px",
+                        "topbar-height": "64px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<span class="font-display-lg text-headline-md font-black text-primary">rainmaker</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">home</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">task_alt</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">dark_mode</span></button>
+</div>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg font-label-md text-label-md hover:opacity-80 transition-opacity">Create New Requisition</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a female HR executive with a warm smile, wearing business attire, against a soft-focus office background. The lighting is bright and modern, consistent with high-end corporate photography styles and a light-mode interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2I8P5BB_JOK5l87oVf7bS2tXRyUDejvN1gqEuTZ-VlK6gJ8s8uXohQd0UX-GcasGV6iZX32T_fMNI9H7fnyr3KGmrgxSytcTkjWFhrmmjQ0nM_PurMjrY6c2aJD7sVkRgPUUosfyH51RfOSRFq8_vOeKIBMJPX5UTm9wso5DaQXmLA-Ywr4DzSIFu7Y3CcsDE8stcKxd08LvOjJXzzHSpASMU3MvcuE1vVDCOydNz8l6znptXdt1b"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Primary - Rainmaker Global) -->
+<nav class="fixed left-0 top-0 h-full w-[88px] z-50 flex flex-col items-center py-4 bg-primary text-on-primary">
+<div class="mb-8 mt-2">
+<span class="font-display-lg text-headline-sm font-black text-on-primary">R</span>
+</div>
+<div class="flex flex-col gap-2 flex-1 overflow-y-auto no-scrollbar">
+<!-- Recruitment is active index 11 -->
+<div class="flex flex-col items-center gap-1 p-2 opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer rounded-lg">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] text-center font-label-md">Dashboard</span>
+</div>
+<div class="flex flex-col items-center gap-1 p-2 opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer rounded-lg">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] text-center font-label-md">HR</span>
+</div>
+<!-- ... other items ... -->
+<div class="flex flex-col items-center gap-1 p-2 bg-primary-container text-on-primary-container rounded-lg transition-transform scale-95 cursor-pointer">
+<span class="material-symbols-outlined">person_search</span>
+<span class="text-[10px] text-center font-label-md font-bold">Recruit</span>
+</div>
+<div class="flex flex-col items-center gap-1 p-2 opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer rounded-lg">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] text-center font-label-md">Inventory</span>
+</div>
+</div>
+</nav>
+<!-- SideNavBar (Contextual - Recruitment Management) -->
+<nav class="fixed left-[88px] top-0 h-full w-[240px] z-40 flex flex-col py-topbar-height bg-surface border-r border-outline-variant">
+<div class="px-6 py-8">
+<div class="font-headline-sm text-headline-sm font-bold text-on-surface">Recruitment</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Management</div>
+</div>
+<div class="flex flex-col px-3 gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="font-label-md text-label-md">Create Requisition</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container-high text-primary font-bold" href="#">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span class="font-label-md text-label-md">Job Requisitions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md text-label-md">Applications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md text-label-md">Scheduling</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+<span class="font-label-md text-label-md">Evaluations</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-[328px] mt-[64px] h-[calc(100vh-64px)] overflow-y-auto bg-surface-bright">
+<div class="p-8 max-w-7xl mx-auto">
+<!-- Page Header -->
+<div class="mb-8">
+<div class="flex items-center gap-2 mb-2">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Generate Interview Questions</h1>
+<span class="material-symbols-outlined text-secondary text-[28px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">
+                    AI-powered interview question generation based on the job description and candidate CV. Tailor questions to specific competencies and experience levels.
+                </p>
+</div>
+<!-- Context Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 mb-8 shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Job Title</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Senior .NET Developer</span>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Candidate</span>
+<span class="font-body-md text-body-md font-semibold text-on-surface">Ayesha Khan</span>
+</div>
+</div>
+<div class="flex items-center justify-end">
+<button class="bg-secondary text-on-secondary px-6 py-2.5 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-md shadow-secondary/10">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                            Generate Questions
+                        </button>
+</div>
+</div>
+<div class="border-t border-outline-variant/30 pt-6 flex flex-wrap items-end gap-12">
+<div class="flex flex-col gap-3">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Questions per category</label>
+<input class="w-24 bg-surface-container text-on-surface border-outline-variant rounded-md px-3 py-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" type="number" value="5"/>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Categories</span>
+<div class="flex items-center gap-6">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary transition-all" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Technical</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary transition-all" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Behavioural</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded text-primary border-outline-variant focus:ring-primary transition-all" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary">Role-specific</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<!-- Results Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Technical Column -->
+<div class="flex flex-col h-full bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Technical</h3>
+<span class="text-on-surface-variant text-[12px] font-medium bg-surface-container px-2 py-1 rounded">5 items</span>
+</div>
+<div class="flex-1 p-2 space-y-2 overflow-y-auto">
+<!-- Question Card 1 -->
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">How do you handle dependency injection in a large-scale .NET project?</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> Understanding of DI containers, lifetime management, and decoupling strategies.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-fixed text-on-primary-fixed uppercase">from JD</span>
+</div>
+<!-- Question Card 2 -->
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">Explain your approach to implementing Microservices with .NET 8.</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> API Gateway, Service Discovery, and asynchronous communication patterns.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed uppercase">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> from CV
+                            </span>
+</div>
+</div>
+<div class="p-4 bg-surface border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all">Add to interview pack</button>
+</div>
+</div>
+<!-- Behavioural Column -->
+<div class="flex flex-col h-full bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Behavioural</h3>
+<span class="text-on-surface-variant text-[12px] font-medium bg-surface-container px-2 py-1 rounded">5 items</span>
+</div>
+<div class="flex-1 p-2 space-y-2 overflow-y-auto">
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">Describe a time you had to mentor a junior developer through a complex bug.</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> Patience, structured guidance, and knowledge sharing ability.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed uppercase">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> from CV
+                            </span>
+</div>
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">How do you prioritize technical debt against feature delivery?</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> Business value awareness, risk assessment, and negotiation skills.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-fixed text-on-primary-fixed uppercase">from JD</span>
+</div>
+</div>
+<div class="p-4 bg-surface border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all">Add to interview pack</button>
+</div>
+</div>
+<!-- Role-specific Column -->
+<div class="flex flex-col h-full bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Role-specific</h3>
+<span class="text-on-surface-variant text-[12px] font-medium bg-surface-container px-2 py-1 rounded">5 items</span>
+</div>
+<div class="flex-1 p-2 space-y-2 overflow-y-auto">
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">What experience do you have with Azure Service Bus in fintech environments?</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> Message queuing, reliability, and security compliance experience.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-fixed text-on-primary-fixed uppercase">from JD</span>
+</div>
+<div class="group relative p-4 rounded-lg bg-surface-bright hover:bg-white border border-transparent hover:border-outline-variant transition-all cursor-pointer">
+<div class="flex justify-between items-start gap-2 mb-2">
+<span class="font-body-md text-body-md text-on-surface font-medium leading-snug">How did you optimize the SQL queries in your last project at TechCorp?</span>
+<div class="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+<button class="p-1 text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[18px]">content_copy</span></button>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-3"><span class="font-semibold text-[10px] uppercase">What to listen for:</span> Indexing strategies, execution plan analysis, and performance gains.</p>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-secondary-fixed text-on-secondary-fixed uppercase">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span> from CV
+                            </span>
+</div>
+</div>
+<div class="p-4 bg-surface border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-2.5 rounded-lg font-label-md text-label-md hover:bg-primary-container transition-all">Add to interview pack</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+
+        // Toggle checkboxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const label = e.target.closest('label').querySelector('span');
+                if(e.target.checked) {
+                    label.classList.add('text-primary');
+                } else {
+                    label.classList.remove('text-primary');
+                }
+            });
+        });
+    </script>
+</body></html>

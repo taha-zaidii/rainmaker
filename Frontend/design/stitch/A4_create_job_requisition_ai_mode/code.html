@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rainmaker - Create Job Requisition (AI-Assisted)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px -3px rgba(249, 115, 22, 0.2);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c3c5d7",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-container-high": "#e7e8ea",
+                        "on-surface": "#191c1e",
+                        "inverse-surface": "#2e3132",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "outline": "#737686",
+                        "secondary-container": "#fd761a",
+                        "on-background": "#191c1e",
+                        "secondary-fixed-dim": "#ffb690",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "tertiary-container": "#5b626f",
+                        "primary": "#003fb1",
+                        "surface": "#f8f9fb",
+                        "on-tertiary-container": "#d7deee",
+                        "surface-bright": "#f8f9fb",
+                        "secondary": "#9d4300",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-container": "#edeef0",
+                        "on-secondary-fixed": "#341100",
+                        "on-primary-container": "#d4dcff",
+                        "primary-fixed": "#dbe1ff",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#dce2f3",
+                        "surface-container-low": "#f3f4f6",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-fixed": "#151c27",
+                        "background": "#f8f9fb",
+                        "surface-variant": "#e1e2e4",
+                        "secondary-fixed": "#ffdbca",
+                        "on-surface-variant": "#434654",
+                        "tertiary": "#434a57",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-error": "#ffffff",
+                        "primary-container": "#1a56db",
+                        "surface-dim": "#d9dadc",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#5c2400",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e1e2e4",
+                        "surface-tint": "#1353d8",
+                        "on-secondary-fixed-variant": "#783200",
+                        "on-primary-fixed": "#00174d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "unit": "4px",
+                        "stack-xs": "4px",
+                        "stack-xl": "48px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px",
+                        "topbar-height": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-x-hidden">
+<!-- Global Top Bar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-md text-headline-md font-black text-primary tracking-tight">rainmaker</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="home">home</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="task_alt">task_alt</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors" data-icon="dark_mode">dark_mode</span>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3 cursor-pointer">
+<div class="text-right">
+<p class="font-label-md text-label-md text-on-surface font-bold">Sumaira Butt</p>
+<p class="text-[10px] uppercase tracking-wider text-on-surface-variant">HR Director</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-fixed-dim border border-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of Sumaira Butt, HR Director, in a brightly lit corporate office setting. High-quality portrait photography with a soft bokeh background that suggests a modern, professional environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9-GnxDL4L3iyyxb-VqVB7111I7OeOiPXVQS8eiRGzz00ANbv1AClGskypo_o1FSbKPmIQIpHi696G4SHy0jIRR_VruH5A38H5kzi1LvmixIyOKqc8XBJiOX9F659gn2nQZHQTmhTIHDGfCgqVisdM2sbzIi9XkFzRlOPJeeXn-wJJ6-zO_rf6wO9p7oIgDkVpk3QQIy9_nWTZK8KUbxjUf7JgAS4qOYGv9gQ3E-ltp2BptU9bm8EL"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Primary Vertical Sidebar (Rainmaker Main) -->
+<nav class="fixed left-0 top-0 h-full w-[88px] z-50 flex flex-col items-center py-4 bg-primary text-on-primary">
+<div class="mb-8 mt-2">
+<span class="material-symbols-outlined text-4xl" data-icon="cloud_done" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+<div class="flex flex-col gap-2 w-full px-2">
+<!-- Simplified sidebar icons for context -->
+<div class="flex flex-col items-center py-3 rounded-lg opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] mt-1">Dashboard</span>
+</div>
+<div class="flex flex-col items-center py-3 rounded-lg opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="text-[10px] mt-1">HR</span>
+</div>
+<!-- Active State for Recruitment -->
+<div class="flex flex-col items-center py-3 bg-primary-container text-on-primary-container rounded-lg transition-transform active:scale-95 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="person_search" style="font-variation-settings: 'FILL' 1;">person_search</span>
+<span class="text-[10px] mt-1 font-bold">Recruitment</span>
+</div>
+<div class="flex flex-col items-center py-3 rounded-lg opacity-70 hover:bg-primary-container hover:opacity-100 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="text-[10px] mt-1">Reports</span>
+</div>
+</div>
+</nav>
+<!-- Secondary Navigation (Recruitment Context) -->
+<nav class="fixed left-[88px] top-0 h-full w-[240px] z-40 flex flex-col py-topbar-height bg-surface border-r border-outline-variant">
+<div class="px-6 py-8">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Recruitment</h2>
+<p class="text-on-surface-variant font-label-sm uppercase tracking-widest text-[10px]">Management</p>
+</div>
+<div class="flex flex-col px-3 gap-1">
+<a class="flex items-center gap-3 px-4 py-3 bg-surface-container-high text-primary font-bold rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-md text-label-md">Create Job Requisition</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="list_alt">list_alt</span>
+<span class="font-label-md text-label-md">Job Requisitions</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
+<span class="font-label-md text-label-md">Applications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Interview Scheduling</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Recruitment Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-[328px] mt-[64px] p-8 max-w-5xl">
+<!-- Page Header -->
+<header class="mb-8">
+<h1 class="font-headline-md text-headline-md text-on-surface">Create Job Requisition</h1>
+<p class="text-on-surface-variant font-body-md">Create a new job posting with AI assistance or manually</p>
+</header>
+<!-- AI Job Description Generator Card -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[3px] border-l-[#F97316] rounded-lg overflow-hidden ai-glow">
+<!-- Card Header -->
+<div class="p-6 pb-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-[#F97316]" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">AI Job Description Generator</h2>
+</div>
+<p class="text-on-surface-variant font-body-md">Fill in the fields below and the AI will draft a complete job requisition for you to review and edit.</p>
+</div>
+<!-- Form Content -->
+<form class="p-6 space-y-6">
+<!-- Two Column Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+<!-- Job Title -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Job Title</label>
+<input class="w-full border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="text" value="Senior Software Engineer"/>
+</div>
+<!-- Department -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Department</label>
+<div class="relative">
+<select class="w-full appearance-none border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-transparent pr-10">
+<option>Information Technology</option>
+<option>Human Resources</option>
+<option>Marketing</option>
+<option>Product Management</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Designation -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Designation</label>
+<div class="relative">
+<select class="w-full appearance-none border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-transparent pr-10">
+<option>System Administrator</option>
+<option>Software Architect</option>
+<option>Lead Developer</option>
+<option>Cloud Engineer</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Experience Required -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Experience Required</label>
+<input class="w-full border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="text" value="3 - 6 years"/>
+<p class="text-[11px] text-on-surface-variant italic">Free text — "3-5 years", "5+", "Fresh" all work</p>
+</div>
+<!-- Job Category -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Job Category</label>
+<div class="relative">
+<select class="w-full appearance-none border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary bg-transparent pr-10">
+<option>Dot Net Developer</option>
+<option>Frontend Engineer</option>
+<option>Backend Specialist</option>
+<option>Full Stack Developer</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-tight">The AI picks from your configured categories so the result always fits your dropdown</p>
+</div>
+</div>
+<!-- Full Width Field: Key Skills -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant">Key Skills</label>
+<textarea class="w-full border border-outline rounded-[6px] px-4 py-2 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary resize-none transition-all" rows="2">JavaScript, Python, .NET, Angular, C#</textarea>
+<p class="text-[11px] text-on-surface-variant">Comma separated or one per line — the AI cleans this up</p>
+</div>
+<!-- Information Strip -->
+<div class="flex items-center gap-3 bg-[#FFF7ED] border border-[#FFEDD5] rounded-lg p-4 text-[#9A3412]">
+<span class="material-symbols-outlined" data-icon="info" style="font-variation-settings: 'FILL' 1;">info</span>
+<span class="font-body-md">Generation takes about 15–30 seconds. You can edit everything afterwards.</span>
+</div>
+<!-- Footer Actions -->
+<div class="flex items-center gap-6 pt-4">
+<button class="flex items-center gap-2 bg-[#F97316] text-white px-6 py-3 rounded-[6px] font-label-md text-label-md hover:bg-[#EA580C] active:scale-[0.98] transition-all shadow-md" type="button">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+                        Generate Job Description with AI
+                    </button>
+<button class="text-primary font-label-md text-label-md hover:underline transition-all" type="button">
+                        Switch to manual
+                    </button>
+</div>
+</form>
+</div>
+<!-- Decorative Progress Indicator (Micro-interaction) -->
+<div class="hidden mt-8" id="ai-loading">
+<div class="flex flex-col items-center gap-4">
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="w-0 h-full bg-[#F97316] transition-all duration-300" id="ai-progress-bar"></div>
+</div>
+<p class="text-[#F97316] font-label-md text-label-md animate-pulse">Drafting your perfect requisition...</p>
+</div>
+</div>
+<!-- Extra UI Element: Recently Generated Section -->
+<section class="mt-12">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Previous AI Drafts</h3>
+<button class="text-primary font-label-sm text-label-sm">View All</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Draft Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:border-primary-container transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary-fixed-dim p-1.5 rounded text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="article">article</span>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium">2 HOURS AGO</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">Marketing Manager</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mt-1">Growth strategies, Brand identity, Content lifecycle management...</p>
+</div>
+<!-- Draft Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:border-primary-container transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary-fixed-dim p-1.5 rounded text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="article">article</span>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium">YESTERDAY</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">UI/UX Designer</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mt-1">Design systems, Figma, User flow optimization, Accessibility...</p>
+</div>
+<!-- Draft Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-lg hover:border-primary-container transition-all group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<div class="bg-primary-fixed-dim p-1.5 rounded text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="article">article</span>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium">OCT 24</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-surface font-bold">Project Coordinator</h4>
+<p class="text-body-sm text-on-surface-variant line-clamp-2 mt-1">Agile methodologies, Stakeholder management, Resource planning...</p>
+</div>
+</div>
+</section>
+</main>
+<script>
+        // Simple micro-interaction for the "Generate" button
+        const generateBtn = document.querySelector('button.bg-\\[\\#F97316\\]');
+        const loadingSection = document.getElementById('ai-loading');
+        const progressBar = document.getElementById('ai-progress-bar');
+
+        generateBtn.addEventListener('click', () => {
+            loadingSection.classList.remove('hidden');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        alert("AI Requisition Draft Created! \n\nCheck your drafts list below or scroll down to edit.");
+                        loadingSection.classList.add('hidden');
+                        progressBar.style.width = '0%';
+                    }, 500);
+                }
+                progressBar.style.width = progress + '%';
+            }, 600);
+        });
+    </script>
+</body></html>

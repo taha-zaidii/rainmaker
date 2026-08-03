@@ -36,6 +36,13 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         /// <summary>503 from /ready — the LLM backend is not answering. Park the job, do not fail it.</summary>
         NotReady,
 
+        /// <summary>
+        /// 429 busy — the GPU is saturated. Distinct from <see cref="NotReady"/>:
+        /// the service is healthy and telling us exactly how long to wait, so the
+        /// UI can honestly say "AI is busy, retrying…" rather than "unavailable".
+        /// </summary>
+        Busy,
+
         /// <summary>Client-side timeout. The GPU is single-flight, so this usually means a queue behind us.</summary>
         Timeout,
 
@@ -61,12 +68,19 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     /// <param name="HttpStatus">Status observed, when there was a response at all.</param>
     /// <param name="Retryable">True only for genuinely transient conditions.</param>
     /// <param name="ServiceErrorCode">The service's own error slug, kept verbatim for logs and support.</param>
+    /// <param name="RetryAfter">
+    /// How long the service asked us to wait, from the <c>Retry-After</c> header or
+    /// a <c>retry_after_s</c> body field. Only a 429 carries this. Honouring it
+    /// matters: the GPU is single-flight, so retrying on our own schedule just
+    /// lengthens the queue we are already stuck behind.
+    /// </param>
     public sealed record AiError(
         AiErrorCode Code,
         string Message,
         int? HttpStatus = null,
         bool Retryable = false,
-        string? ServiceErrorCode = null)
+        string? ServiceErrorCode = null,
+        TimeSpan? RetryAfter = null)
     {
         public override string ToString() =>
             HttpStatus is null
@@ -107,8 +121,8 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         public static AiResult<T> Fail(AiError error) => new(false, default, error);
 
         public static AiResult<T> Fail(AiErrorCode code, string message, int? httpStatus = null,
-            bool retryable = false, string? serviceErrorCode = null) =>
-            new(false, default, new AiError(code, message, httpStatus, retryable, serviceErrorCode));
+            bool retryable = false, string? serviceErrorCode = null, TimeSpan? retryAfter = null) =>
+            new(false, default, new AiError(code, message, httpStatus, retryable, serviceErrorCode, retryAfter));
 
         /// <summary>Carry a failure across a type boundary without restating it.</summary>
         public AiResult<TOther> PropagateFailure<TOther>() => IsFailure

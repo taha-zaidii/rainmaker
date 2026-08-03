@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create Job Requisition - Rainmaker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#1a56db",
+                        "tertiary": "#434a57",
+                        "on-secondary-fixed-variant": "#783200",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#dbe1ff",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "on-secondary-fixed": "#341100",
+                        "secondary": "#9d4300",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "on-tertiary-container": "#d7deee",
+                        "secondary-container": "#fd761a",
+                        "outline-variant": "#c3c5d7",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed": "#00174d",
+                        "tertiary-fixed": "#dce2f3",
+                        "on-tertiary-fixed": "#151c27",
+                        "surface-container-high": "#e7e8ea",
+                        "outline": "#737686",
+                        "surface-tint": "#1353d8",
+                        "surface-container-highest": "#e1e2e4",
+                        "secondary-fixed": "#ffdbca",
+                        "on-primary-container": "#d4dcff",
+                        "on-surface": "#191c1e",
+                        "surface-container-low": "#f3f4f6",
+                        "on-surface-variant": "#434654",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d9dadc",
+                        "surface-bright": "#f8f9fb",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#5c2400",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-error-container": "#93000a",
+                        "on-background": "#191c1e",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-variant": "#e1e2e4",
+                        "inverse-on-surface": "#f0f1f3",
+                        "surface": "#f8f9fb",
+                        "secondary-fixed-dim": "#ffb690",
+                        "tertiary-container": "#5b626f",
+                        "primary": "#003fb1",
+                        "surface-container": "#edeef0",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b5c4ff",
+                        "background": "#f8f9fb",
+                        "ai-orange": "#F97316"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "24px",
+                        "stack-xl": "48px",
+                        "unit": "4px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "stack-xs": "4px",
+                        "topbar-height": "64px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        .pulse-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #F97316;
+            border-radius: 50%;
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .pulse-ring-delayed {
+            animation-delay: 1s;
+        }
+
+        @keyframes rotate-spinner {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-ai-spinner {
+            animation: rotate-spinner 2s linear infinite;
+        }
+
+        .glass-overlay {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-lg text-primary font-black tracking-tight">rainmaker</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+</button>
+<button class="p-2 hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">task_alt</span>
+</button>
+<button class="p-2 hover:text-primary transition-colors text-on-surface-variant relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 hover:text-primary transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:opacity-80 transition-opacity">
+                Create New Requisition
+            </button>
+<div class="flex items-center gap-3 ml-4 cursor-pointer">
+<img class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a female executive named Sumaira Butt, wearing business attire, with a soft-focus office background. The lighting is warm and cinematic, following the corporate modern aesthetic with clean lines and high-quality production value." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfCIL3I9wU4h0FlWTXhk4DZ1WjdKyLOeinCo3MqpB6u5uVi2CZqtaY2iLTbx1nzQpPbyrrBaDC1EAF-H2_-Hm0J8cZSLdHxxK8zr-cvbGcCG768g3_JOKbthPbpw8bSF3udesZBymMDOygZGbSz7zQr1NCmtsViksjYr6D1PtsZ17FIYOkTl0CgatLieMVZ0BN1yHFliEFQ_PDAh65_JizL2HvGJqnXez1eWW5vJqkjozb6pvDoAjv"/>
+<span class="font-label-md text-on-surface">Sumaira Butt</span>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Primary Blue) -->
+<nav class="fixed left-0 top-0 h-full w-[88px] z-50 flex flex-col items-center py-4 bg-primary text-on-primary">
+<div class="mb-8 p-2">
+<span class="material-symbols-outlined text-[32px]">water_drop</span>
+</div>
+<div class="flex flex-col gap-4 overflow-y-auto no-scrollbar">
+<a class="flex flex-col items-center p-2 opacity-70 hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] mt-1">Dash</span>
+</a>
+<a class="flex flex-col items-center p-2 opacity-70 hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] mt-1">HR</span>
+</a>
+<a class="flex flex-col items-center p-2 opacity-70 hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] mt-1">Inv</span>
+</a>
+<a class="flex flex-col items-center p-2 bg-primary-container text-on-primary-container rounded-lg scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined">person_search</span>
+<span class="text-[10px] mt-1 font-bold">Recruit</span>
+</a>
+<a class="flex flex-col items-center p-2 opacity-70 hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] mt-1">Reports</span>
+</a>
+<a class="flex flex-col items-center p-2 opacity-70 hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] mt-1">Admin</span>
+</a>
+</div>
+</nav>
+<!-- SideNavBar (Secondary Recruitment) -->
+<nav class="fixed left-[88px] top-0 h-full w-[240px] z-40 flex flex-col py-topbar-height bg-surface border-r border-outline-variant">
+<div class="px-6 py-6">
+<h2 class="font-headline-sm text-on-surface font-bold">Recruitment</h2>
+<p class="font-label-sm text-on-surface-variant uppercase tracking-wider">Management</p>
+</div>
+<div class="flex flex-col">
+<a class="px-6 py-4 bg-surface-container-high text-primary font-bold flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-label-md">Create Job Requisition</span>
+</a>
+<a class="px-6 py-4 text-on-surface-variant hover:bg-surface-container-low hover:text-primary flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-md">Job Requisitions</span>
+</a>
+<a class="px-6 py-4 text-on-surface-variant hover:bg-surface-container-low hover:text-primary flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">person_add</span>
+<span class="font-label-md">Applications Management</span>
+</a>
+<a class="px-6 py-4 text-on-surface-variant hover:bg-surface-container-low hover:text-primary flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-md">Interview Scheduling</span>
+</a>
+<a class="px-6 py-4 text-on-surface-variant hover:bg-surface-container-low hover:text-primary flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span class="font-label-md">Candidate Evaluation</span>
+</a>
+<a class="px-6 py-4 text-on-surface-variant hover:bg-surface-container-low hover:text-primary flex items-center gap-3 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Recruitment Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-[328px] pt-topbar-height min-h-screen p-container-margin">
+<div class="max-w-4xl mx-auto py-8">
+<header class="mb-stack-lg">
+<nav class="flex items-center gap-2 text-on-surface-variant font-label-md mb-2">
+<span>Recruitment</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-on-surface">Create Job Requisition</span>
+</nav>
+<h2 class="font-headline-lg text-on-surface font-semibold">New Job Requisition</h2>
+<p class="text-on-surface-variant font-body-md">Configure and publish a new job opening to your internal and external portals.</p>
+</header>
+<!-- AI Generator Card (Generating State) -->
+<div class="relative bg-surface-container-lowest rounded-xl border border-outline-variant border-l-[3px] border-l-ai-orange overflow-hidden shadow-sm transition-all duration-500">
+<!-- Background Disabled Form Content -->
+<div class="p-stack-lg opacity-30 pointer-events-none filter blur-[1px]">
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="space-y-stack-sm">
+<label class="font-label-sm text-on-surface-variant uppercase">Job Title</label>
+<div class="h-10 bg-surface-container rounded-md w-full"></div>
+</div>
+<div class="space-y-stack-sm">
+<label class="font-label-sm text-on-surface-variant uppercase">Department</label>
+<div class="h-10 bg-surface-container rounded-md w-full"></div>
+</div>
+<div class="col-span-2 space-y-stack-sm">
+<label class="font-label-sm text-on-surface-variant uppercase">Key Responsibilities</label>
+<div class="h-32 bg-surface-container rounded-md w-full"></div>
+</div>
+</div>
+</div>
+<!-- Generating State Overlay -->
+<div class="absolute inset-0 glass-overlay flex flex-col items-center justify-center p-12 text-center">
+<!-- AI Animated Illustration -->
+<div class="mb-stack-lg flex flex-col items-center">
+<div class="pulse-container">
+<div class="pulse-ring"></div>
+<div class="pulse-ring pulse-ring-delayed"></div>
+<div class="relative z-10 w-12 h-12 bg-ai-orange text-white rounded-full flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-[28px]">auto_awesome</span>
+</div>
+</div>
+</div>
+<!-- Heading & Status -->
+<div class="space-y-2 mb-stack-xl">
+<h3 class="font-headline-sm text-on-surface">Drafting your job requisition…</h3>
+<p class="font-body-md text-on-surface-variant">This usually takes 15–30 seconds.</p>
+<div class="pt-4">
+<span class="font-mono text-ai-orange font-bold text-headline-sm tracking-widest" id="timer">0:12</span>
+</div>
+</div>
+<!-- 3-Step Progress Indicator -->
+<div class="w-full max-w-lg mb-stack-xl">
+<div class="flex items-center justify-between relative px-2">
+<!-- Progress Line -->
+<div class="absolute top-5 left-8 right-8 h-[2px] bg-outline-variant -z-10">
+<div class="h-full bg-ai-orange w-[50%] transition-all duration-1000"></div>
+</div>
+<!-- Step 1: Done -->
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 bg-success-container text-green-600 rounded-full flex items-center justify-center border-2 border-green-600 bg-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-md text-on-surface-variant">Understanding the role</span>
+</div>
+<!-- Step 2: Active -->
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 bg-white text-ai-orange rounded-full flex items-center justify-center border-2 border-ai-orange">
+<span class="material-symbols-outlined animate-ai-spinner">progress_activity</span>
+</div>
+<span class="font-label-md text-ai-orange font-bold">Writing the description</span>
+</div>
+<!-- Step 3: Pending -->
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 bg-surface-container text-outline rounded-full flex items-center justify-center border-2 border-outline-variant">
+<div class="w-3 h-3 bg-outline rounded-full"></div>
+</div>
+<span class="font-label-md text-outline">Preparing your draft</span>
+</div>
+</div>
+</div>
+<!-- Cancel Action -->
+<button class="font-label-md text-on-surface-variant hover:text-error transition-colors flex items-center gap-2 px-4 py-2 hover:bg-error-container/20 rounded-lg">
+<span class="material-symbols-outlined text-[18px]">close</span>
+                        Cancel generation
+                    </button>
+</div>
+</div>
+<!-- Additional Detail Sections (Dimmed) -->
+<div class="mt-stack-lg space-y-stack-md opacity-50">
+<div class="p-6 bg-white border border-outline-variant rounded-xl flex items-center justify-between">
+<div>
+<h4 class="font-label-md font-bold text-on-surface">Experience & Education</h4>
+<p class="text-body-sm text-on-surface-variant">Define the minimum requirements for this role.</p>
+</div>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+<div class="p-6 bg-white border border-outline-variant rounded-xl flex items-center justify-between">
+<div>
+<h4 class="font-label-md font-bold text-on-surface">Compensation & Benefits</h4>
+<p class="text-body-sm text-on-surface-variant">Salary range, bonus structure, and perks.</p>
+</div>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple timer logic
+        let seconds = 12;
+        const timerElement = document.getElementById('timer');
+        
+        setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerElement.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        // Interactive micro-interaction for cancel button hover
+        const cancelButton = document.querySelector('button.text-on-surface-variant');
+        cancelButton.addEventListener('mouseenter', () => {
+            cancelButton.style.transform = 'scale(1.02)';
+        });
+        cancelButton.addEventListener('mouseleave', () => {
+            cancelButton.style.transform = 'scale(1)';
+        });
+    </script>
+</body></html>

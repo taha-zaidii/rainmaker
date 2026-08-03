@@ -1,0 +1,174 @@
+<div class="max-w-[1240px] mx-auto px-6 py-6">
+  <div class="flex items-start gap-4 mb-6">
+    <div class="flex-1">
+      <h1 class="rm-page-title">Recruitment Dashboard</h1>
+      <p class="mt-1 text-sm text-ink-muted">
+        Overview of active hiring processes and AI-assisted recruitment activity.
+      </p>
+    </div>
+    <a routerLink="/recruitment/job-create" class="rm-btn-primary">
+      <rm-icon name="plus-circle" [size]="16" /> Create New Requisition
+    </a>
+  </div>
+
+  <!-- ══ Hiring funnel — real counts from the database ══════════════════ -->
+  @if (loadingDashboard()) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="rm-card p-5 h-[132px] animate-pulse">
+          <div class="w-10 h-10 rounded-lg bg-surface-sunken"></div>
+          <div class="mt-4 h-3 w-24 rounded bg-surface-sunken"></div>
+          <div class="mt-2 h-7 w-12 rounded bg-surface-sunken"></div>
+        </div>
+      }
+    </div>
+  } @else if (stats().length) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+      @for (s of stats(); track s.label) {
+        <div class="rm-card p-5">
+          <div class="w-10 h-10 rounded-lg bg-primary-tint text-primary grid place-items-center">
+            <rm-icon [name]="s.icon" [size]="20" />
+          </div>
+          <div class="mt-4 text-sm text-ink-muted">{{ s.label }}</div>
+          <div class="mt-0.5 text-[28px] font-semibold leading-9 text-ink tabular">
+            {{ s.value }}
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- No invented numbers. If the query could not run, say so. -->
+    <div class="rm-card rm-card-pad mb-6 flex gap-3">
+      <rm-icon name="alert-triangle" [size]="18" class="text-warning shrink-0 mt-0.5" />
+      <div>
+        <div class="text-sm font-medium text-ink">Hiring figures unavailable</div>
+        <p class="mt-1 text-[13px] text-ink-muted leading-5">
+          These counts come from stored procedures that arrive with the production
+          database. Rather than show sample numbers that would be believed and acted on,
+          this panel stays empty until the real data is there.
+        </p>
+      </div>
+    </div>
+  }
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+    <!-- ══ AI activity — the real feed from Tbl_Ruc_RecruitmentAI_Activity ══ -->
+    <section class="rm-card xl:col-span-2 overflow-hidden">
+      <div class="px-6 py-4 border-b border-line flex items-center gap-2">
+        <rm-icon name="sparkles" [size]="18" class="text-ai" />
+        <h2 class="rm-section-title">AI Activity</h2>
+        <div class="flex-1"></div>
+        <span class="text-xs text-ink-muted">From this company's records</span>
+      </div>
+
+      @if (loadingDashboard()) {
+        <div class="px-6 py-8 text-sm text-ink-muted">Loading activity…</div>
+      } @else if (activity().length) {
+        @for (a of activity(); track a.id) {
+          <div class="px-6 py-4 border-b border-line last:border-0 flex items-start gap-4">
+            @if (isAiActivity(a.activityType)) {
+              <span class="rm-chip-ai shrink-0 mt-0.5 font-semibold !text-[10px]">AI</span>
+            } @else {
+              <span class="rm-chip-neutral shrink-0 mt-0.5 font-semibold !text-[10px]">LOG</span>
+            }
+            <div class="flex-1 min-w-0">
+              <div class="text-sm text-ink">
+                <strong class="font-medium">{{ a.title }}</strong>
+                @if (a.description) {
+                  — {{ a.description }}
+                }
+              </div>
+              <div class="text-xs text-ink-muted mt-0.5">
+                {{ a.createdOn | date: 'd MMM y, HH:mm' }}
+              </div>
+            </div>
+          </div>
+        }
+      } @else {
+        <div class="px-6 py-10 text-center">
+          <div
+            class="w-11 h-11 mx-auto rounded-lg bg-ai-tint text-ai grid place-items-center"
+          >
+            <rm-icon name="sparkles" [size]="20" />
+          </div>
+          <p class="mt-3 text-sm text-ink-muted">
+            No AI activity yet. Generate a job description and it will appear here.
+          </p>
+          <a routerLink="/recruitment/job-create" class="rm-btn-ai-outline mt-4 !h-9">
+            <rm-icon name="sparkles" [size]="15" /> Generate one now
+          </a>
+        </div>
+      }
+    </section>
+
+    <!-- ══ AI service status — a live probe of /auth/verify ═══════════════ -->
+    <section class="rm-card rm-card-pad">
+      <h2 class="rm-section-title">AI Service Status</h2>
+
+      @if (checking()) {
+        <p class="mt-4 text-sm text-ink-muted">Checking connection…</p>
+      } @else if (service()) {
+        @let s = service()!;
+        <div class="mt-4 flex items-center gap-2.5">
+          <span
+            class="w-2.5 h-2.5 rounded-full shrink-0"
+            [class.bg-success]="s.status === 'valid'"
+            [class.bg-danger]="s.status === 'invalid_key'"
+            [class.bg-warning]="s.status !== 'valid' && s.status !== 'invalid_key'"
+          ></span>
+          <span class="text-sm font-medium text-ink">
+            @if (s.status === 'valid') {
+              {{ s.model }} {{ s.serviceVersion }} connected
+            } @else if (s.status === 'invalid_key') {
+              API key rejected
+            } @else {
+              Service unreachable
+            }
+          </span>
+        </div>
+
+        @if (s.status === 'valid' && s.capabilities.length) {
+          <div class="mt-5">
+            <div class="rm-label">Active capabilities</div>
+            <div class="flex flex-wrap gap-2">
+              @for (c of s.capabilities; track c) {
+                <span class="rm-chip-blue">{{ capabilityLabel(c) }}</span>
+              }
+            </div>
+          </div>
+
+          @if (aiStats().length) {
+            <div class="mt-6 pt-5 border-t border-line space-y-2.5">
+              @for (a of aiStats(); track a.label) {
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-ink-muted">{{ a.label }}</span>
+                  <span class="font-semibold text-ink tabular">{{ a.value }}</span>
+                </div>
+              }
+            </div>
+          }
+        } @else {
+          <p class="mt-2 text-[13px] text-ink-muted leading-5">{{ s.error }}</p>
+          <a routerLink="/recruitment/ai-settings" class="rm-btn-secondary mt-4 !h-9">
+            Open AI Settings
+          </a>
+        }
+      }
+    </section>
+  </div>
+
+  <!-- ══ Quick start ═══════════════════════════════════════════════════ -->
+  <section class="rm-card rm-card-pad border-l-[3px] border-l-ai">
+    <div class="flex items-center gap-2">
+      <rm-icon name="sparkles" [size]="18" class="text-ai" />
+      <h2 class="rm-section-title">Try the AI</h2>
+    </div>
+    <p class="mt-1.5 text-sm text-ink-muted">
+      Generate a complete job requisition from five fields. The draft is yours to edit —
+      nothing is saved until you say so.
+    </p>
+    <a routerLink="/recruitment/job-create" class="rm-btn-ai mt-4">
+      <rm-icon name="sparkles" [size]="16" /> Generate a job description
+    </a>
+  </section>
+</div>

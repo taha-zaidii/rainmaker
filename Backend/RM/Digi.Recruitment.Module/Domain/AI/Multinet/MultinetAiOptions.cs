@@ -15,9 +15,18 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     {
         public const string SectionName = "MultinetAI";
 
-        /// <summary>Root of the AI service. No trailing slash required.</summary>
+        /// <summary>
+        /// Versioned root of the AI service — the BASE URL only. The backend
+        /// appends each feature path (auth/verify, recruitment/jobreq/generate,
+        /// parser/extract …), so this must be the versioned root and nothing
+        /// deeper. A trailing slash is optional; it is normalised either way.
+        ///
+        /// Note this is only the fallback. The portal is multi-tenant and each
+        /// company stores its own endpoint in Tbl_Ruc_RecruitmentAI_Settings,
+        /// which overrides this per call.
+        /// </summary>
         [Required]
-        public string BaseUrl { get; set; } = "http://127.0.0.1:8000";
+        public string BaseUrl { get; set; } = "https://ai.rainmaker.pk/hrms/api/v1";
 
         /// <summary>
         /// Platform-level key sent as <c>X-API-Key</c>. Never commit a real value:
@@ -93,21 +102,22 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                 return problems;
             }
 
-            if (string.IsNullOrWhiteSpace(BaseUrl) ||
-                !Uri.TryCreate(BaseUrl, UriKind.Absolute, out var uri) ||
-                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            var resolvedBaseUrl = MultinetAiEndpoints.ResolveBaseUrl(BaseUrl);
+            if (!resolvedBaseUrl.IsUsable)
             {
-                problems.Add($"{SectionName}:BaseUrl must be an absolute http/https URL (got '{BaseUrl}').");
+                problems.Add($"{SectionName}:BaseUrl — {resolvedBaseUrl.Problem}");
             }
 
-            // In stub mode no call leaves the process, so a key is not required.
-            if (!StubMode && string.IsNullOrWhiteSpace(ApiKey))
-            {
-                problems.Add(
-                    $"{SectionName}:ApiKey is empty. The AI service is fail-closed and will answer 401 " +
-                    "for every business endpoint. Set it in appsettings.Development.json or user-secrets, " +
-                    $"or set {SectionName}:StubMode=true for offline work.");
-            }
+            // NOTE: a missing platform key is deliberately NOT fatal.
+            //
+            // This is a multi-tenant portal: the key that actually gets used is
+            // the per-company one in Tbl_Ruc_RecruitmentAI_Settings, entered
+            // through the AI Settings screen and stored encrypted. The value
+            // here is only a fallback for callers with no company context.
+            //
+            // Failing startup because the fallback is unset would block the
+            // normal, correct configuration — every tenant holding its own key
+            // and the platform holding none.
 
             if (TimeoutSeconds < 180)
             {

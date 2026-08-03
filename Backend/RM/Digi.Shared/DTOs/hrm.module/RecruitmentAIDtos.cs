@@ -73,6 +73,30 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? ApiEndpoint { get; set; }
     }
 
+    /// <summary>
+    /// Outcomes of a key test. A boolean cannot carry the distinction that
+    /// matters most here: "your key is wrong" and "we could not reach the AI
+    /// service" look identical to a recruiter but need completely different
+    /// actions, and conflating them has already cost real debugging time.
+    /// </summary>
+    public static class TestApiKeyStatus
+    {
+        /// <summary>Key accepted by the provider.</summary>
+        public const string Valid = "valid";
+
+        /// <summary>Provider answered, and rejected the key. Do not retry.</summary>
+        public const string InvalidKey = "invalid_key";
+
+        /// <summary>Provider could not be contacted at all — network, DNS, TLS or timeout.</summary>
+        public const string Unreachable = "unreachable";
+
+        /// <summary>Settings themselves are wrong (e.g. the endpoint is not a usable URL).</summary>
+        public const string Misconfigured = "misconfigured";
+
+        /// <summary>Provider is not one this backend knows how to test.</summary>
+        public const string UnsupportedProvider = "unsupported_provider";
+    }
+
     // Test API Key Response
     public class TestApiKeyResponseDto
     {
@@ -81,6 +105,33 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? Model { get; set; }
         public string? TestResponse { get; set; }
         public string? Error { get; set; }
+
+        /// <summary>
+        /// One of <see cref="TestApiKeyStatus"/>. Lets the settings page show
+        /// "AI service unreachable" instead of the misleading "API Key Invalid"
+        /// when the key was never actually the problem.
+        /// </summary>
+        public string? Status { get; set; }
+
+        /// <summary>Reported by Multinet's in-house AI service. Null for other providers.</summary>
+        public string? ServiceVersion { get; set; }
+
+        /// <summary>ProfileSchema version the AI service is serving. Null for other providers.</summary>
+        public string? SchemaVersion { get; set; }
+
+        /// <summary>
+        /// What the key is permitted to do, e.g. "recruitment.jobreq.generate".
+        /// Drive the feature toggles from this rather than hard-coding them, so
+        /// the portal follows the service as it gains features.
+        /// </summary>
+        public List<string> Capabilities { get; set; } = new List<string>();
+
+        /// <summary>
+        /// A usable-but-suspicious configuration worth showing the administrator,
+        /// e.g. an endpoint that had to be corrected before the call could be made.
+        /// Not an error: the test still ran.
+        /// </summary>
+        public string? ConfigurationWarning { get; set; }
     }
 
     // Dashboard Statistics
@@ -113,15 +164,165 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? Experience { get; set; }
         public string? Skills { get; set; }
         public string? AdditionalInfo { get; set; }
+
+        /// <summary>
+        /// The wizard already collects this; it simply had nowhere to go.
+        /// Optional — existing callers that omit it behave exactly as before.
+        /// </summary>
+        public string? Designation { get; set; }
+
+        /// <summary>
+        /// The Job Category dropdown's allowed values. Send them and the AI snaps
+        /// its answer to a real option so it always binds; omit them and you get
+        /// free text the dropdown may reject.
+        /// </summary>
+        public List<string>? JobCategoryOptions { get; set; }
+    }
+
+    // ── AI-generated requisition draft (maps onto the 4-step wizard) ─────────
+    //
+    // Every field is a SUGGESTION for a human to edit. Nulls are meaningful:
+    // they mark fields the AI is forbidden from filling because they are HR's
+    // decision. Render them as empty and editable, never as a failure.
+
+    /// <summary>A numeric range where either end may legitimately be unknown.</summary>
+    public class AiJobDraftRangeDto
+    {
+        public int? Minimum { get; set; }
+        public int? Maximum { get; set; }
+    }
+
+    /// <summary>Wizard step 1 — Basic Information.</summary>
+    public class AiJobDraftBasicInfoDto
+    {
+        /// <summary>Verbatim echo of what was submitted — binds straight back to the field.</summary>
+        public string? JobTitle { get; set; }
+
+        /// <summary>Verbatim echo — binds straight back to the dropdown.</summary>
+        public string? Department { get; set; }
+
+        /// <summary>Verbatim echo — binds straight back to the dropdown.</summary>
+        public string? Designation { get; set; }
+
+        public string? JobSummary { get; set; }
+        public string? JobCategory { get; set; }
+
+        /// <summary>Always 1 — a starting value for the human to change.</summary>
+        public int? Vacancies { get; set; }
+
+        /// <summary>Null by design — HR's decision.</summary>
+        public string? EmploymentType { get; set; }
+
+        /// <summary>Null by design — HR's decision.</summary>
+        public string? Grade { get; set; }
+    }
+
+    /// <summary>Wizard step 2 — Requirements.</summary>
+    public class AiJobDraftRequirementsDto
+    {
+        public AiJobDraftRangeDto? ExperienceYears { get; set; }
+
+        /// <summary>
+        /// Always null, deliberately. Age is a protected attribute and an AI
+        /// proposing an age band in a job advert is discriminatory. Do not bind
+        /// an input to this, and never backfill it.
+        /// </summary>
+        public AiJobDraftRangeDto? AgeLimits { get; set; }
+
+        public List<string> KeyResponsibilities { get; set; } = new List<string>();
+        public List<string> Requirements { get; set; } = new List<string>();
+        public List<string> Qualifications { get; set; } = new List<string>();
+        public List<string> Skills { get; set; } = new List<string>();
+    }
+
+    /// <summary>Wizard step 3 — Compensation. Only location is AI-suggested.</summary>
+    public class AiJobDraftCompensationDto
+    {
+        public string? Location { get; set; }
+
+        /// <summary>Null by design.</summary>
+        public string? Benefits { get; set; }
+
+        /// <summary>Null by design.</summary>
+        public string? BudgetType { get; set; }
+
+        /// <summary>Null by design.</summary>
+        public int? BudgetLineId { get; set; }
+    }
+
+    /// <summary>Wizard step 4 — Publishing. The AI never publishes.</summary>
+    public class AiJobDraftPublishingDto
+    {
+        /// <summary>Null by design.</summary>
+        public string? Justification { get; set; }
+
+        /// <summary>Always false — a human publishes.</summary>
+        public bool IsPublicJob { get; set; }
+
+        /// <summary>Always "Draft".</summary>
+        public string? Status { get; set; }
+
+        /// <summary>Null by design.</summary>
+        public string? ClosingDate { get; set; }
+    }
+
+    /// <summary>The full draft, one property per wizard step.</summary>
+    public class AiJobDraftDto
+    {
+        public AiJobDraftBasicInfoDto BasicInfo { get; set; } = new AiJobDraftBasicInfoDto();
+        public AiJobDraftRequirementsDto Requirements { get; set; } = new AiJobDraftRequirementsDto();
+        public AiJobDraftCompensationDto Compensation { get; set; } = new AiJobDraftCompensationDto();
+        public AiJobDraftPublishingDto Publishing { get; set; } = new AiJobDraftPublishingDto();
     }
 
     // Generate Job Description Response
     public class GenerateJobDescriptionResponseDto
     {
+        /// <summary>
+        /// Readable rendering of the whole draft. Kept so existing callers that
+        /// only know about a single text blob keep working unchanged; new screens
+        /// should bind <see cref="Draft"/> field by field instead.
+        /// </summary>
         public string JobDescription { get; set; } = string.Empty;
+
         public DateTime GeneratedOn { get; set; }
         public int TokensUsed { get; set; }
         public string? Model { get; set; }
+
+        /// <summary>
+        /// The structured draft, when the company's provider returns one.
+        /// Null for providers that only produce free text.
+        /// </summary>
+        public AiJobDraftDto? Draft { get; set; }
+
+        /// <summary>
+        /// Always true for AI-generated content. Drives the
+        /// "AI-generated — please review" affordance. A human must edit and
+        /// approve before anything is saved as a requisition of record.
+        /// </summary>
+        public bool ReviewRequired { get; set; }
+
+        /// <summary>Server-side generation time. Useful when someone asks why a call took 30 seconds.</summary>
+        public long? ExecutionTimeMs { get; set; }
+
+        /// <summary>True when the AI service answered from its deterministic cache.</summary>
+        public bool? CacheHit { get; set; }
+
+        /// <summary>"parsed_from_request" when the AI used the experience range the user typed.</summary>
+        public string? ExperienceSource { get; set; }
+
+        /// <summary>"selected_from_options" when the category snapped to a real dropdown value.</summary>
+        public string? JobCategorySource { get; set; }
+
+        /// <summary>e.g. "Hybrid" — inferred, still a suggestion.</summary>
+        public string? WorkMode { get; set; }
+
+        /// <summary>
+        /// Fields the AI deliberately left empty because they are HR's to decide.
+        /// Show these as "for you to complete" rather than letting them read as a
+        /// failed generation.
+        /// </summary>
+        public List<string> FieldsForHumanToComplete { get; set; } = new List<string>();
     }
 
     // Job Requirements
@@ -340,9 +541,23 @@ namespace Digi.Shared.DTOs.hrm.module
         /// Supports both resumeFilePath and resumePath (for Angular compatibility)
         /// Primary property - Angular se "resumePath" aayega to yahan map hoga
         /// </summary>
+        private string _resumeFilePath = string.Empty;
+
         [System.Text.Json.Serialization.JsonPropertyName("resumePath")]
         [Newtonsoft.Json.JsonProperty("resumePath")]
-        public string ResumeFilePath { get; set; } = string.Empty;
+        public string ResumeFilePath
+        {
+            get => _resumeFilePath;
+            set => _resumeFilePath = value;
+        }
+
+        [System.Text.Json.Serialization.JsonPropertyName("resumeFilePath")]
+        [Newtonsoft.Json.JsonProperty("resumeFilePath")]
+        public string ResumeFilePathAlias
+        {
+            get => _resumeFilePath;
+            set { if (!string.IsNullOrWhiteSpace(value)) _resumeFilePath = value; }
+        }
         
         /// <summary>
         /// Optional: Direct resume text (for testing or manual input)

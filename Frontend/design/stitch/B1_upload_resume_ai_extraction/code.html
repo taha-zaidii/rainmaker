@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Upload Resume | Rainmaker Recruitment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e1e2e4",
+                        "tertiary": "#434a57",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-surface-variant": "#434654",
+                        "tertiary-fixed": "#dce2f3",
+                        "surface-bright": "#f8f9fb",
+                        "surface-dim": "#d9dadc",
+                        "background": "#f8f9fb",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e7e8ea",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "surface-tint": "#1353d8",
+                        "surface-container": "#edeef0",
+                        "on-secondary-container": "#5c2400",
+                        "surface-container-low": "#f3f4f6",
+                        "on-background": "#191c1e",
+                        "outline": "#737686",
+                        "outline-variant": "#c3c5d7",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#151c27",
+                        "on-primary-fixed-variant": "#003dab",
+                        "secondary": "#9d4300",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#00174d",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#fd761a",
+                        "surface-container-highest": "#e1e2e4",
+                        "primary-fixed": "#dbe1ff",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "secondary-fixed": "#ffdbca",
+                        "on-secondary-fixed-variant": "#783200",
+                        "inverse-surface": "#2e3132",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#5b626f",
+                        "on-primary-container": "#d4dcff",
+                        "inverse-primary": "#b5c4ff",
+                        "inverse-on-surface": "#f0f1f3",
+                        "surface": "#f8f9fb",
+                        "primary-container": "#1a56db",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#341100",
+                        "primary": "#003fb1",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-container": "#d7deee",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#191c1e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "container-margin": "24px",
+                        "stack-xl": "48px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px",
+                        "unit": "4px",
+                        "stack-xs": "4px",
+                        "topbar-height": "64px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- Global Top Bar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<h1 class="font-display-lg text-[24px] font-black text-primary uppercase tracking-tighter">rainmaker</h1>
+</div>
+<div class="flex items-center gap-stack-lg">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">home</span></button>
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">task_alt</span></button>
+<div class="relative">
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">notifications</span></button>
+<span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-surface"></span>
+</div>
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">dark_mode</span></button>
+</div>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<span class="font-label-md text-label-md text-on-surface font-medium">Sumaira Butt</span>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot of a female recruiter with a friendly smile, set against a clean, corporate office background. The lighting is soft and professional, utilizing the brand's primary blue and clean white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_HfMG4UpcWL1mm_MX2oHbNTT6pHtcskxpNCH2ze4EZ1ha4St_kpBOaynEJKOcGUMgo3yvfMdv_BJP23nohJkOJH4k7BUVjpj7qDmvqU21UJlxvoruuBrK4t8qheV1NE2iG0BU0CWBBFrAOnafV-mBfXSAKQFlZe4WRtNm1ef9rTIk9HQE_argQFiUBlA9VlzfJaIt_Nf9PHidyBA3Qaau7nc_DYdMKT67Uty-42k6cVD1trnS_gu4"/>
+</div>
+</div>
+</header>
+<!-- Primary Side Rail -->
+<aside class="fixed left-0 top-0 h-full z-50 flex flex-col items-center py-4 bg-primary w-[88px]">
+<div class="mb-8">
+<div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-primary font-black">R</div>
+</div>
+<nav class="flex flex-col items-center gap-4 w-full px-2">
+<!-- Simplified rail for brevity, focusing on the active state -->
+<button class="flex flex-col items-center gap-1 w-full py-2 text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-medium">Dash</span>
+</button>
+<button class="flex flex-col items-center gap-1 w-full py-2 bg-primary-container text-on-primary-container rounded-lg transition-transform scale-95">
+<span class="material-symbols-outlined">person_search</span>
+<span class="text-[10px] font-medium">Recruit</span>
+</button>
+<button class="flex flex-col items-center gap-1 w-full py-2 text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container transition-colors rounded-lg">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] font-medium">HR</span>
+</button>
+</nav>
+</aside>
+<!-- Secondary Navigation Drawer -->
+<aside class="fixed left-[88px] top-0 h-full z-40 flex flex-col py-topbar-height w-[240px] bg-surface border-r border-outline-variant">
+<div class="px-6 py-6">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Recruitment</h2>
+<p class="text-label-sm text-on-surface-variant">Management</p>
+</div>
+<nav class="flex-1 flex flex-col px-3 gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 bg-surface-container-high text-primary font-bold rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="text-label-md">Create Job Requisition</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="text-label-md">Job Requisitions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">person_add</span>
+<span class="text-label-md">Applications Management</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="pl-[328px] pt-topbar-height min-h-screen">
+<div class="max-w-[1200px] mx-auto p-container-margin">
+<!-- Page Header -->
+<div class="mb-stack-xl">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Upload Resume</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Upload a CV and the AI will extract the candidate profile for your review</p>
+</div>
+<!-- Two Column Layout -->
+<div class="grid grid-cols-2 gap-stack-xl items-start">
+<!-- Left Column: Upload -->
+<div class="space-y-stack-lg">
+<div class="p-stack-xl border-2 border-dashed border-primary bg-primary/5 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-all group">
+<div class="w-16 h-16 bg-primary-container/10 text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[32px]">upload_file</span>
+</div>
+<h4 class="font-headline-sm text-on-surface mb-2">Drag a CV here or click to browse</h4>
+<p class="font-body-sm text-on-surface-variant">PDF, DOCX, PNG or JPG · up to 5 MB</p>
+</div>
+<!-- Uploaded File Row -->
+<div class="p-stack-md bg-white border border-outline-variant rounded-lg flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-low text-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">ayesha-khan-cv.pdf</p>
+<p class="text-[11px] text-on-surface-variant">1.2 MB</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+</div>
+<!-- Right Column: AI Extracted Profile -->
+<div class="bg-white border border-outline-variant rounded-xl shadow-sm flex flex-col h-[700px]">
+<!-- Card Header -->
+<div class="p-stack-lg border-b border-outline-variant flex items-center justify-between bg-white sticky top-0 rounded-t-xl z-10">
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-headline-sm">Extracted Profile</h3>
+</div>
+<span class="px-3 py-1 bg-secondary-fixed text-on-secondary-fixed-variant text-[11px] font-bold rounded-full uppercase tracking-wider">AI-extracted — please verify</span>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-stack-lg space-y-stack-lg custom-scrollbar">
+<!-- Name Field -->
+<div class="space-y-1">
+<label class="font-label-sm text-on-surface-variant">Name</label>
+<input class="w-full bg-surface border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0" type="text" value="Ayesha Khan"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="font-label-sm text-on-surface-variant">Email</label>
+<input class="w-full bg-surface border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0" type="email" value="ayesha.khan@example.com"/>
+</div>
+<!-- Flagged: Phone -->
+<div class="space-y-1 group">
+<label class="font-label-sm text-on-surface-variant">Phone</label>
+<div class="relative">
+<input class="w-full bg-surface border-l-4 border-l-secondary border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0" type="text" value="0300-1234567"/>
+<div class="flex items-center gap-1.5 mt-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span class="text-[11px] font-medium">Needs review — extracted by pattern matching, not verified</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Flagged: Location -->
+<div class="space-y-1">
+<label class="font-label-sm text-on-surface-variant">Location</label>
+<div class="relative">
+<input class="w-full bg-surface border-l-4 border-l-secondary border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0" type="text" value="Lahore, Pakistan"/>
+<div class="flex items-center gap-1.5 mt-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span class="text-[11px] font-medium">Needs review</span>
+</div>
+</div>
+</div>
+<div class="space-y-1">
+<label class="font-label-sm text-on-surface-variant">Headline</label>
+<input class="w-full bg-surface border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0" type="text" value="Senior Frontend Developer"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-sm text-on-surface-variant">Summary</label>
+<textarea class="w-full bg-surface border-outline-variant rounded-lg text-on-surface focus:border-primary focus:ring-0 resize-none" rows="3">Experienced developer with 6+ years in React and UI/UX...</textarea>
+</div>
+<!-- Flagged Group: Skills -->
+<div class="space-y-1 p-3 bg-secondary/5 border-l-4 border-l-secondary rounded-r-lg">
+<div class="flex items-center justify-between mb-2">
+<label class="font-label-sm text-on-surface-variant">Skills</label>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span class="text-[11px] font-medium">Verify categorization</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">JavaScript</span>
+<span class="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">React</span>
+<span class="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">Tailwind CSS</span>
+<span class="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded">TypeScript</span>
+<button class="px-2 py-1 border border-dashed border-outline text-on-surface-variant text-xs rounded hover:bg-white">+</button>
+</div>
+</div>
+<div class="space-y-3">
+<label class="font-label-sm text-on-surface-variant">Experience</label>
+<div class="space-y-2">
+<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-on-surface">TechSolutions — Lead Dev</p>
+<p class="text-xs text-on-surface-variant">2020-Present</p>
+</div>
+<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-on-surface">SoftSystems — Frontend Dev</p>
+<p class="text-xs text-on-surface-variant">2017-2020</p>
+</div>
+</div>
+</div>
+<div class="space-y-1 pb-4">
+<label class="font-label-sm text-on-surface-variant">Education</label>
+<div class="p-3 bg-surface-container-low border border-outline-variant rounded-lg">
+<p class="font-label-md text-on-surface">BS Computer Science, LUMS</p>
+</div>
+</div>
+</div>
+<!-- Card Footer -->
+<div class="p-stack-lg border-t border-outline-variant bg-surface-bright rounded-b-xl flex items-center justify-between">
+<span class="text-label-md text-secondary font-semibold">3 of 11 fields need review</span>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 border border-outline text-on-surface font-semibold rounded-lg hover:bg-surface-container transition-colors">Discard</button>
+<button class="px-6 py-2.5 bg-primary text-white font-semibold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-sm">Accept and Save Candidate</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for the drop zone
+        const dropZone = document.querySelector('.group');
+        if(dropZone) {
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('bg-primary/20');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('bg-primary/20');
+            });
+        }
+
+        // Handle button clicks
+        const saveBtn = document.querySelector('button.bg-primary');
+        if(saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                saveBtn.innerHTML = '<span class="flex items-center gap-2"><svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Saving...</span>';
+                setTimeout(() => {
+                    saveBtn.innerHTML = 'Saved Successfully!';
+                    saveBtn.classList.replace('bg-primary', 'bg-green-600');
+                }, 1500);
+            });
+        }
+    </script>
+</body></html>

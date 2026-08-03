@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create Job Requisition - Requirements</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#783200",
+                        "outline-variant": "#c3c5d7",
+                        "on-secondary-container": "#5c2400",
+                        "surface-container-high": "#e7e8ea",
+                        "on-surface-variant": "#434654",
+                        "secondary-container": "#fd761a",
+                        "on-primary": "#ffffff",
+                        "outline": "#737686",
+                        "surface-tint": "#1353d8",
+                        "on-background": "#191c1e",
+                        "tertiary-fixed": "#dce2f3",
+                        "on-surface": "#191c1e",
+                        "surface-variant": "#e1e2e4",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#9d4300",
+                        "tertiary": "#434a57",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-bright": "#f8f9fb",
+                        "on-secondary-fixed": "#341100",
+                        "on-primary-container": "#d4dcff",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#edeef0",
+                        "on-tertiary-fixed": "#151c27",
+                        "background": "#f8f9fb",
+                        "on-tertiary-container": "#d7deee",
+                        "primary-container": "#1a56db",
+                        "primary": "#003fb1",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-dim": "#d9dadc",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "on-primary-fixed": "#00174d",
+                        "secondary-fixed": "#ffdbca",
+                        "inverse-surface": "#2e3132",
+                        "secondary-fixed-dim": "#ffb690",
+                        "inverse-on-surface": "#f0f1f3",
+                        "error-container": "#ffdad6",
+                        "surface-container-highest": "#e1e2e4",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#5b626f",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface": "#f8f9fb",
+                        "on-primary-fixed-variant": "#003dab",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "surface-container-low": "#f3f4f6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin": "24px",
+                        "stack-lg": "24px",
+                        "stack-xs": "4px",
+                        "stack-xl": "48px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c3c5d7;
+            border-radius: 4px;
+        }
+        .ai-shimmer {
+            background: linear-gradient(90deg, #FFF3E8 0%, #fff 50%, #FFF3E8 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Primary SideNavBar (Rainmaker Global) -->
+<nav class="fixed left-0 top-0 h-full w-[88px] z-[70] bg-primary flex flex-col items-center py-4">
+<div class="mb-8">
+<span class="font-black text-on-primary text-[24px] tracking-tighter">RM</span>
+</div>
+<div class="flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-grow px-2">
+<!-- Simplified Sidebar Icons for Desktop -->
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all rounded-lg" title="Dashboard">
+<span class="material-symbols-outlined">dashboard</span>
+</button>
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all rounded-lg" title="System Administration">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all rounded-lg" title="Human Resource">
+<span class="material-symbols-outlined">groups</span>
+</button>
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all rounded-lg" title="Inventory">
+<span class="material-symbols-outlined">inventory_2</span>
+</button>
+<button class="p-3 bg-primary-container text-on-primary-container rounded-lg scale-95 transition-transform" title="Recruitment Management">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_search</span>
+</button>
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all rounded-lg" title="Reports">
+<span class="material-symbols-outlined">bar_chart</span>
+</button>
+</div>
+<div class="mt-auto">
+<button class="p-3 text-on-primary opacity-70 hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">logout</span>
+</button>
+</div>
+</nav>
+<!-- Secondary SideNavBar (Recruitment Focused) -->
+<nav class="fixed left-[88px] top-0 h-full w-[240px] z-[60] bg-surface border-r border-outline-variant flex flex-col py-[64px] hidden lg:flex">
+<div class="px-6 py-8">
+<h2 class="font-headline-sm text-on-surface font-bold">Recruitment</h2>
+<p class="text-on-surface-variant font-label-md">Management</p>
+</div>
+<div class="flex flex-col gap-1 px-4">
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container-high text-primary font-bold rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="font-label-md">Create Job Requisition</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span class="font-label-md">Job Requisitions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md">Applications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md">Interview Scheduling</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low hover:text-primary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+<span class="font-label-md">Evaluation</span>
+</a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[80] bg-surface border-b border-outline-variant flex justify-between items-center px-6 lg:pl-[352px]">
+<div class="flex items-center gap-4">
+<span class="font-page-title text-page-title font-black text-primary uppercase tracking-tighter">rainmaker</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">home</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">task_alt</span></button>
+<button class="hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">dark_mode</span></button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label-md text-on-surface">Sumaira Butt</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">HR Director</p>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a Middle Eastern woman with a confident smile, wearing a stylish business blazer, in a bright corporate office environment with soft natural lighting and a minimalist background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQekcUU7tOYPHXheQQog1GBB9IZCbDuiN-zJoC1LamiAZK-A07zFLKKIO3h9hLoFF9JsKnvFizNWXml0vlG-fUVYnFzXwb2TsHERBl-Ut-hE0X0D6PT9bKoKWuX5Sq0kRQkDB9ctd8qbO5x0yelGjEaxBK_puaN9hmFUd3ageXAJT1CduGR5bBnsz6kmnoV5aNqZ2Eex3DjdUmVDoZnTCXBA1OXdc3Bd8TZZTv6MibktFkelKPZeI8"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-[88px] pb-24 lg:pl-[352px] px-6 min-h-screen">
+<div class="max-w-5xl mx-auto space-y-8">
+<!-- Page Header -->
+<header>
+<h1 class="font-headline-lg text-on-surface">Create Job Requisition</h1>
+<p class="text-body-lg text-on-surface-variant mt-1">Configure and publish a new job opening to your internal and external portals.</p>
+</header>
+<!-- AI Banner -->
+<div class="bg-[#FFF3E8] border-l-4 border-secondary p-4 flex items-center justify-between rounded-r-lg shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<p class="text-on-secondary-fixed-variant font-medium">AI-generated draft — please review before saving. Every field is editable.</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-4 py-1.5 border border-secondary text-secondary rounded-full font-label-md hover:bg-secondary hover:text-white transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                        Regenerate
+                    </button>
+<button class="text-on-secondary-fixed-variant opacity-50 hover:opacity-100"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<!-- Stepper -->
+<nav class="flex items-center w-full bg-white p-6 rounded-xl border border-outline-variant">
+<div class="flex flex-1 items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<div>
+<p class="text-on-surface-variant font-label-sm">Step 1</p>
+<p class="font-label-md text-on-surface">Basic Info</p>
+</div>
+</div>
+<div class="w-12 h-[1px] bg-outline-variant mx-4"></div>
+<div class="flex flex-1 items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">2</div>
+<div>
+<p class="text-primary font-label-sm">Step 2</p>
+<p class="font-label-md text-primary font-bold">Requirements</p>
+</div>
+</div>
+<div class="w-12 h-[1px] bg-outline-variant mx-4"></div>
+<div class="flex flex-1 items-center gap-3 opacity-40">
+<div class="w-10 h-10 rounded-full border-2 border-outline flex items-center justify-center font-bold">3</div>
+<div>
+<p class="text-on-surface-variant font-label-sm">Step 3</p>
+<p class="font-label-md text-on-surface">Compensation</p>
+</div>
+</div>
+<div class="w-12 h-[1px] bg-outline-variant mx-4"></div>
+<div class="flex flex-1 items-center gap-3 opacity-40">
+<div class="w-10 h-10 rounded-full border-2 border-outline flex items-center justify-center font-bold">4</div>
+<div>
+<p class="text-on-surface-variant font-label-sm">Step 4</p>
+<p class="font-label-md text-on-surface">Publishing</p>
+</div>
+</div>
+</nav>
+<!-- Main Form Card -->
+<div class="bg-white rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-8 border-b border-outline-variant bg-surface-bright flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[28px]">description</span>
+<h2 class="font-headline-md text-on-surface">Requirements</h2>
+</div>
+</div>
+<div class="p-8 space-y-10">
+<!-- Experience Required -->
+<section>
+<div class="flex items-center gap-2 mb-4">
+<h3 class="font-label-md text-on-surface uppercase tracking-wider">Experience Required</h3>
+<span class="material-symbols-outlined text-secondary text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="flex gap-4 items-end">
+<div class="w-32">
+<label class="block text-label-sm text-on-surface-variant mb-1.5">Minimum</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" value="3"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<div class="w-32">
+<label class="block text-label-sm text-on-surface-variant mb-1.5">Maximum</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" value="6"/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<div class="pb-3">
+<p class="text-[11px] text-secondary font-medium italic">Taken from what you entered</p>
+</div>
+</div>
+</section>
+<!-- Key Responsibilities -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-label-md text-on-surface uppercase tracking-wider">Key Responsibilities</h3>
+</div>
+<div class="space-y-3">
+<!-- Rows -->
+<div class="group flex items-center gap-3 p-1 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-outline-variant cursor-grab">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Architect and implement scalable front-end solutions using modern React patterns."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant hover:text-error transition-colors p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="group flex items-center gap-3 p-1 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-outline-variant cursor-grab">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Collaborate with cross-functional teams to define, design, and ship new features."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant hover:text-error transition-colors p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="group flex items-center gap-3 p-1 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-outline-variant cursor-grab">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Optimize application performance and ensure high availability across platforms."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant hover:text-error transition-colors p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="group flex items-center gap-3 p-1 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-outline-variant cursor-grab">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Maintain code quality through rigorous testing, code reviews, and documentation."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant hover:text-error transition-colors p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="group flex items-center gap-3 p-1 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-outline-variant cursor-grab">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Mentor junior developers and participate in technical leadership initiatives."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant hover:text-error transition-colors p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<button class="mt-4 flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add responsibility
+                        </button>
+</section>
+<!-- Requirements -->
+<section>
+<h3 class="font-label-md text-on-surface uppercase tracking-wider mb-4">Requirements</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Proven experience as a Full Stack Developer or similar role."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="In-depth knowledge of JavaScript frameworks (Angular, React, or Node.js)."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Familiarity with databases (e.g. MySQL, MongoDB) and web servers."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Excellent communication and teamwork skills with great attention to detail."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<button class="mt-4 flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add requirement
+                        </button>
+</section>
+<!-- Qualifications -->
+<section>
+<h3 class="font-label-md text-on-surface uppercase tracking-wider mb-4">Qualifications</h3>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Degree in Computer Science, Statistics or relevant field."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline-variant">drag_indicator</span>
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-outline-variant rounded-lg px-4 py-3 pr-10 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-body-md" type="text" value="Professional certifications in Cloud Architecture (AWS/Azure) preferred."/>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-secondary text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<button class="text-outline-variant p-2"><span class="material-symbols-outlined">close</span></button>
+</div>
+</div>
+<button class="mt-4 flex items-center gap-2 text-primary font-bold hover:underline transition-all">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                            Add qualification
+                        </button>
+</section>
+<!-- Skills -->
+<section>
+<div class="flex items-center gap-2 mb-4">
+<h3 class="font-label-md text-on-surface uppercase tracking-wider">Skills</h3>
+<div class="relative">
+<span class="material-symbols-outlined text-secondary text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 items-center bg-surface-container-lowest p-6 rounded-xl border border-dashed border-outline-variant">
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1.5 rounded-full flex items-center gap-2 font-label-md shadow-sm">
+                                JavaScript
+                                <button class="hover:opacity-60 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1.5 rounded-full flex items-center gap-2 font-label-md shadow-sm">
+                                Python
+                                <button class="hover:opacity-60 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1.5 rounded-full flex items-center gap-2 font-label-md shadow-sm">
+                                .NET
+                                <button class="hover:opacity-60 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1.5 rounded-full flex items-center gap-2 font-label-md shadow-sm">
+                                Angular
+                                <button class="hover:opacity-60 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<div class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1.5 rounded-full flex items-center gap-2 font-label-md shadow-sm">
+                                C#
+                                <button class="hover:opacity-60 transition-opacity"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<button class="px-4 py-1.5 border border-primary text-primary rounded-full font-label-md hover:bg-primary hover:text-white transition-all flex items-center gap-2 bg-white">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                Add skill
+                            </button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Footer -->
+<footer class="fixed bottom-0 right-0 left-0 h-[80px] bg-white border-t border-outline-variant z-[90] lg:pl-[352px] flex items-center justify-center">
+<div class="max-w-5xl w-full px-6 flex justify-between">
+<button class="px-8 py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-surface-container-low transition-all">Back</button>
+<button class="px-8 py-3 bg-primary text-on-primary font-bold rounded-lg hover:shadow-lg hover:opacity-90 active:scale-95 transition-all">Continue to Compensation</button>
+</div>
+</footer>
+<script>
+        // Simple micro-interaction for drag handles
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+            if(icon.textContent === 'drag_indicator') {
+                icon.addEventListener('mousedown', () => {
+                    icon.closest('.flex').classList.add('opacity-50', 'scale-[0.99]');
+                });
+                icon.addEventListener('mouseup', () => {
+                    icon.closest('.flex').classList.remove('opacity-50', 'scale-[0.99]');
+                });
+            }
+        });
+
+        // Hover effect for AI sparkle icons to show tooltip-like behavior (conceptual)
+        document.querySelectorAll('.text-secondary').forEach(sparkle => {
+            if(sparkle.textContent === 'auto_awesome') {
+                sparkle.style.cursor = 'help';
+            }
+        });
+    </script>
+</body></html>

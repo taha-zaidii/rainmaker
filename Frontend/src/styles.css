@@ -1,0 +1,331 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Rainmaker Protocol — design tokens
+   --------------------------------------------------------------------------
+   THE LOAD-BEARING RULE OF THIS SYSTEM:
+
+     Blue  = a human acting.
+     Orange = the machine thinking.
+
+   Orange is reserved exclusively for AI-generated, AI-suggested or
+   AI-triggered elements. Nothing else may use it. This is not decoration —
+   the AI integration is advisory by law (EU AI Act Annex III, high-risk
+   hiring), which means a person must always be able to tell what a model
+   produced from what a human entered. Encoding that in colour is how the
+   requirement survives contact with the UI.
+
+   If you find yourself reaching for orange on a non-AI element, use
+   --color-warning instead.
+   ========================================================================== */
+
+@theme {
+  /* ── Brand ─────────────────────────────────────────────────────────── */
+  --color-primary: #1a56db;
+  --color-primary-hover: #1e429f;
+  --color-primary-deep: #003fb1;
+  --color-primary-tint: #ebf2ff;
+  --color-primary-tint-strong: #dbe1ff;
+  --color-on-primary: #ffffff;
+
+  /* ── AI accent — orange. Reserved. See the note above. ─────────────── */
+  --color-ai: #f97316;
+  --color-ai-hover: #ea580c;
+  --color-ai-deep: #9d4300;
+  --color-ai-tint: #fff3e8;
+  --color-ai-border: #fed7aa;
+
+  /* ── Surfaces ──────────────────────────────────────────────────────── */
+  --color-canvas: #f8f9fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f6;
+  --color-surface-sunken: #edeef0;
+
+  /* ── Lines ─────────────────────────────────────────────────────────── */
+  --color-line: #e5e9f0;
+  --color-line-strong: #c3c5d7;
+
+  /* ── Type ──────────────────────────────────────────────────────────── */
+  --color-ink: #191c1e;
+  --color-ink-soft: #434654;
+  --color-ink-muted: #6b7280;
+  --color-ink-faint: #9ca3af;
+
+  /* ── Semantic ──────────────────────────────────────────────────────── */
+  --color-success: #16a34a;
+  --color-success-tint: #ecfdf3;
+  --color-warning: #d97706;
+  --color-warning-tint: #fffaeb;
+  --color-danger: #ba1a1a;
+  --color-danger-tint: #ffdad6;
+  --color-info: #0284c7;
+  --color-info-tint: #f0f9ff;
+
+  /* ── Typography ────────────────────────────────────────────────────── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, sans-serif;
+
+  /* ── Shape ─────────────────────────────────────────────────────────── */
+  --radius-card: 0.5rem;
+  --radius-control: 0.5rem;
+  --radius-pill: 9999px;
+}
+
+/* ==========================================================================
+   Dark theme
+   --------------------------------------------------------------------------
+   Every semantic token is redefined here, so components never need a single
+   `dark:` variant. A screen built against `bg-surface` and `text-ink` is
+   already correct in both themes — which is the only way twelve screens stay
+   consistent as they grow.
+
+   Two things are deliberately NOT simple inversions:
+
+   1. The AI orange is LIGHTENED rather than darkened. Orange on a dark
+      surface loses contrast fast, and this hue carries the "a machine wrote
+      this" signal — it has to stay unmistakable, not tasteful.
+   2. Surfaces get lighter as they come forward (canvas → surface → sunken is
+      dark → less dark), the reverse of the light theme. Borrowing the light
+      ramp would make cards recede into the page.
+   ========================================================================== */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-canvas: #101215;
+  --color-surface: #181b1f;
+  --color-surface-muted: #1f2329;
+  --color-surface-sunken: #262b32;
+
+  --color-line: #2b3037;
+  --color-line-strong: #3d444e;
+
+  --color-ink: #e8eaed;
+  --color-ink-soft: #b9bec7;
+  --color-ink-muted: #8b939f;
+  --color-ink-faint: #6b7280;
+
+  /* Lifted so it stays legible on a dark surface. */
+  --color-primary: #5b8cf5;
+  --color-primary-hover: #7ba3f8;
+  --color-primary-deep: #3b6fd4;
+  --color-primary-tint: #1a2436;
+  --color-primary-tint-strong: #22304a;
+
+  /* Lightened on purpose — see the note above. */
+  --color-ai: #ff9d4d;
+  --color-ai-hover: #ffb570;
+  --color-ai-deep: #ffc899;
+  --color-ai-tint: #2e2013;
+  --color-ai-border: #4d3421;
+
+  --color-success: #4ade80;
+  --color-success-tint: #12251a;
+  --color-warning: #fbbf24;
+  --color-warning-tint: #2a2113;
+  --color-danger: #f87171;
+  --color-danger-tint: #2e1616;
+  --color-info: #38bdf8;
+  --color-info-tint: #10222e;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* Numeric columns must line up in dense tables — an ERP reads down a
+     column far more often than across a row. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* ==========================================================================
+   Component primitives
+   Written as real classes rather than repeated utility strings: these appear
+   on nearly every screen, and a single definition is what keeps twelve
+   screens looking like one product.
+   ========================================================================== */
+
+/* Tailwind v4 note: `@apply` accepts UTILITIES only, not other custom classes.
+   The shared button/input/chip bases are therefore declared with `@utility`,
+   which makes them applyable, and the variants build on them. Repeating the
+   base declarations instead would work too, but it drifts the moment someone
+   edits one variant and not the other five. */
+
+@utility rm-btn {
+  @apply inline-flex items-center justify-center gap-2 h-10 px-4
+         rounded-[var(--radius-control)] text-sm font-medium
+         transition-colors duration-150 whitespace-nowrap
+         disabled:opacity-50 disabled:pointer-events-none;
+}
+
+@utility rm-input {
+  @apply w-full h-10 px-3 bg-surface text-ink text-sm
+         border border-line rounded-[var(--radius-control)]
+         placeholder:text-ink-faint
+         focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none
+         disabled:bg-surface-muted disabled:text-ink-faint;
+}
+
+@utility rm-chip {
+  @apply inline-flex items-center gap-1.5 h-6 px-2.5 rounded-[4px]
+         text-xs font-medium;
+}
+
+@layer components {
+  /* ── Surfaces ──────────────────────────────────────────────────────── */
+  .rm-card {
+    @apply bg-surface border border-line rounded-[var(--radius-card)];
+  }
+
+  .rm-card-pad {
+    @apply p-6;
+  }
+
+  /* ── Buttons ───────────────────────────────────────────────────────── */
+  .rm-btn-primary {
+    @apply rm-btn bg-primary text-white hover:bg-primary-hover;
+  }
+
+  .rm-btn-secondary {
+    @apply rm-btn bg-surface text-ink border border-line hover:bg-surface-muted;
+  }
+
+  .rm-btn-ghost {
+    @apply rm-btn bg-transparent text-ink-soft hover:bg-surface-muted;
+  }
+
+  .rm-btn-danger {
+    @apply rm-btn bg-transparent text-danger hover:bg-danger-tint;
+  }
+
+  /* The AI button. Orange ONLY when the click starts a generative process. */
+  .rm-btn-ai {
+    @apply rm-btn bg-ai text-white hover:bg-ai-hover;
+  }
+
+  .rm-btn-ai-outline {
+    @apply rm-btn bg-ai-tint text-ai-deep border border-ai-border hover:bg-ai-border;
+  }
+
+  /* ── Forms ─────────────────────────────────────────────────────────── */
+  .rm-label {
+    @apply block text-[12px] font-semibold tracking-[0.05em] uppercase
+           text-ink-muted mb-1.5;
+  }
+
+  .rm-textarea {
+    @apply rm-input h-auto py-2.5 leading-6 resize-y;
+  }
+
+  .rm-help {
+    @apply mt-1.5 text-xs text-ink-muted;
+  }
+
+  /* A field the AI filled in. The marker itself is positioned by the
+     component; this just tints the control so it reads as suggested. */
+  .rm-input-ai {
+    @apply rm-input border-ai-border pr-9;
+  }
+
+  /* A field the AI is FORBIDDEN from filling — HR's decision alone.
+     Dashed, never red: this is an invitation, not a validation error. */
+  .rm-input-human {
+    @apply w-full h-10 px-3 bg-surface-muted/60 text-ink text-sm
+           border border-dashed border-line-strong rounded-[var(--radius-control)]
+           placeholder:text-ink-muted
+           focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none;
+  }
+
+  /* ── Chips and badges ──────────────────────────────────────────────── */
+  .rm-chip-blue {
+    @apply rm-chip bg-primary-tint text-primary;
+  }
+
+  .rm-chip-ai {
+    @apply rm-chip bg-ai-tint text-ai-deep;
+  }
+
+  .rm-chip-success {
+    @apply rm-chip bg-success-tint text-success;
+  }
+
+  .rm-chip-warning {
+    @apply rm-chip bg-warning-tint text-warning;
+  }
+
+  .rm-chip-danger {
+    @apply rm-chip bg-danger-tint text-danger;
+  }
+
+  .rm-chip-neutral {
+    @apply rm-chip bg-surface-sunken text-ink-soft;
+  }
+
+  /* ── Tables — 40px rows, dividers not stripes ──────────────────────── */
+  .rm-table {
+    @apply w-full text-sm text-left;
+  }
+
+  .rm-table thead th {
+    @apply h-10 px-4 text-[12px] font-semibold uppercase tracking-[0.05em]
+           text-ink-muted bg-surface-muted/60 border-b border-line;
+  }
+
+  .rm-table tbody td {
+    @apply h-10 px-4 border-b border-line align-middle;
+  }
+
+  .rm-table tbody tr {
+    @apply hover:bg-primary-tint/40 transition-colors;
+  }
+
+  /* ── Section heading ───────────────────────────────────────────────── */
+  .rm-section-title {
+    @apply text-[20px] font-semibold leading-7 text-ink;
+  }
+
+  .rm-page-title {
+    @apply text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink;
+  }
+}
+
+@layer utilities {
+  /* Marks a whole container as AI territory — used by the draft banner and
+     the AI insight panels. */
+  .rm-ai-surface {
+    background-color: var(--color-ai-tint);
+    border-left: 3px solid var(--color-ai);
+  }
+
+  .rm-scroll-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .rm-scroll-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border-radius: 9999px;
+  }
+}

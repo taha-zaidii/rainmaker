@@ -19,11 +19,19 @@ namespace Digi.Recruitment.Module.Tests.Multinet
     {
         private const string ValidPdfHeader = "%PDF-1.7\n";
 
+        /// <summary>
+        /// The on-box form of the base URL, which — like the production one —
+        /// already carries the API version. The client appends bare feature
+        /// paths to it; anything that re-adds "api/v1" would double-prefix and
+        /// 404, which is what the path assertions below exist to catch.
+        /// </summary>
+        private const string OnBoxBase = "http://127.0.0.1:8020/api/v1";
+
         private static MultinetAiOptions Options(Action<MultinetAiOptions>? tweak = null)
         {
             var options = new MultinetAiOptions
             {
-                BaseUrl = "http://127.0.0.1:8000",
+                BaseUrl = OnBoxBase,
                 ApiKey = "test-key-not-a-real-secret",
                 TimeoutSeconds = 180,
                 MaxRetries = 2,
@@ -40,7 +48,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             var handler = new StubHttpMessageHandler();
             var http = new HttpClient(handler)
             {
-                BaseAddress = new Uri("http://127.0.0.1:8000/")
+                BaseAddress = new Uri(OnBoxBase + "/")
             };
 
             var client = new MultinetAiClient(

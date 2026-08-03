@@ -21,7 +21,49 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         /// <summary>True when this client talks to a real service rather than serving canned data.</summary>
         bool IsStub { get; }
 
-        /// <summary>GET /health — liveness only. Open endpoint, no key needed.</summary>
+        /// <summary>
+        /// GET auth/verify — validates the API key and reports what it may do.
+        ///
+        /// This is the ONLY reachability probe that works in production: the ops
+        /// endpoints below are 404 at the nginx edge. It costs zero GPU and
+        /// returns in milliseconds, so it is safe on every settings save.
+        ///
+        /// A wrong key surfaces as an <see cref="AiErrorCode.Unauthorized"/>
+        /// failure, never as an unreachable service — callers must be able to
+        /// tell a recruiter which of the two went wrong.
+        /// </summary>
+        /// <param name="baseUriOverride">
+        /// Per-company base URL from Tbl_Ruc_RecruitmentAI_Settings. The portal is
+        /// multi-tenant and stores an endpoint per company, so the configured
+        /// <see cref="MultinetAiOptions.BaseUrl"/> is only the fallback. Resolve
+        /// it with <see cref="MultinetAiEndpoints.ResolveBaseUrl"/> first.
+        /// </param>
+        Task<AiResult<KeyVerification>> VerifyKeyAsync(
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// POST recruitment/jobreq/generate — the "Generate Job Description with
+        /// AI" button. Returns a draft that maps 1:1 onto the 4-step requisition
+        /// wizard, pre-filled and fully editable by the HR user.
+        ///
+        /// Takes ~13 s warm and up to ~35 s cold, so the UI needs a spinner that
+        /// tolerates the wait. An identical repeat is served from the service's
+        /// deterministic cache in milliseconds.
+        ///
+        /// The result is ADVISORY. It always carries
+        /// <see cref="JobRequisitionResult.ReviewRequired"/>, its status is always
+        /// Draft, and several fields are null by design because they belong to a
+        /// human — see <see cref="NullByDesignFields"/>. Never auto-commit it.
+        /// </summary>
+        Task<AiResult<JobRequisitionResult>> GenerateJobRequisitionAsync(
+            JobRequisitionRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>GET /health — liveness only. On-box only; 404 at the edge.</summary>
         Task<AiResult<ServiceHealth>> GetHealthAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -43,6 +85,20 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             Stream content,
             string fileName,
             string? apiKey = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// POST /api/v1/parser/extract-url — URL-based resume parsing.
+        /// The portal sends the URL of a resume already stored in file storage.
+        /// </summary>
+        Task<AiResult<ParseResumeResult>> ExtractResumeByUrlAsync(
+            string documentUrl,
+            string? candidateId = null,
+            string? applicationId = null,
+            string? requisitionId = null,
+            string? companyId = null,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
             CancellationToken cancellationToken = default);
 
         /// <summary>GET /api/v1/candidates — the corpus the AI service itself holds.</summary>

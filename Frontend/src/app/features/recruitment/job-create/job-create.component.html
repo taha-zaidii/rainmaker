@@ -1,0 +1,660 @@
+<!-- ══ AI draft banner — spans the workspace, above everything ═══════════════
+     Orange, because it is the machine speaking. Persistent until dismissed:
+     a person must not be able to forget they are editing generated text. -->
+@if (stage() === 'wizard' && draft() && !bannerDismissed()) {
+  <div class="rm-ai-surface flex items-center gap-3 px-6 py-3.5">
+    <rm-icon name="sparkles" [size]="18" class="text-ai shrink-0" />
+    <p class="text-sm text-ai-deep flex-1">
+      <strong class="font-semibold">AI-generated draft</strong> — please review before
+      saving. Every field is editable.
+    </p>
+    <button class="rm-btn-ai-outline !h-9" (click)="regenerate()">
+      <rm-icon name="refresh" [size]="15" /> Regenerate
+    </button>
+    <button
+      class="p-2 rounded-lg text-ai-deep/70 hover:bg-ai-border transition-colors"
+      (click)="bannerDismissed.set(true)"
+      aria-label="Dismiss"
+    >
+      <rm-icon name="x" [size]="16" />
+    </button>
+  </div>
+}
+
+<div class="max-w-[1180px] mx-auto px-6 py-6">
+  <div class="mb-6">
+    <h1 class="rm-page-title">Create Job Requisition</h1>
+    <p class="mt-1 text-sm text-ink-muted">
+      Create a new job posting with AI assistance or manually.
+    </p>
+  </div>
+
+  <!-- ══ Stage 1 — creation mode ════════════════════════════════════════ -->
+  @if (stage() === 'mode') {
+    <div class="rm-card rm-card-pad mb-6 flex items-center gap-3">
+      <span class="rm-chip-neutral">New Joining</span>
+      <span class="text-sm text-ink-muted">Create a new headcount / fresh position</span>
+      <div class="flex-1"></div>
+      <button class="rm-btn-ghost !h-8">Change</button>
+    </div>
+
+    <p class="rm-label mb-3">Creation Mode</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <button class="rm-card p-6 text-left hover:border-primary transition-colors group" (click)="startManual()">
+        <div
+          class="w-11 h-11 rounded-lg bg-primary-tint text-primary grid place-items-center mb-4"
+        >
+          <rm-icon name="pencil" [size]="20" />
+        </div>
+        <div class="text-[17px] font-semibold text-ink">Manual Creation</div>
+        <p class="mt-1.5 text-sm text-ink-muted leading-5">
+          Fill in every field yourself. Nothing is pre-filled.
+        </p>
+        <span class="rm-btn-secondary mt-5 !h-9">Start</span>
+      </button>
+
+      <button
+        class="rm-card p-6 text-left border-ai-border hover:border-ai transition-colors relative"
+        (click)="startAi()"
+      >
+        <span class="rm-chip-ai absolute top-5 right-5 font-semibold">Recommended</span>
+        <div class="w-11 h-11 rounded-lg bg-ai-tint text-ai grid place-items-center mb-4">
+          <rm-icon name="sparkles" [size]="20" />
+        </div>
+        <div class="text-[17px] font-semibold text-ink">AI-Assisted Creation</div>
+        <p class="mt-1.5 text-sm text-ink-muted leading-5">
+          Answer five questions and the AI drafts the full requisition for you to review.
+        </p>
+        <span class="rm-btn-ai mt-5 !h-9">
+          <rm-icon name="sparkles" [size]="15" /> Start with AI
+        </span>
+      </button>
+    </div>
+  }
+
+  <!-- ══ Stage 2 — AI generator form ════════════════════════════════════ -->
+  @if (stage() === 'ai-form') {
+    @if (error(); as err) {
+      <div class="rm-card border-l-4 border-l-danger p-5 mb-5 flex gap-3">
+        <rm-icon name="x-circle" [size]="18" class="text-danger shrink-0 mt-0.5" />
+        <div>
+          <div class="text-sm font-semibold text-danger">Generation failed</div>
+          <p class="mt-1 text-sm text-ink-soft">{{ err }}</p>
+        </div>
+      </div>
+    }
+
+    <section class="rm-card border-l-[3px] border-l-ai overflow-hidden">
+      <div class="rm-card-pad">
+        <div class="flex items-center gap-2">
+          <rm-icon name="sparkles" [size]="18" class="text-ai" />
+          <h2 class="rm-section-title">AI Job Description Generator</h2>
+        </div>
+        <p class="mt-1.5 text-sm text-ink-muted">
+          Fill in the fields below and the AI will draft a complete job requisition for you
+          to review and edit.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-5 mt-6">
+          <div>
+            <label class="rm-label" for="jt">Job Title <span class="text-danger">*</span></label>
+            <input
+              id="jt"
+              class="rm-input"
+              placeholder="e.g. Senior Software Engineer"
+              [value]="jobTitle()"
+              (input)="jobTitle.set($any($event.target).value)"
+            />
+            <p class="rm-help">The only field the AI actually needs.</p>
+          </div>
+
+          <div>
+            <label class="rm-label" for="dept">Department</label>
+            <select
+              id="dept"
+              class="rm-input"
+              [ngModel]="department()"
+              (ngModelChange)="department.set($event)"
+              name="dept"
+            >
+              <option value="">Select department…</option>
+              @for (d of departments; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="rm-label" for="desig">Designation</label>
+            <select
+              id="desig"
+              class="rm-input"
+              [ngModel]="designation()"
+              (ngModelChange)="designation.set($event)"
+              name="desig"
+            >
+              <option value="">Select designation…</option>
+              @for (d of designations; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="rm-label" for="exp">Experience Required</label>
+            <input
+              id="exp"
+              class="rm-input"
+              placeholder="e.g. 3 - 6 years"
+              [value]="experience()"
+              (input)="experience.set($any($event.target).value)"
+            />
+            <p class="rm-help">
+              Free text — "3-5 years", "5+", "Fresh" all parse. Give a number and the AI
+              will not contradict it.
+            </p>
+          </div>
+
+          <div class="lg:col-span-2">
+            <label class="rm-label" for="skills">Key Skills</label>
+            <textarea
+              id="skills"
+              rows="2"
+              class="rm-textarea"
+              placeholder="e.g. JavaScript, Python, .NET, Angular, C#"
+              [value]="keySkills()"
+              (input)="keySkills.set($any($event.target).value)"
+            ></textarea>
+            <p class="rm-help">
+              Type it however you like — the service strips filler words and keeps compound
+              names such as .NET, C# and Node.js intact.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="mt-6 flex gap-3 rounded-[var(--radius-card)] bg-warning-tint border border-warning/25 p-4 text-[13px] text-ink-soft"
+        >
+          <rm-icon name="info" [size]="16" class="text-warning shrink-0 mt-0.5" />
+          <span>
+            Generation takes about 15–30 seconds — the model runs on Multinet's own GPU and
+            processes one request at a time. You can edit everything afterwards.
+          </span>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-surface-muted/50 border-t border-line flex items-center gap-3">
+        <button class="rm-btn-ai" (click)="generate()" [disabled]="!canGenerate()">
+          <rm-icon name="sparkles" [size]="16" /> Generate Job Description with AI
+        </button>
+        <button class="rm-btn-ghost" (click)="startManual()">Switch to manual</button>
+      </div>
+    </section>
+  }
+
+  <!-- ══ Stage 3 — generating ═══════════════════════════════════════════ -->
+  @if (stage() === 'generating') {
+    <section class="rm-card p-12 text-center">
+      <div class="w-16 h-16 mx-auto rounded-full bg-ai-tint grid place-items-center">
+        <rm-icon name="sparkles" [size]="28" class="text-ai animate-pulse" />
+      </div>
+
+      <h2 class="mt-5 text-[20px] font-semibold text-ink">Drafting your job requisition…</h2>
+      <p class="mt-1.5 text-sm text-ink-muted">This usually takes 15–30 seconds.</p>
+
+      <div class="mt-8 flex items-center justify-center gap-2 max-w-[560px] mx-auto">
+        @for (label of ['Understanding the role', 'Writing the description', 'Preparing your draft']; track label; let i = $index) {
+          <div class="flex-1 flex flex-col items-center gap-2">
+            <div class="w-full h-1 rounded-full" [class.bg-ai]="i <= phase()" [class.bg-line]="i > phase()"></div>
+            <span
+              class="text-[11px] text-center leading-tight"
+              [class.text-ai-deep]="i <= phase()"
+              [class.font-medium]="i === phase()"
+              [class.text-ink-faint]="i > phase()"
+            >
+              {{ label }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <p class="mt-6 text-2xl font-semibold text-ink tabular">{{ elapsedLabel() }}</p>
+      <p class="mt-1 text-xs text-ink-muted">elapsed</p>
+    </section>
+  }
+
+  <!-- ══ Stage 4 — the 4-step wizard ════════════════════════════════════ -->
+  @if (stage() === 'wizard') {
+    <!-- Stepper -->
+    <div class="flex items-center mb-6">
+      @for (s of ['Basic Info', 'Requirements', 'Compensation', 'Publishing']; track s; let i = $index) {
+        <button class="flex flex-col items-center gap-2 shrink-0" (click)="goToStep(i + 1)">
+          <span
+            class="w-9 h-9 rounded-full grid place-items-center text-sm font-semibold transition-colors"
+            [class.bg-primary]="step() === i + 1"
+            [class.text-white]="step() === i + 1"
+            [class.bg-surface-sunken]="step() !== i + 1"
+            [class.text-ink-muted]="step() !== i + 1"
+          >
+            {{ i + 1 }}
+          </span>
+          <span
+            class="text-[13px]"
+            [class.text-primary]="step() === i + 1"
+            [class.font-medium]="step() === i + 1"
+            [class.text-ink-muted]="step() !== i + 1"
+            >{{ s }}</span
+          >
+        </button>
+        @if (i < 3) {
+          <div class="flex-1 h-px bg-line mx-3 mb-6"></div>
+        }
+      }
+    </div>
+
+    <!-- ─────────── Step 1: Basic Information ─────────── -->
+    @if (step() === 1) {
+      <section class="rm-card">
+        <div class="px-6 py-4 border-b border-line">
+          <h2 class="rm-section-title">Basic Information</h2>
+        </div>
+        <div class="rm-card-pad grid grid-cols-1 lg:grid-cols-3 gap-x-6 gap-y-5">
+          <div class="lg:col-span-2">
+            <label class="rm-label">Job Title</label>
+            <div class="relative">
+              <input
+                [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                [value]="draft()?.basicInfo?.jobTitle ?? ''"
+                (input)="patchBasic('jobTitle', $any($event.target).value)"
+              />
+              @if (draft()) {
+                <rm-icon name="sparkles" [size]="15" class="absolute right-3 top-1/2 -translate-y-1/2 text-ai" />
+              }
+            </div>
+          </div>
+
+          <div>
+            <label class="rm-label">Vacancies</label>
+            <div class="relative">
+              <input
+                type="number"
+                [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                [value]="draft()?.basicInfo?.vacancies ?? 1"
+                (input)="patchBasic('vacancies', +$any($event.target).value)"
+              />
+              @if (draft()) {
+                <rm-icon name="sparkles" [size]="15" class="absolute right-3 top-1/2 -translate-y-1/2 text-ai" />
+              }
+            </div>
+            <p class="rm-help">A starting value — change it freely.</p>
+          </div>
+
+          <div class="lg:col-span-3">
+            <label class="rm-label">Job Summary</label>
+            <div class="relative">
+              <textarea
+                rows="4"
+                [class]="draft() ? 'rm-textarea border-ai-border pr-9' : 'rm-textarea'"
+                [value]="draft()?.basicInfo?.jobSummary ?? ''"
+                (input)="patchBasic('jobSummary', $any($event.target).value)"
+              ></textarea>
+              @if (draft()) {
+                <rm-icon name="sparkles" [size]="15" class="absolute right-3 top-3 text-ai" />
+              }
+            </div>
+          </div>
+
+          <div>
+            <label class="rm-label">Department</label>
+            <select
+              [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+              [ngModel]="draft()?.basicInfo?.department ?? ''"
+              (ngModelChange)="patchBasic('department', $event)"
+              name="wDept"
+            >
+              <option value="">Select department…</option>
+              @for (d of departments; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="rm-label">Designation</label>
+            <select
+              [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+              [ngModel]="draft()?.basicInfo?.designation ?? ''"
+              (ngModelChange)="patchBasic('designation', $event)"
+              name="wDesig"
+            >
+              <option value="">Select designation…</option>
+              @for (d of designations; track d) {
+                <option [value]="d">{{ d }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="rm-label">Job Category</label>
+            <select
+              [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+              [ngModel]="draft()?.basicInfo?.jobCategory ?? ''"
+              (ngModelChange)="patchBasic('jobCategory', $event)"
+              name="wCat"
+            >
+              <option value="">Select category…</option>
+              @for (c of jobCategoryOptions; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+            @if (meta()?.jobCategorySource === 'selected_from_options') {
+              <p class="rm-help text-ai-deep">Chosen from your configured categories.</p>
+            }
+          </div>
+
+          <!-- ═══ Null by design ═══════════════════════════════════════════
+               These two are EMPTY on purpose. The AI is not permitted to
+               decide them. Dashed, muted, with an invitation — never styled
+               as a validation error, because nothing has gone wrong. -->
+          <div class="lg:col-span-3 pt-5 border-t border-dashed border-line">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <label class="rm-label">Employment Type</label>
+                <select
+                  class="rm-input-human"
+                  [ngModel]="draft()?.basicInfo?.employmentType ?? ''"
+                  (ngModelChange)="patchBasic('employmentType', $event)"
+                  name="wEmp"
+                >
+                  <option value="">Select employment type…</option>
+                  @for (t of employmentTypes; track t) {
+                    <option [value]="t">{{ t }}</option>
+                  }
+                </select>
+                <p class="rm-help italic">For you to complete — the AI does not decide this.</p>
+              </div>
+
+              <div>
+                <label class="rm-label">Grade</label>
+                <select
+                  class="rm-input-human"
+                  [ngModel]="draft()?.basicInfo?.grade ?? ''"
+                  (ngModelChange)="patchBasic('grade', $event)"
+                  name="wGrade"
+                >
+                  <option value="">Select grade…</option>
+                  @for (g of grades; track g) {
+                    <option [value]="g">{{ g }}</option>
+                  }
+                </select>
+                <p class="rm-help italic">For you to complete — the AI does not decide this.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (meta()?.fieldsForHumanToComplete?.length) {
+          <div
+            class="px-6 py-3.5 bg-surface-muted/60 border-t border-line flex items-center gap-2.5 text-[13px] text-ink-soft"
+          >
+            <rm-icon name="info" [size]="16" class="text-ink-muted" />
+            <span>
+              <strong class="font-medium">{{ meta()!.fieldsForHumanToComplete.length }} fields</strong>
+              left for you to complete —
+              {{ meta()!.fieldsForHumanToComplete.join(', ') }}
+            </span>
+          </div>
+        }
+      </section>
+    }
+
+    <!-- ─────────── Step 2: Requirements ─────────── -->
+    @if (step() === 2) {
+      <section class="rm-card">
+        <div class="px-6 py-4 border-b border-line">
+          <h2 class="rm-section-title">Requirements</h2>
+        </div>
+        <div class="rm-card-pad space-y-6">
+          <div>
+            <label class="rm-label">Experience Required (years)</label>
+            <div class="flex items-center gap-3 max-w-md">
+              <input
+                type="number"
+                [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                placeholder="Min"
+                [value]="draft()?.requirements?.experienceYears?.minimum ?? ''"
+                (input)="patchExperienceYears('minimum', +$any($event.target).value)"
+              />
+              <span class="text-ink-muted">to</span>
+              <input
+                type="number"
+                [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                placeholder="Max"
+                [value]="draft()?.requirements?.experienceYears?.maximum ?? ''"
+                (input)="patchExperienceYears('maximum', +$any($event.target).value)"
+              />
+            </div>
+            @if (meta()?.experienceSource === 'parsed_from_request') {
+              <p class="rm-help text-ai-deep flex items-center gap-1.5">
+                <rm-icon name="sparkles" [size]="13" /> Taken from what you entered — the AI
+                does not override a number a person typed.
+              </p>
+            }
+          </div>
+
+          @for (group of listGroups; track group.key) {
+            <div>
+              <label class="rm-label">{{ group.label }}</label>
+              <div class="space-y-2">
+                @for (item of draft()?.requirements?.[group.key] ?? []; track $index) {
+                  <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                      <input
+                        [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                        [value]="item"
+                        (input)="patchList(group.key, $index, $any($event.target).value)"
+                      />
+                      @if (draft()) {
+                        <rm-icon name="sparkles" [size]="14" class="absolute right-3 top-1/2 -translate-y-1/2 text-ai" />
+                      }
+                    </div>
+                    <button
+                      class="p-2 rounded-lg text-ink-muted hover:text-danger hover:bg-danger-tint transition-colors"
+                      (click)="removeListItem(group.key, $index)"
+                      aria-label="Remove"
+                    >
+                      <rm-icon name="x" [size]="16" />
+                    </button>
+                  </div>
+                }
+              </div>
+              <button class="rm-btn-ghost mt-2 !h-8 !px-2 text-primary" (click)="addListItem(group.key)">
+                <rm-icon name="plus-circle" [size]="15" /> Add {{ group.label.toLowerCase() }}
+              </button>
+            </div>
+          }
+
+          <div>
+            <label class="rm-label">Skills</label>
+            <div class="flex flex-wrap gap-2">
+              @for (skill of draft()?.requirements?.skills ?? []; track $index) {
+                <span class="rm-chip-blue !h-8 !px-3">
+                  {{ skill }}
+                  <button
+                    class="ml-0.5 hover:text-danger"
+                    (click)="removeListItem('skills', $index)"
+                    aria-label="Remove skill"
+                  >
+                    <rm-icon name="x" [size]="13" />
+                  </button>
+                </span>
+              }
+              <button class="rm-chip-neutral !h-8 !px-3 hover:bg-line" (click)="addListItem('skills')">
+                <rm-icon name="plus-circle" [size]="14" /> Add skill
+              </button>
+            </div>
+            @if (draft()) {
+              <p class="rm-help text-ai-deep flex items-center gap-1.5">
+                <rm-icon name="sparkles" [size]="13" /> Normalised by the AI from what you typed.
+              </p>
+            }
+          </div>
+
+          <!-- There is deliberately NO age field on this screen, and there
+               never will be. Age is a protected attribute; an AI proposing an
+               age band in a job advert is discriminatory and indefensible
+               under the EU AI Act's high-risk hiring rules. The service
+               refuses to produce one and the client discards it if it ever
+               arrives — do not "helpfully" add an input here. -->
+        </div>
+      </section>
+    }
+
+    <!-- ─────────── Step 3: Compensation ─────────── -->
+    @if (step() === 3) {
+      <section class="rm-card">
+        <div class="px-6 py-4 border-b border-line">
+          <h2 class="rm-section-title">Compensation</h2>
+        </div>
+        <div class="rm-card-pad grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-5">
+          <div>
+            <label class="rm-label">Location</label>
+            <div class="relative">
+              <input
+                [class]="draft() ? 'rm-input-ai' : 'rm-input'"
+                [value]="draft()?.compensation?.location ?? ''"
+                (input)="patchCompensation('location', $any($event.target).value)"
+              />
+              @if (draft()) {
+                <rm-icon name="sparkles" [size]="15" class="absolute right-3 top-1/2 -translate-y-1/2 text-ai" />
+              }
+            </div>
+            @if (meta()?.workMode) {
+              <p class="rm-help text-ai-deep">Work mode inferred as {{ meta()!.workMode }}.</p>
+            }
+          </div>
+
+          <div>
+            <label class="rm-label">Budget Type</label>
+            <input
+              class="rm-input-human"
+              placeholder="For you to complete…"
+              [value]="draft()?.compensation?.budgetType ?? ''"
+              (input)="patchCompensation('budgetType', $any($event.target).value)"
+            />
+            <p class="rm-help italic">For you to complete — the AI does not decide this.</p>
+          </div>
+
+          <div class="lg:col-span-2">
+            <label class="rm-label">Benefits</label>
+            <textarea
+              rows="3"
+              class="rm-input-human !h-auto py-2.5 leading-6"
+              placeholder="For you to complete…"
+              [value]="draft()?.compensation?.benefits ?? ''"
+              (input)="patchCompensation('benefits', $any($event.target).value)"
+            ></textarea>
+            <p class="rm-help italic">
+              For you to complete — benefits are a company commitment, so the AI never
+              drafts them.
+            </p>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- ─────────── Step 4: Publishing ─────────── -->
+    @if (step() === 4) {
+      <section class="rm-card">
+        <div class="px-6 py-4 border-b border-line">
+          <h2 class="rm-section-title">Publishing</h2>
+        </div>
+        <div class="rm-card-pad space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <label class="rm-label">Status</label>
+              <input class="rm-input" [value]="draft()?.publishing?.status ?? 'Draft'" disabled />
+              <p class="rm-help">
+                Always starts as Draft. Publishing is a person's decision, never the AI's.
+              </p>
+            </div>
+
+            <div>
+              <label class="rm-label">Closing Date</label>
+              <input
+                type="date"
+                class="rm-input-human"
+                [value]="draft()?.publishing?.closingDate ?? ''"
+                (input)="patchPublishing('closingDate', $any($event.target).value)"
+              />
+              <p class="rm-help italic">For you to complete — the AI does not decide this.</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="rm-label">Justification</label>
+            <textarea
+              rows="3"
+              class="rm-input-human !h-auto py-2.5 leading-6"
+              placeholder="Why is this position required?"
+              [value]="draft()?.publishing?.justification ?? ''"
+              (input)="patchPublishing('justification', $any($event.target).value)"
+            ></textarea>
+            <p class="rm-help italic">
+              For you to complete — this is your business case, so the AI stays out of it.
+            </p>
+          </div>
+
+          <div
+            class="rounded-[var(--radius-card)] bg-primary-tint/60 border border-primary/15 p-4 flex gap-3"
+          >
+            <rm-icon name="info" [size]="16" class="text-primary shrink-0 mt-0.5" />
+            <p class="text-[13px] text-ink-soft">
+              Saving creates the requisition as a <strong>Draft</strong>. It will not appear
+              on the public careers page until someone publishes it explicitly.
+            </p>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Wizard footer -->
+    <div class="flex items-center gap-3 mt-6">
+      <button class="rm-btn-secondary" (click)="goToStep(step() - 1)" [disabled]="step() === 1">
+        <rm-icon name="chevron-left" [size]="16" /> Back
+      </button>
+      <div class="flex-1"></div>
+      @if (step() < 4) {
+        <button class="rm-btn-primary" (click)="goToStep(step() + 1)">
+          Continue <rm-icon name="chevron-right" [size]="16" />
+        </button>
+      } @else {
+        <button class="rm-btn-primary" (click)="saveRequisition()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            Saving Requisition...
+          } @else {
+            Save & Publish Requisition
+          }
+        </button>
+      }
+    </div>
+
+    <!-- Generation provenance — quiet, but there when someone asks why a
+         call took thirty seconds. -->
+    @if (meta(); as m) {
+      <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-ink-muted">
+        <span class="flex items-center gap-1.5">
+          <rm-icon name="sparkles" [size]="13" class="text-ai" />
+          Generated in {{ m.executionTimeMs }} ms
+        </span>
+        @if (m.cacheHit !== null) {
+          <span>Cache {{ m.cacheHit ? 'hit' : 'miss' }}</span>
+        }
+        @if (m.model) {
+          <span>Model {{ m.model }}</span>
+        }
+        <span>Review required: {{ m.reviewRequired ? 'yes' : 'no' }}</span>
+      </div>
+    }
+  }
+</div>

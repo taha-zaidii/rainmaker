@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Candidate Evaluation - Rainmaker HRMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .ai-glow {
+            box-shadow: inset 0 0 12px rgba(249, 115, 22, 0.05);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#00174d",
+                        "inverse-primary": "#b5c4ff",
+                        "outline": "#737686",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "surface-container-high": "#e7e8ea",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#dce2f3",
+                        "surface-container-low": "#f3f4f6",
+                        "on-surface": "#191c1e",
+                        "primary-fixed": "#dbe1ff",
+                        "on-surface-variant": "#434654",
+                        "on-secondary-fixed": "#341100",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-secondary-container": "#5c2400",
+                        "tertiary": "#434a57",
+                        "surface-bright": "#f8f9fb",
+                        "on-secondary-fixed-variant": "#783200",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#5b626f",
+                        "outline-variant": "#c3c5d7",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e1e2e4",
+                        "on-background": "#191c1e",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#d7deee",
+                        "secondary-container": "#fd761a",
+                        "surface-container": "#edeef0",
+                        "error": "#ba1a1a",
+                        "primary": "#003fb1",
+                        "secondary": "#9d4300",
+                        "surface-tint": "#1353d8",
+                        "background": "#f8f9fb",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#1a56db",
+                        "on-tertiary-fixed": "#151c27",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-primary-container": "#d4dcff",
+                        "surface-variant": "#e1e2e4",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "inverse-surface": "#2e3132",
+                        "surface-dim": "#d9dadc",
+                        "secondary-fixed": "#ffdbca",
+                        "surface": "#f8f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-xl": "48px",
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-lg": "24px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "stack-xs": "4px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-background overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-stack-md">
+<span class="font-headline-md text-headline-md font-black text-primary">rainmaker</span>
+</div>
+<div class="flex items-center gap-stack-lg">
+<div class="flex items-center gap-stack-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">home</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">task_alt</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">dark_mode</span></button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md hover:opacity-90 active:opacity-80 transition-all">
+                Create New Requisition
+            </button>
+<div class="flex items-center gap-2 border-l border-outline-variant pl-4">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A professional studio portrait of Sumaira Butt, a South Asian female HR Executive, wearing business formal attire against a clean, neutral background. The lighting is soft and corporate-modern, reflecting a high-end enterprise software aesthetic with clear skin and sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRrZJiuDUGRKfWpHAcktZ2PKUftHmI1dEZAvpW19_3yLWLO4WZ8_QhWG48gXYrC_E45U-iXA_7lFESHoTF6hL-94th910tSDDtYZPVjKpxSk9W5xm79Np2kuCzfEQoprUa46REOmO3oaOGuwHwjaBA_lHccW6ZUeOQnEJXjINHIi2sjhcksEp0rJGLyVfrwX_4wzBRRHYbr_D0arXvl0JVChbItKq7Ei42i2KzI8jLCmt79EsyW4NE"/>
+<span class="font-label-md text-label-md font-semibold text-on-surface">Sumaira Butt</span>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Primary) -->
+<nav class="fixed left-0 top-0 h-full z-50 flex flex-col items-center py-4 bg-primary w-[88px] pt-[64px]">
+<div class="flex flex-col gap-4 w-full items-center">
+<!-- Recruitment is active -->
+<button class="flex flex-col items-center justify-center w-14 h-14 rounded-lg bg-primary-container text-on-primary-container scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person_search</span>
+<span class="text-[10px] mt-1 font-medium">Recruitment</span>
+</button>
+<button class="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] mt-1 font-medium">Dash</span>
+</button>
+<button class="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">groups</span>
+<span class="text-[10px] mt-1 font-medium">HR</span>
+</button>
+<button class="flex flex-col items-center justify-center w-14 h-14 rounded-lg text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] mt-1 font-medium">Reports</span>
+</button>
+</div>
+</nav>
+<!-- SideNavBar (Secondary - Recruitment Management) -->
+<nav class="fixed left-[88px] top-0 h-full z-40 flex flex-col py-topbar-height bg-surface border-r border-outline-variant w-[240px] pt-[64px]">
+<div class="px-6 py-6 border-b border-outline-variant mb-4">
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Recruitment</h2>
+<p class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Management</p>
+</div>
+<div class="flex flex-col px-3 gap-1">
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="font-label-md text-label-md">Create Requisition</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span class="font-label-md text-label-md">Job Requisitions</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md text-label-md">Applications</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg bg-surface-container-high text-primary font-bold transition-all">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+<span class="font-label-md text-label-md">Candidate Evaluation</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md text-label-md">Interview Scheduling</span>
+</button>
+<button class="flex items-center gap-3 px-3 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-md text-label-md">Recruitment Settings</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-[328px] mt-[64px] p-container-margin h-[calc(100vh-64px)] overflow-y-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<nav class="flex text-label-sm font-label-sm text-on-surface-variant gap-2 mb-2">
+<span class="hover:text-primary cursor-pointer">Recruitment</span>
+<span>/</span>
+<span class="text-primary font-bold">Evaluation</span>
+</nav>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Candidate Evaluation</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Review AI-suggested metrics alongside panel feedback.</p>
+</div>
+<button class="flex items-center gap-2 border border-outline-variant px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                Download Summary
+            </button>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Header Card: Candidate Bio -->
+<div class="col-span-12 bg-white border border-outline-variant rounded-lg p-6 flex flex-wrap items-center justify-between gap-6">
+<div class="flex items-center gap-stack-lg">
+<div class="w-16 h-16 bg-primary-container rounded-full flex items-center justify-center text-on-primary-container font-bold text-headline-md">
+                        AK
+                    </div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Ayesha Khan</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="bg-surface-container-high px-2 py-0.5 rounded text-label-sm font-label-sm text-on-surface-variant">Senior .NET Developer</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span class="text-label-md font-label-md text-primary">Technical Round 1</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-on-surface-variant">Panel Members</span>
+<div class="flex -space-x-2">
+<div class="group relative">
+<img class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer hover:z-10 transition-transform hover:scale-110" data-alt="A close-up professional headshot of Ahmed Ali, an experienced software engineer with a beard, smiling warmly. The image has high-key lighting, soft shadows, and a clean professional background typical of corporate HR software." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBt0Uq8DB3HknlB2AhXmvz8hT5KsU6AA0U_iK_a7nOatA1a50aj8DYhG3oUYnhFqOzHF0jAor6A38MdHfzcTJmjsLtLWDfrgbnRMpKYCSqM2_rkQ1zEMxKZddQhf7tP2OblAPle-a-l1UnOThuQztpKLcNDO6zgTFjWtCWNjQTF2w_1z8AAfs7mUAbKjmnPt87h6IPJDxtnMdycCYGMeFudtGHuMaotMIyLQ086eIneQgCqE9TjYLvS"/>
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Ahmed Ali</span>
+</div>
+<div class="group relative">
+<img class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer hover:z-10 transition-transform hover:scale-110" data-alt="A portrait of Sara Khan, a tech lead in her 30s with a modern professional look. She is wearing a professional blazer against a blurred tech office background. Professional lighting, vibrant yet clean colors, matching a high-end enterprise SaaS dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHaVT0y7H--xa95SdlgcFJE1sVnTxn_LsqMxHvKNrdjOFHbN1zAJ13o2GEuZPfnZviXk7tyfNeBJ6dDsqtKoQjdO10zCSor03htoVD8lUY6LMp2XKVgALBuOgPQ2AAg8asc9K5IJRzFnkOQgzk50F4eoqBAiDB1Bf0LU0BngoP4R_QecobNAshMucpJU9ly_YcbGAITqi2GefYdTuulgFHS6ByIoZ0hZaTkn4aGz5-q0MaiE0Bl_f0"/>
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Sara Khan</span>
+</div>
+<div class="group relative">
+<img class="w-10 h-10 rounded-full border-2 border-white object-cover cursor-pointer hover:z-10 transition-transform hover:scale-110" data-alt="Headshot of John Doe, a senior architect with glasses, looking professional and approachable. Minimalist lighting, white studio background, high contrast, crisp details, suitable for a professional recruitment management tool." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3Sa0b67IjiNMi95Pe6IK8sJoEtezE87l77UF5yuknyA0NZyc1-OFUe66gPMwkek6BiEfTEnx-zboQR2kuAzDW9kA1CnnD02KctW4p3jZXEohWJRjz0VLynlyLbvVzu8ByBxW8r66Fzx0BNc0T3R1mmdnwgn-QHhabxkNB8RYA5QJO_KyDOJcCCtMrM0TsKnCvUleuMKUnTkM1Yng54VBtxSY8uZeDmrmPm0ZE3R_1tMJfk5xSFjVb"/>
+<span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">John Doe</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Scoring Assist Card -->
+<div class="col-span-12 lg:col-span-7 bg-white border border-secondary/20 rounded-lg overflow-hidden ai-glow">
+<div class="bg-secondary-fixed/10 px-6 py-4 border-b border-secondary/10 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-headline-sm text-headline-sm text-secondary">AI Scoring Assist</h3>
+</div>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-label-sm font-bold shadow-sm">PROVISIONAL</span>
+</div>
+<div class="bg-[#FFFBEB] px-6 py-3 flex items-start gap-3 border-b border-secondary/10">
+<span class="material-symbols-outlined text-secondary-fixed-dim mt-0.5">info</span>
+<p class="text-label-sm font-label-sm text-on-secondary-container">
+                        The scoring rubric is awaiting HR sign-off. These scores are advisory and cannot be used as the evaluation of record.
+                    </p>
+</div>
+<div class="p-6 flex flex-col md:flex-row gap-stack-xl">
+<div class="flex-1 space-y-stack-lg">
+<!-- Technical Skill -->
+<div class="group">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Technical Skill</span>
+<span class="text-secondary font-bold">8 / 10</span>
+</div>
+<div class="h-2 bg-surface-container-high rounded-full flex gap-1 overflow-hidden">
+<div class="h-full bg-secondary w-[80%] rounded-r"></div>
+</div>
+<div class="mt-2 text-label-sm text-on-surface-variant italic pl-2 border-l-2 border-secondary/30">
+                                "Strong proficiency in dependency injection and microservices architectures observed in CV."
+                            </div>
+</div>
+<!-- Relevant Experience -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Relevant Experience</span>
+<span class="text-secondary font-bold">7 / 10</span>
+</div>
+<div class="h-2 bg-surface-container-high rounded-full flex gap-1 overflow-hidden">
+<div class="h-full bg-secondary w-[70%] rounded-r"></div>
+</div>
+<div class="mt-2 text-label-sm text-on-surface-variant italic pl-2 border-l-2 border-secondary/30">
+                                "6+ years of core .NET development, though direct experience with Azure Service Bus is noted as a gap."
+                            </div>
+</div>
+<!-- Communication -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Communication</span>
+<span class="text-secondary font-bold">6 / 10</span>
+</div>
+<div class="h-2 bg-surface-container-high rounded-full flex gap-1 overflow-hidden">
+<div class="h-full bg-secondary w-[60%] rounded-r"></div>
+</div>
+<div class="mt-2 text-label-sm text-on-surface-variant italic pl-2 border-l-2 border-secondary/30">
+                                "Clear documentation style in past projects, though interview transcripts suggest occasional technical jargon usage."
+                            </div>
+</div>
+<!-- Domain Depth -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Domain Depth</span>
+<span class="text-secondary font-bold">6 / 10</span>
+</div>
+<div class="h-2 bg-surface-container-high rounded-full flex gap-1 overflow-hidden">
+<div class="h-full bg-secondary w-[60%] rounded-r"></div>
+</div>
+<div class="mt-2 text-label-sm text-on-surface-variant italic pl-2 border-l-2 border-secondary/30">
+                                "Good understanding of ERP systems, but limited exposure to large-scale HRMS specifics."
+                            </div>
+</div>
+</div>
+<div class="w-full md:w-48 flex flex-col items-center justify-center border-l border-outline-variant/30 pl-stack-lg">
+<div class="relative w-32 h-32">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary transition-all duration-1000" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="102" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-secondary leading-none">72</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-tighter">Overall</span>
+</div>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant mt-4 text-center">Proprietary AI Score <br/> Confidence: 88%</p>
+</div>
+</div>
+</div>
+<!-- Panel Evaluation Card -->
+<div class="col-span-12 lg:col-span-5 bg-white border border-outline-variant rounded-lg flex flex-col shadow-sm">
+<div class="px-6 py-4 border-b border-outline-variant flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">groups</span>
+<h3 class="font-headline-sm text-headline-sm text-primary font-semibold">Panel Evaluation (final)</h3>
+</div>
+<form class="p-6 flex flex-col flex-1 gap-stack-lg" onsubmit="event.preventDefault(); alert('Evaluation Submitted Successfully');">
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="flex flex-col gap-1">
+<label class="text-label-sm font-label-sm text-on-surface-variant uppercase">Technical Skill</label>
+<input class="border border-outline-variant rounded p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" max="10" min="0" placeholder="0-10" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-sm font-label-sm text-on-surface-variant uppercase">Experience</label>
+<input class="border border-outline-variant rounded p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" max="10" min="0" placeholder="0-10" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-sm font-label-sm text-on-surface-variant uppercase">Communication</label>
+<input class="border border-outline-variant rounded p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" max="10" min="0" placeholder="0-10" type="number"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-sm font-label-sm text-on-surface-variant uppercase">Domain Depth</label>
+<input class="border border-outline-variant rounded p-2 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" max="10" min="0" placeholder="0-10" type="number"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-label-sm font-label-sm text-on-surface-variant uppercase">Panel Comments</label>
+<textarea class="border border-outline-variant rounded p-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all resize-none" placeholder="Enter consolidated feedback from the panel here..." rows="5"></textarea>
+</div>
+<div class="mt-auto pt-stack-md">
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-headline-sm text-headline-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-md" type="submit">
+                            Submit Evaluation
+                        </button>
+<p class="text-center text-label-sm font-body-sm text-on-surface-variant mt-2">
+                            Submitting will finalize the Technical Round 1 score.
+                        </p>
+</div>
+</form>
+</div>
+<!-- Supplemental Info Section (Bento Style) -->
+<div class="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-gutter mt-2">
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant flex items-center gap-4">
+<div class="p-3 bg-primary/10 text-primary rounded-lg">
+<span class="material-symbols-outlined">attachment</span>
+</div>
+<div>
+<p class="text-label-sm font-bold text-on-surface">resume_v4_ayesha.pdf</p>
+<p class="text-body-sm text-on-surface-variant">Verified by AI Parsing</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant flex items-center gap-4">
+<div class="p-3 bg-primary/10 text-primary rounded-lg">
+<span class="material-symbols-outlined">video_chat</span>
+</div>
+<div>
+<p class="text-label-sm font-bold text-on-surface">Interview Transcript</p>
+<p class="text-body-sm text-on-surface-variant">32 min duration • Analyzed</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant flex items-center gap-4">
+<div class="p-3 bg-primary/10 text-primary rounded-lg">
+<span class="material-symbols-outlined">code</span>
+</div>
+<div>
+<p class="text-label-sm font-bold text-on-surface">Coding Assessment</p>
+<p class="text-body-sm text-on-surface-variant">Score: 92/100 • Completed</p>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-stack-xl py-6 border-t border-outline-variant flex justify-between items-center text-label-sm text-on-surface-variant">
+<p>© 2024 Rainmaker HRMS. Powered by AI Intelligence.</p>
+<div class="flex gap-4">
+<a class="hover:text-primary" href="#">Compliance Standards</a>
+<a class="hover:text-primary" href="#">Data Protection</a>
+</div>
+</footer>
+</main>
+<script>
+        // Simple micro-interaction for input highlighting
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value > 10) e.target.value = 10;
+                if (e.target.value < 0) e.target.value = 0;
+            });
+        });
+    </script>
+</body></html>

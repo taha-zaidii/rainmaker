@@ -30,6 +30,141 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
         public bool IsStub => true;
 
+        /// <summary>
+        /// Always valid, and advertises the full capability set so the settings
+        /// page's feature toggles are all reachable offline. The service name
+        /// carries "(STUB)" so nobody mistakes a stubbed green tick for proof
+        /// that a real key works.
+        /// </summary>
+        public Task<AiResult<KeyVerification>> VerifyKeyAsync(
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(AiResult<KeyVerification>.Ok(new KeyVerification
+            {
+                Valid = true,
+                Service = "hrms-ai-service (STUB)",
+                ServiceVersion = "1.1.0",
+                SchemaVersion = ProfileSchemaVersions.Supported,
+                Capabilities = new List<string>
+                {
+                    MultinetAiEndpoints.Capabilities.ParserExtract,
+                    MultinetAiEndpoints.Capabilities.JobRequisitionGenerate,
+                    MultinetAiEndpoints.Capabilities.ScreeningScreen,
+                    MultinetAiEndpoints.Capabilities.InterviewQuestions,
+                    MultinetAiEndpoints.Capabilities.MatchingRank,
+                    MultinetAiEndpoints.Capabilities.ScoringScore
+                }
+            }));
+
+        /// <summary>
+        /// A canned requisition draft shaped exactly like the real one — including
+        /// every null-by-design field left null. That is the point: if the wizard
+        /// is only ever built against a fully-populated response, the empty-state
+        /// handling for those fields never gets written, and the gap only shows up
+        /// in production where those fields are ALWAYS empty.
+        /// </summary>
+        public async Task<AiResult<JobRequisitionResult>> GenerateJobRequisitionAsync(
+            JobRequisitionRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null || string.IsNullOrWhiteSpace(request.JobTitle))
+            {
+                return AiResult<JobRequisitionResult>.Fail(
+                    AiErrorCode.BadRequest,
+                    "A job title is required before a job description can be generated.");
+            }
+
+            // Generation is the slowest thing the portal does — ~13 s warm, ~35 s
+            // cold. A spinner only tested against an instant stub looks broken the
+            // first time it meets the real service.
+            if (_options.StubLatencySeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(_options.StubLatencySeconds), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            _logger.LogInformation(
+                "STUB job requisition generated for '{JobTitle}'. No call left this process and no GPU was used.",
+                request.JobTitle);
+
+            return AiResult<JobRequisitionResult>.Ok(new JobRequisitionResult
+            {
+                Status = "success",
+                ExecutionTimeMs = 13_402,
+                CompanyId = request.CompanyId,
+                ReviewRequired = true,
+                Data = new JobRequisitionData
+                {
+                    BasicInfo = new JobRequisitionBasicInfo
+                    {
+                        // Verbatim echoes, exactly as the real service does.
+                        JobTitle = request.JobTitle,
+                        Department = request.Department,
+                        Designation = request.Designation,
+                        JobSummary =
+                            $"We are seeking a {request.JobTitle} to join our team. This summary is " +
+                            "produced by stub mode and is not a real generation.",
+                        JobCategory = request.JobCategoryOptions?.FirstOrDefault(),
+                        Vacancies = 1,
+                        EmploymentType = null,   // null by design — HR's decision
+                        Grade = null             // null by design — HR's decision
+                    },
+                    Requirements = new JobRequisitionRequirements
+                    {
+                        ExperienceYears = new JobRequisitionRange { Minimum = 3, Maximum = 6 },
+                        AgeLimits = null,        // never populated — protected attribute
+                        KeyResponsibilities = new List<string>
+                        {
+                            "Design, build and maintain services in the product area.",
+                            "Collaborate with QA and product on release readiness.",
+                            "Review peers' changes and keep the codebase healthy."
+                        },
+                        Requirements = new List<string>
+                        {
+                            "Proven delivery experience in a comparable role.",
+                            "Comfortable owning a feature from design through support."
+                        },
+                        Qualifications = new List<string>
+                        {
+                            "Bachelor's degree in Computer Science or a related field."
+                        },
+                        Skills = MultinetAiText.Clean(
+                                     request.KeySkills?.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                                 ?? new List<string> { "C#", ".NET", "Angular", "SQL Server" }
+                    },
+                    Compensation = new JobRequisitionCompensation
+                    {
+                        Location = "Karachi, Pakistan",
+                        Benefits = null,         // null by design
+                        BudgetType = null,       // null by design
+                        BudgetLineId = null      // null by design
+                    },
+                    Publishing = new JobRequisitionPublishing
+                    {
+                        Justification = null,    // null by design
+                        IsPublicJob = false,     // a human publishes
+                        Status = "Draft",        // always
+                        ClosingDate = null       // null by design
+                    }
+                },
+                Meta = new JobRequisitionMeta
+                {
+                    ServiceVersion = "1.1.0 (STUB)",
+                    CacheHit = false,
+                    ExperienceSource = string.IsNullOrWhiteSpace(request.ExperienceRequired)
+                        ? "derived_by_model"
+                        : "parsed_from_request",
+                    JobCategorySource = request.JobCategoryOptions?.Count > 0
+                        ? "selected_from_options"
+                        : "generated",
+                    WorkMode = "Hybrid"
+                }
+            });
+        }
+
         public Task<AiResult<ServiceHealth>> GetHealthAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(AiResult<ServiceHealth>.Ok(new ServiceHealth
             {
@@ -100,6 +235,36 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                 Path.GetFileName(fileName), ProfileSchemaVersions.Supported);
 
             return AiResult<ParseResumeResult>.Ok(BuildCannedResult(fileName));
+        }
+
+        public async Task<AiResult<ParseResumeResult>> ExtractResumeByUrlAsync(
+            string documentUrl,
+            string? candidateId = null,
+            string? applicationId = null,
+            string? requisitionId = null,
+            string? companyId = null,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(documentUrl))
+            {
+                return AiResult<ParseResumeResult>.Fail(
+                    AiErrorCode.BadRequest, "No document URL was supplied.");
+            }
+
+            if (_options.StubLatencySeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(_options.StubLatencySeconds), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            _logger.LogInformation(
+                "STUB parse (URL) of {Url} — returning canned ProfileSchema {Version}. " +
+                "No call left this process and no GPU was used.",
+                documentUrl, ProfileSchemaVersions.Supported);
+
+            return AiResult<ParseResumeResult>.Ok(BuildCannedResult(Path.GetFileName(documentUrl)));
         }
 
         public Task<AiResult<CandidateIndexResult>> ListCandidatesAsync(

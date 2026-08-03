@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Recruitment Settings | Rainmaker HRMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
+        .ai-glow { box-shadow: 0 0 15px rgba(249, 115, 22, 0.1); }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "tertiary-container": "#5b626f",
+                        "inverse-primary": "#b5c4ff",
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary-fixed-variant": "#783200",
+                        "secondary-fixed": "#ffdbca",
+                        "outline-variant": "#c3c5d7",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#edeef0",
+                        "outline": "#737686",
+                        "on-primary-fixed": "#00174d",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#341100",
+                        "on-tertiary-container": "#d7deee",
+                        "surface-variant": "#e1e2e4",
+                        "secondary-fixed-dim": "#ffb690",
+                        "surface-bright": "#f8f9fb",
+                        "surface-container-high": "#e7e8ea",
+                        "surface-container-low": "#f3f4f6",
+                        "tertiary-fixed": "#dce2f3",
+                        "on-primary": "#ffffff",
+                        "background": "#f8f9fb",
+                        "on-secondary-container": "#5c2400",
+                        "surface-tint": "#1353d8",
+                        "primary-container": "#1a56db",
+                        "error": "#ba1a1a",
+                        "secondary": "#9d4300",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "tertiary": "#434a57",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d9dadc",
+                        "on-surface-variant": "#434654",
+                        "surface-container-highest": "#e1e2e4",
+                        "on-primary-fixed-variant": "#003dab",
+                        "inverse-surface": "#2e3132",
+                        "primary": "#003fb1",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#151c27",
+                        "surface": "#f8f9fb",
+                        "on-background": "#191c1e",
+                        "inverse-on-surface": "#f0f1f3",
+                        "primary-fixed": "#dbe1ff",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#fd761a",
+                        "on-error": "#ffffff"
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                    spacing: { "container-margin": "24px", "stack-xl": "48px", "stack-sm": "8px", "stack-xs": "4px", "stack-md": "16px", "unit": "4px", "stack-lg": "24px", "gutter": "16px" },
+                    fontFamily: { "headline-sm": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Inter"], "label-md": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "body-md": ["Inter"], "body-lg": ["Inter"] },
+                    fontSize: {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- Left Icon Sidebar (88px) -->
+<aside class="w-[88px] bg-primary flex flex-col items-center py-stack-lg flex-shrink-0 z-50">
+<div class="mb-stack-xl">
+<span class="material-symbols-outlined text-white text-[32px]">rainy</span>
+</div>
+<nav class="flex flex-col gap-y-6 flex-1 items-center">
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined">dashboard</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-primary-container text-on-primary-container shadow-lg transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">work</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined">group</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined">payments</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined">medical_services</span>
+</button>
+</nav>
+<div class="mt-auto flex flex-col gap-y-6 items-center">
+<button class="text-white/70 hover:text-white transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="w-10 h-10 rounded-full border-2 border-white/20 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a female HR Director, cinematic lighting, corporate high-fashion aesthetic, sharp focus, vibrant yet professional color palette with corporate blue accents, minimalist office background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0sG2-Y8hKQ3NuXDpkGpPm2NAh69jnFduBPH-m_GfcWTP6GVz6BKSUNgYMGWi3b2dG2pZboY4xocwJSzGPs7xx7csh2btaNv-DDFDK5Cb_h-ln4YHVsW0bEhW9-kma2TxHq5U-RxegjrPkDGtTJY_jyy3xD1mh5qeHeLq1yv-jhFM-fONvGVG0nS6Mfxa2xVWwsoXcW9Rh1PS-j93LkyEK4WGBUOmWRPnIq9BBbq8GN3AgJvktk3j0"/>
+</button>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- Top Bar (64px) -->
+<header class="h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-stack-lg flex-shrink-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-sm text-headline-sm font-black text-primary">Rainmaker</span>
+<span class="text-outline-variant">/</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">HRMS Enterprise</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full text-body-sm focus:ring-2 focus:ring-primary" placeholder="Search enterprise data..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<!-- Secondary Navigation Column (240px) -->
+<nav class="w-[240px] bg-surface-container-lowest border-r border-outline-variant py-stack-lg px-stack-sm flex flex-col gap-1 flex-shrink-0 overflow-y-auto">
+<div class="px-3 mb-4">
+<h3 class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Recruitment</h3>
+</div>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                    Create Job Requisition
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">assignment</span>
+                    Job Requisitions
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">quick_reference_all</span>
+                    Applications Management
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                    Interview Scheduling
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+                    Candidate Evaluation
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-container text-on-primary-container font-label-md shadow-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">smart_toy</span>
+                    Recruitment Settings
+                </a>
+<div class="mt-8 px-3 mb-2">
+<button class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-secondary-container text-on-secondary-container rounded-xl font-label-md font-bold transition-transform hover:scale-[0.98] active:scale-95 shadow-lg shadow-secondary/20">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                        AI Insights
+                    </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-surface-container-low p-stack-lg custom-scrollbar">
+<div class="max-w-5xl mx-auto">
+<!-- Page Header -->
+<div class="mb-stack-lg">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-secondary text-[24px]" style="font-variation-settings: 'FILL' 1;">arrow_back_ios_new</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">AI Recruitment Settings</h1>
+</div>
+<p class="font-body-md text-on-surface-variant">Configure your AI provider and feature preferences to automate hiring workflows.</p>
+</div>
+<!-- Card 1: API Key Configuration -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden mb-8">
+<!-- Success Banner -->
+<div class="bg-[#ECFDF5] border-b border-[#A7F3D0] px-stack-lg py-3 flex items-center gap-3">
+<div class="bg-green-500 text-white rounded-full p-0.5">
+<span class="material-symbols-outlined text-[16px] font-bold">check</span>
+</div>
+<span class="text-sm font-medium text-[#065F46]">API Key Configured — your key is active and ready to use</span>
+</div>
+<div class="p-stack-lg">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">key</span>
+                                API Key Configuration
+                            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+<!-- AI Provider Dropdown -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">AI Provider</label>
+<div class="relative">
+<div class="w-full border border-outline-variant rounded-lg p-3 flex items-center justify-between bg-surface-container-lowest cursor-pointer ring-2 ring-primary">
+<div class="flex items-center gap-2">
+<span class="font-body-md">MultinetAI</span>
+<span class="bg-secondary-container/20 text-secondary px-2 py-0.5 rounded text-[10px] font-bold uppercase">In-house</span>
+</div>
+<span class="material-symbols-outlined">expand_less</span>
+</div>
+<div class="absolute top-full left-0 w-full bg-white border border-outline-variant rounded-lg mt-1 shadow-xl z-10 overflow-hidden">
+<div class="p-1">
+<button class="w-full text-left px-3 py-2 hover:bg-surface-container rounded font-body-md">OpenAI</button>
+<button class="w-full text-left px-3 py-2 hover:bg-surface-container rounded font-body-md">Anthropic</button>
+<button class="w-full text-left px-3 py-2 hover:bg-surface-container rounded font-body-md">Google AI</button>
+<button class="w-full text-left px-3 py-2 hover:bg-surface-container rounded font-body-md">Custom API</button>
+<button class="w-full text-left px-3 py-2 bg-primary-fixed text-primary font-bold rounded flex items-center justify-between">
+                                                    MultinetAI
+                                                    <span class="material-symbols-outlined text-[16px]">check</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Model Input -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Model</label>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg p-3 text-on-surface-variant cursor-not-allowed" readonly="" type="text" value="qwen3.5:27b"/>
+<p class="text-[11px] text-outline">Set by the service — not editable</p>
+</div>
+<!-- API Key Input -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">API Key</label>
+<div class="relative">
+<input class="w-full border border-outline-variant rounded-lg p-3 pr-12 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter new API key or leave blank to keep current" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline">
+<span class="material-symbols-outlined">visibility_off</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-1">
+<p class="text-[11px] text-on-surface-variant font-medium">Current key: <span class="font-mono">UALW••••••••0xIL</span></p>
+<div class="flex items-center gap-1 text-green-600">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span class="text-[11px] font-medium">Encrypted at rest. Never shared.</span>
+</div>
+</div>
+</div>
+<!-- API Endpoint -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">API Endpoint</label>
+<input class="w-full border border-outline-variant rounded-lg p-3 focus:ring-2 focus:ring-primary focus:border-primary font-mono text-body-sm" type="text" value="https://ai.rainmaker.pk/hrms/api/v1"/>
+<p class="text-[11px] text-outline">Base URL only — the backend appends the feature path.</p>
+</div>
+<!-- Max Tokens & Temp -->
+<div class="space-y-2 opacity-50">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Max Tokens &amp; Temperature</label>
+<div class="grid grid-cols-2 gap-4">
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg p-3 text-on-surface-variant cursor-not-allowed" disabled="" type="text" value="4096"/>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg p-3 text-on-surface-variant cursor-not-allowed" disabled="" type="text" value="0.7"/>
+</div>
+<p class="text-[11px] text-outline italic">Managed by the in-house service</p>
+</div>
+<!-- Auto Shortlist Threshold -->
+<div class="space-y-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Auto Shortlist Threshold</label>
+<div class="flex items-center gap-4">
+<input class="flex-1 accent-primary h-2 bg-surface-container rounded-lg appearance-none cursor-pointer" max="100" min="0" type="range" value="80"/>
+<div class="w-16 border border-outline-variant rounded-lg p-2 text-center font-bold text-primary bg-primary-fixed">80</div>
+</div>
+<p class="text-[11px] text-on-surface-variant">Candidates scoring at or above this are suggested for shortlisting</p>
+</div>
+</div>
+<!-- Action Row -->
+<div class="mt-12 flex items-center gap-4 border-t border-outline-variant pt-8">
+<button class="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-primary text-primary font-bold hover:bg-primary/5 transition-all">
+<span class="material-symbols-outlined text-[18px]">power</span>
+                                    Test Connection
+                                </button>
+<button class="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary-container transition-all shadow-md">
+                                    Save Settings
+                                </button>
+<div class="flex-1"></div>
+<button class="text-error font-bold hover:underline">
+                                    Delete Key
+                                </button>
+</div>
+</div>
+</section>
+<!-- Card 2: Connection Test Result States -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- State 1: Success -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[6px] border-l-green-500 p-5 rounded-lg shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<h4 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-tight">Connection verified</h4>
+</div>
+<p class="font-mono text-[11px] text-on-surface-variant mb-4">hrms-ai-service 1.1.0 · schema 1.2.0</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">SCREEN_PARSER</span>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">MATCH_CORE</span>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">QUERY_GEN</span>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">NOTIF_AUTO</span>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">VECTOR_STORE</span>
+<span class="px-2 py-1 bg-green-50 text-green-700 text-[9px] font-bold rounded border border-green-200">PROMPT_SAFE</span>
+</div>
+</div>
+<!-- State 2: Invalid Key -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[6px] border-l-error p-5 rounded-lg shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-error">cancel</span>
+<h4 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-tight">API key rejected</h4>
+</div>
+<p class="font-body-sm text-on-surface-variant">The AI service did not accept this key. Check the key and save again.</p>
+<button class="mt-4 text-primary font-bold text-xs hover:underline">Support Documentation</button>
+</div>
+<!-- State 3: Service Unreachable -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[6px] border-l-secondary p-5 rounded-lg shadow-sm">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-secondary">warning</span>
+<h4 class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-tight">Could not reach the AI service</h4>
+</div>
+<p class="font-body-sm text-on-surface-variant">The key was not tested because the endpoint timed out. Check your VPN or network.</p>
+<button class="mt-4 flex items-center gap-1 text-secondary font-bold text-xs uppercase tracking-widest hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+                                Retry
+                            </button>
+</div>
+</div>
+<!-- Card 3: AI Feature Settings -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-stack-lg">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-1">AI Feature Settings</h2>
+<p class="text-body-sm text-on-surface-variant">Enable or disable specific machine learning features in the recruitment lifecycle.</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-[32px] opacity-20">memory</span>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Feature Row 1 -->
+<div class="py-5 flex items-center justify-between group">
+<div class="max-w-xl">
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-1">Auto Resume Screening</h4>
+<p class="text-body-sm text-on-surface-variant">Automatically score and rank uploaded resumes against the job description using LLM analysis.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Feature Row 2 -->
+<div class="py-5 flex items-center justify-between group">
+<div class="max-w-xl">
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-1">Auto Candidate Matching</h4>
+<p class="text-body-sm text-on-surface-variant">Recommend existing candidates in the database for new job openings based on historical skill data.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Feature Row 3 -->
+<div class="py-5 flex items-center justify-between group">
+<div class="max-w-xl">
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-1">Generate Interview Questions</h4>
+<p class="text-body-sm text-on-surface-variant">Create customized behavioral and technical questions for each candidate's interview session.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Feature Row 4 -->
+<div class="py-5 flex items-center justify-between group">
+<div class="max-w-xl">
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-1">Email Notifications</h4>
+<p class="text-body-sm text-on-surface-variant">Draft personalized rejection or acceptance emails for HR review before sending.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Feature Row 5 -->
+<div class="py-5 flex items-center justify-between group">
+<div class="max-w-xl">
+<h4 class="font-label-md text-label-md text-on-surface font-bold mb-1">Auto Resume Parse</h4>
+<p class="text-body-sm text-on-surface-variant">Extract personal info, experience, and education from documents directly into profile fields.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div class="mt-8">
+<button class="px-8 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary-container transition-all">
+                                Save Feature Settings
+                            </button>
+</div>
+</section>
+</div>
+<!-- Footer for visual completion -->
+<footer class="mt-stack-xl max-w-5xl mx-auto flex items-center justify-between py-6 border-t border-outline-variant opacity-60">
+<p class="text-xs font-label-md">Rainmaker HRMS v4.8.2-enterprise</p>
+<div class="flex items-center gap-4">
+<a class="text-xs hover:underline" href="#">Privacy Policy</a>
+<a class="text-xs hover:underline" href="#">Security</a>
+<a class="text-xs hover:underline" href="#">API Docs</a>
+</div>
+</footer>
+</main>
+</div>
+</div>
+<!-- Micro-interaction script -->
+<script>
+        document.querySelectorAll('input[type="range"]').forEach(range => {
+            range.addEventListener('input', (e) => {
+                const target = e.target.nextElementSibling;
+                if (target) target.innerText = e.target.value;
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Applications Management | Rainmaker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#00174d",
+                        "tertiary": "#434a57",
+                        "secondary": "#9d4300",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-surface-variant": "#434654",
+                        "surface-bright": "#f8f9fb",
+                        "on-tertiary-container": "#d7deee",
+                        "on-background": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#dce2f3",
+                        "surface-container-highest": "#e1e2e4",
+                        "surface-container-low": "#f3f4f6",
+                        "outline": "#737686",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#edeef0",
+                        "secondary-fixed": "#ffdbca",
+                        "surface-variant": "#e1e2e4",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-dim": "#d9dadc",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "primary": "#003fb1",
+                        "surface": "#f8f9fb",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-fixed": "#151c27",
+                        "surface-container-high": "#e7e8ea",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f8f9fb",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#5b626f",
+                        "on-secondary-fixed-variant": "#783200",
+                        "tertiary-fixed-dim": "#c0c7d6",
+                        "secondary-container": "#fd761a",
+                        "secondary-fixed-dim": "#ffb690",
+                        "primary-container": "#1a56db",
+                        "on-secondary-container": "#5c2400",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#404754",
+                        "surface-tint": "#1353d8",
+                        "inverse-primary": "#b5c4ff",
+                        "on-surface": "#191c1e",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c3c5d7",
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary-fixed": "#341100",
+                        "inverse-surface": "#2e3132"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "24px",
+                        "container-margin": "24px",
+                        "stack-md": "16px",
+                        "gutter": "16px",
+                        "unit": "4px",
+                        "stack-xs": "4px",
+                        "stack-xl": "48px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .ai-glow {
+            box-shadow: inset 0 0 8px rgba(249, 115, 22, 0.2), 0 0 12px rgba(249, 115, 22, 0.1);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c3c5d7; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Primary SideNav (88px) -->
+<nav class="fixed left-0 top-0 h-full w-[88px] z-50 flex flex-col items-center py-4 bg-primary transition-transform">
+<div class="mb-8 font-display-lg text-on-primary font-black scale-75">R</div>
+<div class="flex flex-col gap-4 items-center w-full">
+<!-- Active Recruitment Management -->
+<button class="w-12 h-12 flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-lg transition-transform active:scale-95">
+<span class="material-symbols-outlined">person_search</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">groups</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">inventory_2</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">bar_chart</span>
+</button>
+</div>
+<div class="mt-auto">
+<button class="w-12 h-12 flex items-center justify-center text-on-primary opacity-70 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</nav>
+<!-- Sub SideNav (240px) -->
+<nav class="fixed left-[88px] top-0 h-full w-[240px] z-40 flex flex-col pt-16 bg-surface border-r border-outline-variant">
+<div class="px-6 py-8">
+<h2 class="font-headline-sm text-on-surface font-bold leading-tight">Recruitment</h2>
+<p class="text-on-surface-variant font-label-sm uppercase tracking-wider">Management</p>
+</div>
+<div class="flex-1 overflow-y-auto px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span class="font-label-md">Create Job Requisition</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span class="font-label-md">Job Requisitions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-container-high text-primary font-bold transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="font-label-md">Applications Management</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="font-label-md">Interview Scheduling</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+<span class="font-label-md">Candidate Evaluation</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-md">Recruitment Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopBar -->
+<header class="fixed top-0 right-0 left-0 h-[64px] z-[60] flex justify-between items-center px-6 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg font-black text-primary tracking-tighter">rainmaker</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">home</span></button>
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">task_alt</span></button>
+<div class="relative">
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">notifications</span></button>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full"></span>
+</div>
+<button class="hover:text-primary transition-colors active:opacity-80"><span class="material-symbols-outlined">dark_mode</span></button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md hover:opacity-90 transition-opacity">Create New Requisition</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+<div class="text-right">
+<p class="font-label-md font-bold text-on-surface">Sumaira Butt</p>
+<p class="text-[10px] text-on-surface-variant uppercase">HR Director</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A professional headshot of a corporate woman with a confident smile, wearing business attire, clean studio lighting with a neutral gray background, corporate professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnZFksIJGqwVZa5h5cUXdaJq-cBGkZviEwHRlNWm4vJFX7XPXeRJaZyq-VhHJazCScLw-AAPxhgt1wRjRB7NlySzczxWBfMKmnEJL01gIpV4qyuxQuwQUhghh1F--1lAPcVy2ElctgeKXLh3U13bW9J8QqPItSDkELVMGSW6OiXE9Sbjmlu7ZNlkQyuPffNiMGSdQRbvtR23i1a9_EzVRGkt2vFm_xecGtnqEvtv1BbRGknCsCg4Iw"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[328px] mt-[64px] p-container-margin h-[calc(100vh-64px)] overflow-y-auto">
+<!-- Page Header -->
+<div class="flex justify-between items-start mb-stack-lg">
+<div>
+<h1 class="font-headline-lg text-on-surface">Applications Management</h1>
+<p class="text-on-surface-variant font-body-md mt-1">Manage and screen candidates across all active job requisitions</p>
+</div>
+<button class="flex items-center gap-2 border border-outline px-4 py-2 rounded-lg font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                Export Report
+            </button>
+</div>
+<!-- KPI Cards -->
+<div class="grid grid-cols-4 gap-gutter mb-stack-lg">
+<div class="bg-surface-container-lowest p-stack-md rounded-xl border border-outline-variant">
+<p class="text-on-surface-variant font-label-sm uppercase">Total Applications</p>
+<p class="font-display-lg text-primary mt-1">26</p>
+</div>
+<div class="bg-surface-container-lowest p-stack-md rounded-xl border border-outline-variant">
+<p class="text-on-surface-variant font-label-sm uppercase">Scheduled</p>
+<p class="font-display-lg text-primary mt-1">13</p>
+</div>
+<div class="bg-surface-container-lowest p-stack-md rounded-xl border border-outline-variant">
+<p class="text-on-surface-variant font-label-sm uppercase">Evaluations</p>
+<p class="font-display-lg text-primary mt-1">13</p>
+</div>
+<div class="bg-surface-container-lowest p-stack-md rounded-xl border border-outline-variant">
+<p class="text-on-surface-variant font-label-sm uppercase">Hired</p>
+<p class="font-display-lg text-on-surface-variant mt-1">0</p>
+</div>
+</div>
+<!-- Tabs & Filters -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-stack-md mb-stack-lg">
+<div class="flex items-center gap-8 border-b border-outline-variant mb-6">
+<button class="pb-3 px-1 border-b-2 border-primary text-primary font-bold font-label-md transition-all">All Applications</button>
+<button class="pb-3 px-1 text-on-surface-variant hover:text-primary font-label-md transition-all">Scheduled Interviews</button>
+<button class="pb-3 px-1 text-on-surface-variant hover:text-primary font-label-md transition-all">Evaluations</button>
+<button class="pb-3 px-1 text-on-surface-variant hover:text-primary font-label-md transition-all">Hired</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-0 outline-none transition-all" placeholder="Search candidates..." type="text"/>
+</div>
+<div class="relative min-w-[160px]">
+<select class="w-full pl-3 pr-8 py-2 bg-surface-container border border-outline-variant rounded-lg font-body-md appearance-none">
+<option>All Statuses</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+<div class="relative min-w-[160px]">
+<select class="w-full pl-3 pr-8 py-2 bg-surface-container border border-outline-variant rounded-lg font-body-md appearance-none">
+<option>All Jobs</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
+</div>
+<button class="text-primary font-label-md px-4 py-2 hover:bg-primary-fixed rounded-lg transition-colors">Clear</button>
+</div>
+</div>
+<!-- Main Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Rank</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Candidate</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Job Title</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Department</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">AI Match</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Status</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Applied Date</th>
+<th class="px-4 py-4 font-label-sm uppercase text-on-surface-variant">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors group">
+<td class="px-4 py-4">
+<span class="w-8 h-8 flex items-center justify-center bg-primary-fixed text-primary font-bold rounded-full text-label-md">1</span>
+</td>
+<td class="px-4 py-4">
+<div>
+<p class="font-label-md font-bold text-on-surface">Ayesha Khan</p>
+<p class="text-[11px] text-on-surface-variant">RM-001 • 0300-1234567</p>
+</div>
+</td>
+<td class="px-4 py-4 text-on-surface font-body-md">Senior Software Engineer</td>
+<td class="px-4 py-4">
+<span class="bg-primary-fixed/30 text-on-primary-fixed px-3 py-1 rounded-full text-label-sm">Information Technology</span>
+</td>
+<td class="px-4 py-4">
+<div class="inline-flex items-center gap-1.5 bg-green-100 text-green-800 px-2 py-1 rounded-lg font-bold text-label-sm">
+                                92
+                                <span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-label-sm">Under Review</span>
+</td>
+<td class="px-4 py-4 text-on-surface-variant text-body-sm">Oct 24, 2023</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary-container text-white hover:scale-110 transition-transform active:scale-95 ai-glow">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-4 py-4">
+<span class="w-8 h-8 flex items-center justify-center bg-primary-fixed text-primary font-bold rounded-full text-label-md">2</span>
+</td>
+<td class="px-4 py-4">
+<div>
+<p class="font-label-md font-bold text-on-surface">Hamza Ahmed</p>
+<p class="text-[11px] text-on-surface-variant">RM-002 • 0300-9876543</p>
+</div>
+</td>
+<td class="px-4 py-4 text-on-surface font-body-md">Project Coordinator</td>
+<td class="px-4 py-4">
+<span class="bg-primary-fixed/30 text-on-primary-fixed px-3 py-1 rounded-full text-label-sm">Operations</span>
+</td>
+<td class="px-4 py-4">
+<div class="inline-flex items-center gap-1.5 bg-amber-100 text-amber-800 px-2 py-1 rounded-lg font-bold text-label-sm">
+                                78
+                                <span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-label-sm">Screening</span>
+</td>
+<td class="px-4 py-4 text-on-surface-variant text-body-sm">Oct 23, 2023</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-4 py-4">
+<span class="w-8 h-8 flex items-center justify-center bg-primary-fixed text-primary font-bold rounded-full text-label-md">3</span>
+</td>
+<td class="px-4 py-4">
+<div>
+<p class="font-label-md font-bold text-on-surface">Zainab Malik</p>
+<p class="text-[11px] text-on-surface-variant">RM-003 • 0300-5556667</p>
+</div>
+</td>
+<td class="px-4 py-4 text-on-surface font-body-md">.NET Developer</td>
+<td class="px-4 py-4">
+<span class="bg-primary-fixed/30 text-on-primary-fixed px-3 py-1 rounded-full text-label-sm">Information Technology</span>
+</td>
+<td class="px-4 py-4">
+<div class="inline-flex items-center gap-1.5 bg-red-100 text-red-800 px-2 py-1 rounded-lg font-bold text-label-sm">
+                                45
+                                <span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</td>
+<td class="px-4 py-4">
+<span class="bg-error-container text-error px-3 py-1 rounded-full text-label-sm">Rejected</span>
+</td>
+<td class="px-4 py-4 text-on-surface-variant text-body-sm">Oct 22, 2023</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+<!-- Side Slide-over Drawer -->
+<div class="fixed inset-0 z-[100] transition-opacity duration-300 ease-in-out" id="ai-drawer">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+<!-- Panel -->
+<div class="absolute right-0 top-0 h-full w-[480px] bg-white shadow-2xl flex flex-col border-l border-outline-variant animate-slide-in">
+<!-- Drawer Header -->
+<div class="p-6 border-b border-outline-variant flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-2xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h3 class="font-headline-sm text-on-surface">AI Screening Result</h3>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Drawer Body -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+<!-- Score Gauge Section -->
+<div class="flex flex-col items-center">
+<div class="relative w-40 h-40 flex items-center justify-center rounded-full border-[12px] border-surface-container">
+<svg class="absolute inset-0 w-full h-full -rotate-90">
+<circle class="transition-all duration-1000" cx="80" cy="80" fill="none" r="74" stroke="#1A56DB" stroke-dasharray="465" stroke-dashoffset="37" stroke-width="12"></circle>
+</svg>
+<div class="text-center">
+<p class="font-display-lg text-primary leading-none">92</p>
+<p class="text-on-surface-variant font-label-sm uppercase">/ 100</p>
+</div>
+</div>
+<div class="mt-6 text-center">
+<span class="inline-block bg-green-100 text-green-800 px-4 py-1.5 rounded-full font-bold text-label-md mb-2">Recommended for shortlist</span>
+<p class="text-on-surface-variant text-body-sm italic">Threshold 80 · advisory only</p>
+</div>
+</div>
+<!-- Skills Alignment -->
+<div class="space-y-4">
+<div>
+<h4 class="font-label-sm uppercase text-on-surface-variant mb-2">Matched Skills</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-lg text-label-sm">C#</span>
+<span class="bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-lg text-label-sm">.NET</span>
+<span class="bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-lg text-label-sm">Angular</span>
+<span class="bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-lg text-label-sm">SQL Server</span>
+</div>
+</div>
+<div>
+<h4 class="font-label-sm uppercase text-on-surface-variant mb-2">Missing Skills</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-on-surface-variant border border-outline-variant px-3 py-1 rounded-lg text-label-sm">Azure DevOps</span>
+<span class="text-on-surface-variant border border-outline-variant px-3 py-1 rounded-lg text-label-sm">Kubernetes</span>
+</div>
+</div>
+</div>
+<!-- Analysis Details -->
+<div class="space-y-6">
+<h4 class="font-headline-sm text-on-surface">Why this score</h4>
+<!-- Item 1 -->
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-green-600 mt-1">check_circle</span>
+<div class="space-y-2">
+<p class="font-bold text-on-surface">Strong technical alignment</p>
+<p class="text-on-surface-variant text-body-md">Candidate demonstrates 6+ years of expertise in core framework.</p>
+<div class="bg-surface-container-low border-l-4 border-primary p-3 italic text-body-sm text-on-surface-variant">
+                                "Managed transition of legacy SQL systems to modern .NET stack."
+                            </div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-green-600 mt-1">check_circle</span>
+<div class="space-y-2">
+<p class="font-bold text-on-surface">Domain experience</p>
+<p class="text-on-surface-variant text-body-md">Extensive background in enterprise ERP development.</p>
+<div class="bg-surface-container-low border-l-4 border-primary p-3 italic text-body-sm text-on-surface-variant">
+                                "Led the architecture team for a global HRMS platform."
+                            </div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-amber-500 mt-1">error</span>
+<div class="space-y-2">
+<p class="font-bold text-on-surface">Cloud infrastructure gap</p>
+<p class="text-on-surface-variant text-body-md">Limited exposure to containerization and CI/CD tools.</p>
+<div class="bg-surface-container-low border-l-4 border-outline-variant p-3 italic text-body-sm text-on-surface-variant">
+                                "Basic understanding of cloud deployment cycles."
+                            </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Footer -->
+<div class="p-6 border-t border-outline-variant bg-surface-container-lowest flex gap-4">
+<button class="flex-1 border border-outline px-4 py-3 rounded-xl font-bold text-on-surface hover:bg-surface-container-low transition-colors">Override</button>
+<button class="flex-1 bg-primary text-on-primary px-4 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">Accept Suggestion</button>
+</div>
+</div>
+</div>
+<style>
+        @keyframes slide-in {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-in {
+            animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+<script>
+        // Simple toggle for the AI drawer
+        const drawer = document.getElementById('ai-drawer');
+        const closeBtn = drawer.querySelector('button');
+        const backdrop = drawer.querySelector('.absolute.bg-black\\/30');
+
+        function closeDrawer() {
+            drawer.style.opacity = '0';
+            drawer.style.pointerEvents = 'none';
+            setTimeout(() => drawer.classList.add('hidden'), 300);
+        }
+
+        closeBtn.addEventListener('click', closeDrawer);
+        backdrop.addEventListener('click', closeDrawer);
+
+        // Keep it open by default as requested in prompt "Open"
+        drawer.classList.remove('hidden');
+    </script>
+</body></html>

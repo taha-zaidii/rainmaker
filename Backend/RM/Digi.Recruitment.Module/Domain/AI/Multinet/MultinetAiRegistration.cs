@@ -33,10 +33,16 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                 {
                     var options = serviceProvider.GetRequiredService<IOptions<MultinetAiOptions>>().Value;
 
-                    // Trailing slash matters: without it, BaseAddress composition
-                    // drops the last path segment of the base URL.
-                    var baseUrl = options.BaseUrl.TrimEnd('/') + "/";
-                    client.BaseAddress = new Uri(baseUrl);
+                    // One resolver for every base URL in the system, so the
+                    // configured default and a per-company endpoint from the
+                    // database are normalised identically. Trailing slash is
+                    // load-bearing — without it BaseAddress composition silently
+                    // drops the last path segment.
+                    var resolved = MultinetAiEndpoints.ResolveBaseUrl(options.BaseUrl);
+                    if (resolved.BaseUri is not null)
+                    {
+                        client.BaseAddress = resolved.BaseUri;
+                    }
 
                     // Total budget for one logical call, INCLUDING retries. A
                     // parse legitimately runs 40–90 s, so the contract's 180 s
@@ -73,6 +79,13 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         }
 
         /// <summary>
+        /// Upper bound on a server-supplied wait. The service is trusted, but a
+        /// bug or a misconfigured proxy sending "Retry-After: 86400" must not
+        /// park a recruiter's request for a day — fall back to our own backoff.
+        /// </summary>
+        private static readonly TimeSpan MaxHonouredRetryAfter = TimeSpan.FromSeconds(120);
+
+        /// <summary>
         /// Retry policy. The critical rule from the contract: a 422 is a verdict
         /// about the DOCUMENT, so retrying it wastes 40–90 s of GPU time on a
         /// guaranteed identical answer. Only genuinely transient conditions are
@@ -87,20 +100,13 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
                 .CreateLogger(typeof(MultinetAiRegistration));
 
-            // Deterministic jitter seed per policy instance; Random.Shared is
-            // thread-safe and we only need spread, not unpredictability.
             return HttpPolicyExtensions
                 .HandleTransientHttpError()                                     // 5xx and 408
                 .OrResult(response => response.StatusCode == HttpStatusCode.TooManyRequests)
                 .WaitAndRetryAsync(
                     options.MaxRetries,
-                    retryAttempt =>
-                    {
-                        var backoff = TimeSpan.FromSeconds(Math.Pow(2, retryAttempt));
-                        var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 750));
-                        return backoff + jitter;
-                    },
-                    onRetry: (outcome, delay, attempt, _) =>
+                    sleepDurationProvider: (retryAttempt, outcome, _) => DelayFor(retryAttempt, outcome),
+                    onRetryAsync: (outcome, delay, attempt, _) =>
                     {
                         var reason = outcome.Result is not null
                             ? $"HTTP {(int)outcome.Result.StatusCode}"
@@ -109,7 +115,62 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                         logger.LogWarning(
                             "AI service call to {Path} failed ({Reason}); retry {Attempt}/{Max} in {Delay}.",
                             request.RequestUri?.PathAndQuery, reason, attempt, options.MaxRetries, delay);
+
+                        return Task.CompletedTask;
                     });
+        }
+
+        /// <summary>
+        /// How long to wait before the next attempt.
+        ///
+        /// A 429 from this service carries <c>Retry-After</c>, and that number is
+        /// worth more than any schedule we invent: the GPU runs work serially, so
+        /// retrying early does not get us served sooner, it just adds load to a
+        /// queue we are already in. Only when the service has not told us do we
+        /// fall back to exponential backoff plus jitter, the jitter being there so
+        /// several waiting workers do not resynchronise onto the same GPU lock.
+        ///
+        /// Note this reads the HEADER only. The matching <c>retry_after_s</c> body
+        /// field cannot be consumed here without draining the response stream that
+        /// the caller still needs; it is read later in
+        /// <see cref="MultinetAiClient.MapError(System.Net.Http.HttpResponseMessage, string?)"/>
+        /// so the UI can say how long the wait will be.
+        /// </summary>
+        private static TimeSpan DelayFor(int retryAttempt, DelegateResult<HttpResponseMessage> outcome)
+        {
+            var requested = ReadRetryAfter(outcome.Result);
+
+            if (requested is { } wait)
+            {
+                return wait > MaxHonouredRetryAfter ? MaxHonouredRetryAfter : wait;
+            }
+
+            var backoff = TimeSpan.FromSeconds(Math.Pow(2, retryAttempt));
+            var jitter = TimeSpan.FromMilliseconds(Random.Shared.Next(0, 750));
+            return backoff + jitter;
+        }
+
+        private static TimeSpan? ReadRetryAfter(HttpResponseMessage? response)
+        {
+            var retryAfter = response?.Headers.RetryAfter;
+
+            if (retryAfter is null)
+            {
+                return null;
+            }
+
+            if (retryAfter.Delta is { } delta)
+            {
+                return delta;
+            }
+
+            if (retryAfter.Date is { } date)
+            {
+                var wait = date - DateTimeOffset.UtcNow;
+                return wait > TimeSpan.Zero ? wait : TimeSpan.Zero;
+            }
+
+            return null;
         }
     }
 

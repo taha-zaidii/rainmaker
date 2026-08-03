@@ -40,4 +40,9 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!-- Automatically free port 5019 before running backend to prevent port-in-use errors -->
+  <Target Name="FreePort5019" BeforeTargets="BeforeBuild">
+    <Exec Command="lsof -ti:5019 | xargs kill -9 2>/dev/null || true" ContinueOnError="true" />
+  </Target>
+
 </Project>

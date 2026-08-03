@@ -1,3 +1,4 @@
+using Digi.Recruitment.Module.Domain.AI.Multinet;
 using Digi.Recruitment.Module.Domain.Repositories.IRepositories;
 using Digi.Recruitment.Module.Domain.Services.IServices;
 using Digi.Shared.DTOs.hrm.module;
@@ -18,18 +19,25 @@ namespace Digi.Recruitment.Module.Domain.Services
         private readonly HttpClient _httpClient;
         private readonly IFileStorageService _fileStorageService;
 
+        // Multinet's in-house AI service. Deliberately NOT reached through
+        // _httpClient: it is a typed client with its own 180 s timeout, retry
+        // policy and error mapping, none of which the shared client has.
+        private readonly IMultinetAiClient _multinetAiClient;
+
         public RecruitmentAIService(
             IRecruitmentAIRepository repository,
             IRecruitmentRepository recruitmentRepository,
-            ILogger<RecruitmentAIService> logger, 
+            ILogger<RecruitmentAIService> logger,
             IHttpClientFactory httpClientFactory,
-            IFileStorageService fileStorageService)
+            IFileStorageService fileStorageService,
+            IMultinetAiClient multinetAiClient)
         {
             _repository = repository;
             _recruitmentRepository = recruitmentRepository;
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient();
             _fileStorageService = fileStorageService;
+            _multinetAiClient = multinetAiClient;
         }
 
         public async Task<ApiResponse<ApiKeyStatusResponseDto>> GetApiKeyStatusAsync(int companyId)
@@ -81,9 +89,11 @@ namespace Digi.Recruitment.Module.Domain.Services
                 if (string.IsNullOrWhiteSpace(request.Provider))
                     return ApiResponse<SaveApiKeySettingsResponseDto>.Fail("Provider is required");
 
-                var validProviders = new[] { "openai", "anthropic", "google", "custom" };
+                // "multinetai" is Multinet's own in-house AI service. Without it
+                // here, selecting it in the dropdown fails the save outright.
+                var validProviders = new[] { "openai", "anthropic", "google", "custom", MultinetAiProvider.Name };
                 if (!validProviders.Contains(request.Provider.ToLower()))
-                    return ApiResponse<SaveApiKeySettingsResponseDto>.Fail("Invalid provider. Must be one of: openai, anthropic, google, custom");
+                    return ApiResponse<SaveApiKeySettingsResponseDto>.Fail($"Invalid provider. Must be one of: {string.Join(", ", validProviders)}");
 
                 if (string.IsNullOrWhiteSpace(request.ApiKey) || request.ApiKey.Length < 10)
                     return ApiResponse<SaveApiKeySettingsResponseDto>.Fail("API key is required and must be at least 10 characters");
@@ -144,6 +154,19 @@ namespace Digi.Recruitment.Module.Domain.Services
                         case "google":
                             (isValid, model, testResponse, error) = await TestGoogleKeyAsync(request.ApiKey, endpoint);
                             break;
+                        // Multinet's own AI service. Returns early rather than
+                        // filling the four locals above: /auth/verify also reports
+                        // the service version and the key's capabilities, and it
+                        // distinguishes "key rejected" from "service unreachable" —
+                        // none of which fits through a bool plus a message.
+                        case "multinetai":
+                            return await TestMultinetAIKeyAsync(request, endpoint);
+
+                        // "custom" deliberately falls through. It is the escape
+                        // hatch for third-party services a client brings
+                        // themselves (Groq, DeepSeek, a self-hosted gateway), and
+                        // it needs its own OpenAI-compatible implementation —
+                        // not a redirect into ours.
                         default:
                             return ApiResponse<TestApiKeyResponseDto>.Fail("Unsupported provider for testing");
                     }
@@ -160,7 +183,8 @@ namespace Digi.Recruitment.Module.Domain.Services
                     Provider = request.Provider,
                     Model = model,
                     TestResponse = testResponse,
-                    Error = error
+                    Error = error,
+                    Status = isValid ? TestApiKeyStatus.Valid : TestApiKeyStatus.InvalidKey
                 };
 
                 if (isValid)
@@ -268,6 +292,149 @@ namespace Digi.Recruitment.Module.Domain.Services
             }
         }
 
+        /// <summary>
+        /// Tests a key against Multinet's in-house AI service using
+        /// GET {base}/auth/verify — the only probe that works through nginx, and
+        /// the only one that costs no GPU time, so it is safe on every save.
+        ///
+        /// Unlike the other providers' tests this reports WHY it failed. "Key
+        /// rejected" and "service unreachable" look the same to a recruiter but
+        /// need opposite actions, and collapsing both into "API Key Invalid" is
+        /// what sent the last round of debugging down the wrong path.
+        /// </summary>
+        private async Task<ApiResponse<TestApiKeyResponseDto>> TestMultinetAIKeyAsync(
+            TestApiKeyRequestDto request, string endpoint)
+        {
+            var resolution = MultinetAiEndpoints.ResolveBaseUrl(endpoint);
+            if (!resolution.IsUsable)
+            {
+                return MultinetKeyTestFailure(
+                    request, TestApiKeyStatus.Misconfigured, resolution.Problem ?? "The API Endpoint is not usable.");
+            }
+
+            if (resolution.WasCorrected)
+            {
+                _logger.LogWarning(
+                    "Corrected the stored AI endpoint for CompanyID {CompanyID} before testing: {Warning}",
+                    request.CompanyId, resolution.Warning);
+            }
+
+            // The settings page lets an administrator leave the key field blank
+            // to keep the current key, so "test" most often means "test what is
+            // already saved" rather than "test what I just typed".
+            var apiKey = request.ApiKey;
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                var encryptedApiKey = await _repository.GetEncryptedApiKeyAsync(request.CompanyId);
+                if (string.IsNullOrWhiteSpace(encryptedApiKey))
+                {
+                    return MultinetKeyTestFailure(
+                        request, TestApiKeyStatus.Misconfigured,
+                        "No API key was supplied and none is saved for this company.");
+                }
+
+                apiKey = EncryptionHelper.DecryptText(encryptedApiKey);
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    return MultinetKeyTestFailure(
+                        request, TestApiKeyStatus.Misconfigured,
+                        "The saved API key could not be decrypted. Re-enter and save it.");
+                }
+            }
+
+            var result = await _multinetAiClient.VerifyKeyAsync(apiKey, resolution.BaseUri);
+
+            if (result.IsSuccess)
+            {
+                var verification = result.Value!;
+
+                var response = new TestApiKeyResponseDto
+                {
+                    IsValid = verification.Valid,
+                    Provider = request.Provider,
+                    Model = verification.Service,
+                    ServiceVersion = verification.ServiceVersion,
+                    SchemaVersion = verification.SchemaVersion,
+                    Capabilities = verification.Capabilities,
+                    ConfigurationWarning = resolution.Warning,
+                    Status = verification.Valid ? TestApiKeyStatus.Valid : TestApiKeyStatus.InvalidKey,
+                    TestResponse = verification.Valid
+                        ? $"Connected to {verification.Service ?? "the AI service"} " +
+                          $"{verification.ServiceVersion ?? "(version unknown)"}. " +
+                          $"{verification.Capabilities.Count} feature(s) available for this key."
+                        : null,
+                    Error = verification.Valid ? null : "The AI service did not accept this API key."
+                };
+
+                if (!verification.Valid)
+                {
+                    return MultinetKeyTestFailure(
+                        request, TestApiKeyStatus.InvalidKey, response.Error!, resolution.Warning);
+                }
+
+                _logger.LogInformation(
+                    "AI key verified for CompanyID {CompanyID}: {Service} {Version}, {Count} capability(ies).",
+                    request.CompanyId, verification.Service, verification.ServiceVersion,
+                    verification.Capabilities.Count);
+
+                return ApiResponse<TestApiKeyResponseDto>.Success(response, "API key is valid");
+            }
+
+            var aiError = result.Error!;
+
+            // A 404 or an unreadable 200 means we reached SOMETHING, just not the
+            // AI service — almost always a wrong base URL, which the
+            // administrator can fix themselves once we say so.
+            var status = aiError.Code switch
+            {
+                AiErrorCode.Unauthorized => TestApiKeyStatus.InvalidKey,
+                AiErrorCode.BadRequest => TestApiKeyStatus.Misconfigured,
+                AiErrorCode.ContractViolation => TestApiKeyStatus.Misconfigured,
+                AiErrorCode.RejectedLocally => TestApiKeyStatus.Misconfigured,
+                _ => TestApiKeyStatus.Unreachable
+            };
+
+            _logger.LogWarning(
+                "AI key test failed for CompanyID {CompanyID}: {Status} ({Code}, HTTP {HttpStatus}).",
+                request.CompanyId, status, aiError.Code, aiError.HttpStatus);
+
+            return MultinetKeyTestFailure(request, status, aiError.Message, resolution.Warning);
+        }
+
+        /// <summary>
+        /// Builds a failed key-test response. Kept in one place so every failure
+        /// path carries a machine-readable <see cref="TestApiKeyStatus"/> and the
+        /// UI never has to guess from message text.
+        ///
+        /// Constructed directly rather than through <c>ApiResponse.Fail</c>
+        /// because that helper discards the payload, and the payload is the whole
+        /// point here — without it the UI is back to a bare boolean and cannot
+        /// tell a bad key from an unreachable service. The status code still
+        /// makes <c>IsSuccess</c> false, so existing callers behave unchanged.
+        /// </summary>
+        private static ApiResponse<TestApiKeyResponseDto> MultinetKeyTestFailure(
+            TestApiKeyRequestDto request, string status, string message, string? configurationWarning = null)
+        {
+            var failureMessage = status == TestApiKeyStatus.InvalidKey
+                ? "Invalid API key or connection failed"
+                : "Could not verify the API key";
+
+            var payload = new TestApiKeyResponseDto
+            {
+                IsValid = false,
+                Provider = request.Provider,
+                Status = status,
+                Error = message,
+                ConfigurationWarning = configurationWarning
+            };
+
+            return new ApiResponse<TestApiKeyResponseDto>(
+                System.Net.HttpStatusCode.BadRequest,
+                failureMessage,
+                payload,
+                new List<string> { message });
+        }
+
         private string GetDefaultEndpoint(string provider)
         {
             return provider.ToLower() switch
@@ -275,6 +442,11 @@ namespace Digi.Recruitment.Module.Domain.Services
                 "openai" => "https://api.openai.com/v1",
                 "anthropic" => "https://api.anthropic.com/v1",
                 "google" => "https://generativelanguage.googleapis.com/v1",
+
+                // Base URL only — the backend appends the per-feature path.
+                // There is no /api/query endpoint; that value 404s.
+                "multinetai" => "https://ai.rainmaker.pk/hrms/api/v1",
+
                 _ => "https://api.openai.com/v1"
             };
         }
@@ -344,6 +516,15 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<GenerateJobDescriptionResponseDto>.Fail("Invalid API key - decryption failed");
                 }
 
+                // Multinet's in-house service returns a STRUCTURED 4-step draft,
+                // not prose, and has a dedicated endpoint for this feature. It
+                // therefore branches before the generic prompt path — everything
+                // below this block is unchanged for OpenAI / Anthropic / Google.
+                if (MultinetAiProvider.Matches(settings.Provider))
+                {
+                    return await GenerateJobDescriptionViaMultinetAsync(request, settings, decryptedApiKey);
+                }
+
                 // Build prompt
                 var prompt = BuildJobDescriptionPrompt(request);
 
@@ -407,6 +588,274 @@ namespace Digi.Recruitment.Module.Domain.Services
             {
                 _logger.LogError(ex, "Error generating job description for CompanyID: {CompanyID}", request.CompanyId);
                 return ApiResponse<GenerateJobDescriptionResponseDto>.Fail($"Error generating job description: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Generates a job requisition draft through Multinet's in-house AI
+        /// service, which has a purpose-built endpoint for this and returns a
+        /// structured 4-step draft rather than prose.
+        ///
+        /// The draft is ADVISORY throughout: every field is pre-filled and
+        /// editable, several are deliberately left empty for HR, and the status
+        /// is always Draft. Nothing here may auto-commit a requisition.
+        /// </summary>
+        private async Task<ApiResponse<GenerateJobDescriptionResponseDto>> GenerateJobDescriptionViaMultinetAsync(
+            GenerateJobDescriptionRequestDto request,
+            ApiKeySettingsResponseDto settings,
+            string apiKey)
+        {
+            var resolution = MultinetAiEndpoints.ResolveBaseUrl(settings.ApiEndpoint);
+            if (!resolution.IsUsable)
+            {
+                return ApiResponse<GenerateJobDescriptionResponseDto>.Fail(
+                    resolution.Problem ?? "The AI service endpoint is not configured correctly.");
+            }
+
+            if (resolution.Warning is not null)
+            {
+                _logger.LogWarning(
+                    "AI endpoint for CompanyID {CompanyID} needs attention: {Warning}",
+                    request.CompanyId, resolution.Warning);
+            }
+
+            // Placeholders are stripped rather than forwarded. The service treats
+            // what it receives as a fact a human asserted, so a literal "N/A" in
+            // the experience field becomes a real constraint on the output.
+            var aiRequest = new JobRequisitionRequest
+            {
+                CompanyId = request.CompanyId,
+                JobTitle = MultinetAiText.Clean(request.JobTitle) ?? string.Empty,
+                Department = MultinetAiText.Clean(request.Department),
+                Designation = MultinetAiText.Clean(request.Designation),
+                ExperienceRequired = MultinetAiText.Clean(request.Experience),
+                KeySkills = MultinetAiText.Clean(request.Skills),
+                JobCategoryOptions = MultinetAiText.Clean(request.JobCategoryOptions),
+                AdditionalContext = MultinetAiText.Clean(request.AdditionalInfo)
+            };
+
+            if (string.IsNullOrWhiteSpace(aiRequest.JobTitle))
+            {
+                return ApiResponse<GenerateJobDescriptionResponseDto>.Fail(
+                    "A job title is required before a job description can be generated.");
+            }
+
+            if (aiRequest.JobCategoryOptions is null)
+            {
+                // Not fatal, but the category then comes back as free text that
+                // the wizard's dropdown may refuse to bind.
+                _logger.LogInformation(
+                    "No job category options were supplied for CompanyID {CompanyID}; the AI cannot snap " +
+                    "its answer to a selectable value.", request.CompanyId);
+            }
+
+            var result = await _multinetAiClient.GenerateJobRequisitionAsync(
+                aiRequest, apiKey, resolution.BaseUri);
+
+            if (result.IsFailure)
+            {
+                var aiError = result.Error!;
+                _logger.LogWarning(
+                    "Job description generation failed for CompanyID {CompanyID}: {Code} (HTTP {Status}).",
+                    request.CompanyId, aiError.Code, aiError.HttpStatus);
+
+                return ApiResponse<GenerateJobDescriptionResponseDto>.Fail(aiError.Message);
+            }
+
+            var generated = result.Value!;
+            var draft = MapJobRequisitionDraft(generated);
+            var rendered = RenderJobDescription(draft);
+
+            var response = new GenerateJobDescriptionResponseDto
+            {
+                JobDescription = rendered,
+                GeneratedOn = DateTime.UtcNow,
+
+                // The service reports wall-clock time, not token counts — it runs
+                // a resident local model with no per-token cost to meter.
+                TokensUsed = 0,
+                Model = settings.Model,
+
+                Draft = draft,
+                ReviewRequired = generated.ReviewRequired,
+                ExecutionTimeMs = generated.ExecutionTimeMs,
+                CacheHit = generated.Meta?.CacheHit,
+                ExperienceSource = generated.Meta?.ExperienceSource,
+                JobCategorySource = generated.Meta?.JobCategorySource,
+                WorkMode = generated.Meta?.WorkMode,
+                FieldsForHumanToComplete = DescribeFieldsLeftForHuman(draft)
+            };
+
+            // Persisted through the same repository calls as every other
+            // provider, so history and the activity feed stay consistent. The
+            // request payload stands in for the prompt: it is what was actually
+            // sent, and it is what the AI team needs to reproduce a bad result.
+            await _repository.SaveJobDescriptionAsync(
+                request.CompanyId,
+                null,
+                rendered,
+                JsonSerializer.Serialize(aiRequest),
+                settings.Model ?? "",
+                0,
+                "System"
+            );
+
+            await _repository.SaveActivityAsync(
+                request.CompanyId,
+                "job_description",
+                "Job Description Generated",
+                $"Generated job description for {request.JobTitle}",
+                null
+            );
+
+            return ApiResponse<GenerateJobDescriptionResponseDto>.Success(
+                response, "Job description generated successfully");
+        }
+
+        /// <summary>
+        /// Maps the AI service's wire contract onto the portal's wizard DTOs.
+        ///
+        /// Nulls are copied through untouched and never defaulted. A null here
+        /// means "the AI is forbidden from deciding this" — substituting a value
+        /// would put words in HR's mouth, and in the case of age limits would
+        /// manufacture a discriminatory constraint out of nothing.
+        /// </summary>
+        private static AiJobDraftDto MapJobRequisitionDraft(JobRequisitionResult generated)
+        {
+            var basicInfo = generated.Data?.BasicInfo;
+            var requirements = generated.Data?.Requirements;
+            var compensation = generated.Data?.Compensation;
+            var publishing = generated.Data?.Publishing;
+
+            return new AiJobDraftDto
+            {
+                BasicInfo = new AiJobDraftBasicInfoDto
+                {
+                    JobTitle = basicInfo?.JobTitle,
+                    Department = basicInfo?.Department,
+                    Designation = basicInfo?.Designation,
+                    JobSummary = basicInfo?.JobSummary,
+                    JobCategory = basicInfo?.JobCategory,
+
+                    // Always 1 from the service; defaulted only if absent entirely.
+                    Vacancies = basicInfo?.Vacancies ?? 1,
+                    EmploymentType = basicInfo?.EmploymentType,
+                    Grade = basicInfo?.Grade
+                },
+                Requirements = new AiJobDraftRequirementsDto
+                {
+                    ExperienceYears = MapRange(requirements?.ExperienceYears),
+                    AgeLimits = MapRange(requirements?.AgeLimits),
+                    KeyResponsibilities = requirements?.KeyResponsibilities ?? new List<string>(),
+                    Requirements = requirements?.Requirements ?? new List<string>(),
+                    Qualifications = requirements?.Qualifications ?? new List<string>(),
+                    Skills = requirements?.Skills ?? new List<string>()
+                },
+                Compensation = new AiJobDraftCompensationDto
+                {
+                    Location = compensation?.Location,
+                    Benefits = compensation?.Benefits,
+                    BudgetType = compensation?.BudgetType,
+                    BudgetLineId = compensation?.BudgetLineId
+                },
+                Publishing = new AiJobDraftPublishingDto
+                {
+                    Justification = publishing?.Justification,
+
+                    // A human publishes. Absent is treated as false, never as true.
+                    IsPublicJob = publishing?.IsPublicJob ?? false,
+                    Status = string.IsNullOrWhiteSpace(publishing?.Status) ? "Draft" : publishing.Status,
+                    ClosingDate = publishing?.ClosingDate
+                }
+            };
+        }
+
+        /// <summary>Null in, null out — an empty range is not the same as a zero one.</summary>
+        private static AiJobDraftRangeDto? MapRange(JobRequisitionRange? range) =>
+            range is null || !range.HasValue
+                ? null
+                : new AiJobDraftRangeDto { Minimum = range.Minimum, Maximum = range.Maximum };
+
+        /// <summary>
+        /// Names the fields the AI deliberately left empty, so the UI can present
+        /// them as "for you to complete" rather than as a half-failed generation.
+        /// </summary>
+        private static List<string> DescribeFieldsLeftForHuman(AiJobDraftDto draft)
+        {
+            var pending = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(draft.BasicInfo.EmploymentType)) pending.Add("Employment Type");
+            if (string.IsNullOrWhiteSpace(draft.BasicInfo.Grade)) pending.Add("Grade");
+            if (string.IsNullOrWhiteSpace(draft.Compensation.Benefits)) pending.Add("Benefits");
+            if (string.IsNullOrWhiteSpace(draft.Compensation.BudgetType)) pending.Add("Budget Type");
+            if (draft.Compensation.BudgetLineId is null) pending.Add("Budget Line");
+            if (string.IsNullOrWhiteSpace(draft.Publishing.Justification)) pending.Add("Justification");
+            if (string.IsNullOrWhiteSpace(draft.Publishing.ClosingDate)) pending.Add("Closing Date");
+
+            return pending;
+        }
+
+        /// <summary>
+        /// Renders the structured draft as readable text.
+        ///
+        /// This exists so callers that only understand a single job-description
+        /// blob — the current portal among them — keep working unchanged. New
+        /// screens should bind the structured draft field by field instead, which
+        /// is the whole reason the AI service returns steps rather than prose.
+        /// </summary>
+        private static string RenderJobDescription(AiJobDraftDto draft)
+        {
+            var sb = new StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(draft.BasicInfo.JobTitle))
+            {
+                sb.AppendLine(draft.BasicInfo.JobTitle);
+                sb.AppendLine();
+            }
+
+            if (!string.IsNullOrWhiteSpace(draft.BasicInfo.JobSummary))
+            {
+                sb.AppendLine(draft.BasicInfo.JobSummary);
+                sb.AppendLine();
+            }
+
+            var experience = draft.Requirements.ExperienceYears;
+            if (experience is not null)
+            {
+                var range = experience.Minimum.HasValue && experience.Maximum.HasValue
+                    ? $"{experience.Minimum}-{experience.Maximum} years"
+                    : experience.Minimum.HasValue
+                        ? $"{experience.Minimum}+ years"
+                        : $"Up to {experience.Maximum} years";
+
+                sb.AppendLine($"Experience Required: {range}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(draft.Compensation.Location))
+            {
+                sb.AppendLine($"Location: {draft.Compensation.Location}");
+            }
+
+            AppendSection(sb, "Key Responsibilities", draft.Requirements.KeyResponsibilities);
+            AppendSection(sb, "Requirements", draft.Requirements.Requirements);
+            AppendSection(sb, "Qualifications", draft.Requirements.Qualifications);
+            AppendSection(sb, "Skills", draft.Requirements.Skills);
+
+            return sb.ToString().TrimEnd();
+        }
+
+        private static void AppendSection(StringBuilder sb, string heading, List<string> items)
+        {
+            if (items is null || items.Count == 0)
+            {
+                return;
+            }
+
+            sb.AppendLine();
+            sb.AppendLine(heading);
+            foreach (var item in items)
+            {
+                sb.AppendLine($"- {item}");
             }
         }
 
@@ -962,6 +1411,8 @@ namespace Digi.Recruitment.Module.Domain.Services
                         return await CallAnthropicAsync(apiKey, endpoint, model, prompt, maxTokens, temperature);
                     case "google":
                         return await CallGoogleAsync(apiKey, endpoint, model, prompt, maxTokens, temperature);
+                    case "multinetai":
+                        return await CallMultinetAIAsync(apiKey, endpoint, model, prompt, maxTokens, temperature);
                     default:
                         return (false, null, 0, "Unsupported provider");
                 }
@@ -970,6 +1421,50 @@ namespace Digi.Recruitment.Module.Domain.Services
             {
                 return (false, null, 0, ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Guard, not a worker — and deliberately so.
+        ///
+        /// This method sits on the generic prompt-in/text-out path shared by the
+        /// OpenAI, Anthropic and Google providers. Multinet's in-house service is
+        /// not shaped like that and cannot be served from here:
+        ///
+        ///  * There is no general-purpose completion endpoint. Each feature has
+        ///    its own path (jobreq/generate, parser/extract, screening/screen …),
+        ///    and by the time control reaches this method the feature has been
+        ///    reduced to a prompt string — there is nothing left to route on.
+        ///    Guessing a path is explicitly forbidden by the integration
+        ///    contract, and the one guess already made (/api/query) 404s.
+        ///  * Responses are structured JSON that maps onto specific screens, not
+        ///    prose. Squeezing one back through a single string would discard the
+        ///    field-level structure that makes the integration worth having.
+        ///  * maxTokens and temperature are ignored by the service, which budgets
+        ///    tokens per endpoint and pins temperature to 0 for deterministic
+        ///    extraction. Honouring a 1000-token client cap would truncate a job
+        ///    description that legitimately needs ~1700.
+        ///
+        /// Features backed by the AI service therefore branch to it BEFORE
+        /// reaching here — see TestMultinetAIKeyAsync for the pattern. Anything
+        /// that still arrives at this method is a feature the in-house service
+        /// does not yet offer, and the honest answer is to say so.
+        /// </summary>
+        private Task<(bool IsSuccess, string? Response, int TokensUsed, string? Error)> CallMultinetAIAsync(
+            string apiKey, string endpoint, string model, string prompt, int maxTokens, decimal temperature)
+        {
+            _logger.LogWarning(
+                "A feature attempted to reach Multinet's AI service through the generic provider path. " +
+                "That service has no free-form completion endpoint; the feature needs its own integration.");
+
+            return Task.FromResult<(bool, string?, int, string?)>((
+                false,
+                null,
+                0,
+                "This feature is not available on Multinet's in-house AI service yet. The service exposes " +
+                "purpose-built endpoints (job description generation, resume parsing, screening, candidate " +
+                "ranking, interview questions and scoring) rather than a general-purpose text endpoint. " +
+                "Either switch this company to a provider that accepts free-form prompts, or ask the AI " +
+                "team to add an endpoint for this feature."));
         }
 
         private async Task<(bool IsSuccess, string? Response, int TokensUsed, string? Error)> CallOpenAIAsync(
@@ -1515,15 +2010,32 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<ParseResumeResponseDto>.Fail("Request body is required");
                 }
 
-                // Get resume text from file path (backend handles text extraction)
-                string resumeText = string.Empty;
-                
-                if (string.IsNullOrWhiteSpace(request.ResumeFilePath))
+                // Track processing time
+                var startTime = DateTime.UtcNow;
+
+                // Get API settings
+                var settings = await _repository.GetApiKeySettingsAsync(request.CompanyId);
+                if (settings == null)
                 {
-                    return ApiResponse<ParseResumeResponseDto>.Fail("ResumeFilePath is required");
+                    return ApiResponse<ParseResumeResponseDto>.Fail("API key settings not found. Please configure your AI provider settings first.");
                 }
 
-                // Extract text from resume file
+                var encryptedKey = await _repository.GetEncryptedApiKeyAsync(request.CompanyId);
+                if (string.IsNullOrWhiteSpace(encryptedKey))
+                {
+                    return ApiResponse<ParseResumeResponseDto>.Fail("API key not found");
+                }
+
+                var apiKey = EncryptionHelper.DecryptText(encryptedKey);
+
+                // If using Multinet AI, it handles URLs & file extraction directly via parser/extract-url or parser/extract
+                if (MultinetAiProvider.Matches(settings.Provider))
+                {
+                    return await ParseResumeViaMultinetAsync(request, settings, apiKey, string.Empty);
+                }
+
+                // Get resume text from file path for other providers
+                string resumeText = string.Empty;
                 try
                 {
                     resumeText = await ExtractTextFromResumeFileAsync(request.ResumeFilePath);
@@ -1543,24 +2055,6 @@ namespace Digi.Recruitment.Module.Domain.Services
                     _logger.LogError(ex, "Failed to extract text from resume file: {FilePath}", request.ResumeFilePath);
                     return ApiResponse<ParseResumeResponseDto>.Fail($"Failed to extract text from resume file: {ex.Message}");
                 }
-
-                // Track processing time
-                var startTime = DateTime.UtcNow;
-
-                // Get API settings
-                var settings = await _repository.GetApiKeySettingsAsync(request.CompanyId);
-                if (settings == null)
-                {
-                    return ApiResponse<ParseResumeResponseDto>.Fail("API key settings not found. Please configure your AI provider settings first.");
-                }
-
-                var encryptedKey = await _repository.GetEncryptedApiKeyAsync(request.CompanyId);
-                if (string.IsNullOrWhiteSpace(encryptedKey))
-                {
-                    return ApiResponse<ParseResumeResponseDto>.Fail("API key not found");
-                }
-
-                var apiKey = EncryptionHelper.DecryptText(encryptedKey);
 
                 // Build prompt for AI
                 var prompt = $@"Parse the following resume and extract structured information. Return ONLY a valid JSON object with the following structure (no markdown, no code blocks, just pure JSON):
@@ -1798,6 +2292,199 @@ Resume Text:
             }
         }
 
+        private async Task<ApiResponse<ParseResumeResponseDto>> ParseResumeViaMultinetAsync(
+            ParseResumeRequestDto request,
+            ApiKeySettingsResponseDto settings,
+            string apiKey,
+            string resumeText)
+        {
+            var resolution = MultinetAiEndpoints.ResolveBaseUrl(settings.ApiEndpoint);
+            if (!resolution.IsUsable)
+            {
+                return ApiResponse<ParseResumeResponseDto>.Fail(
+                    resolution.Problem ?? "The AI service endpoint is not configured correctly.");
+            }
+
+            if (resolution.Warning is not null)
+            {
+                _logger.LogWarning(
+                    "AI endpoint for CompanyID {CompanyID} needs attention: {Warning}",
+                    request.CompanyId, resolution.Warning);
+            }
+
+            var startTime = DateTime.UtcNow;
+            AiResult<ParseResumeResult> aiResult;
+
+            if (request.ResumeFilePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                request.ResumeFilePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                aiResult = await _multinetAiClient.ExtractResumeByUrlAsync(
+                    documentUrl: request.ResumeFilePath,
+                    candidateId: request.ApplicantID?.ToString(),
+                    applicationId: request.ApplicationID?.ToString(),
+                    companyId: request.CompanyId.ToString(),
+                    apiKey: apiKey,
+                    baseUriOverride: resolution.BaseUri);
+            }
+            else
+            {
+                byte[]? fileBytes = null;
+                string fileName = !string.IsNullOrWhiteSpace(request.ResumeFileName)
+                    ? request.ResumeFileName
+                    : Path.GetFileName(request.ResumeFilePath);
+
+                try
+                {
+                    if (File.Exists(request.ResumeFilePath))
+                    {
+                        fileBytes = await File.ReadAllBytesAsync(request.ResumeFilePath);
+                    }
+                    else
+                    {
+                        fileBytes = await _fileStorageService.GetFileAsync(request.ResumeFilePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to read resume file bytes for Multinet AI stream upload: {Path}", request.ResumeFilePath);
+                }
+
+                if (fileBytes != null && fileBytes.Length > 0)
+                {
+                    using var stream = new MemoryStream(fileBytes);
+                    aiResult = await _multinetAiClient.ExtractResumeAsync(
+                        stream,
+                        fileName,
+                        apiKey: apiKey);
+                }
+                else
+                {
+                    aiResult = await _multinetAiClient.ExtractResumeByUrlAsync(
+                        documentUrl: request.ResumeFilePath,
+                        candidateId: request.ApplicantID?.ToString(),
+                        applicationId: request.ApplicationID?.ToString(),
+                        companyId: request.CompanyId.ToString(),
+                        apiKey: apiKey,
+                        baseUriOverride: resolution.BaseUri);
+                }
+            }
+
+            if (aiResult.IsFailure)
+            {
+                var aiError = aiResult.Error!;
+                _logger.LogWarning(
+                    "Resume parsing via Multinet AI failed for CompanyID {CompanyID}: {Code} (HTTP {Status}).",
+                    request.CompanyId, aiError.Code, aiError.HttpStatus);
+
+                return ApiResponse<ParseResumeResponseDto>.Fail(aiError.Message);
+            }
+
+            var result = aiResult.Value!;
+            if (result.Data == null)
+            {
+                return ApiResponse<ParseResumeResponseDto>.Fail("Multinet AI returned success but profile data is empty");
+            }
+
+            var parsedData = MapMultinetProfileToDto(result.Data);
+            parsedData.ParsedOn = DateTime.UtcNow;
+
+            var processingTime = (int)(DateTime.UtcNow - startTime).TotalMilliseconds;
+            var tokensUsed = (result.Meta?.PromptTokens ?? 0) + (result.Meta?.OutputTokens ?? 0);
+
+            string parsedDataJson = System.Text.Json.JsonSerializer.Serialize(parsedData, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            });
+
+            var fileType = request.FileType;
+            if (string.IsNullOrWhiteSpace(fileType) && !string.IsNullOrWhiteSpace(request.ResumeFilePath))
+            {
+                var extension = Path.GetExtension(request.ResumeFilePath)?.TrimStart('.').ToUpper();
+                fileType = extension ?? "UNKNOWN";
+            }
+
+            if (request.ApplicantID != 0)
+            {
+                var resumeFileName = request.ResumeFileName;
+                if (string.IsNullOrWhiteSpace(resumeFileName) && !string.IsNullOrWhiteSpace(request.ResumeFilePath))
+                {
+                    resumeFileName = Path.GetFileName(request.ResumeFilePath);
+                }
+
+                var (parsingId, saveSuccess, saveMessage) = await _repository.SaveResumeParsingAsync(
+                    companyId: request.CompanyId,
+                    applicantId: request.ApplicantID,
+                    applicationId: request.ApplicationID,
+                    resumeFileName: resumeFileName,
+                    resumeFilePath: request.ResumeFilePath,
+                    fileType: fileType,
+                    fileSize: request.FileSize,
+                    parsedDataJson: parsedDataJson,
+                    parsedResumeText: resumeText ?? string.Empty,
+                    parsingMethod: "AI",
+                    parsingProvider: settings.Provider ?? MultinetAiProvider.Name,
+                    parsingModel: settings.Model ?? "qwen3.5:27b",
+                    parsingStatus: "Success",
+                    parsingConfidence: null,
+                    parsingErrors: null,
+                    tokensUsed: tokensUsed,
+                    processingTime: processingTime,
+                    userId: "System"
+                );
+
+                if (saveSuccess && parsingId.HasValue)
+                {
+                    _logger.LogInformation(
+                        "✅ Resume parsing saved to database successfully via Multinet. ParsingID: {ParsingID}, CompanyID: {CompanyID}",
+                        parsingId.Value, request.CompanyId);
+                }
+
+                await _repository.SaveActivityAsync(
+                    request.CompanyId,
+                    "resume_parsing",
+                    "Resume Parsed",
+                    $"Parsed resume using {settings.Provider} ({settings.Model ?? "qwen3.5:27b"}). Processing time: {processingTime}ms. Parsing ID: {parsingId}",
+                    parsingId
+                );
+            }
+
+            return ApiResponse<ParseResumeResponseDto>.Success(parsedData, $"Resume parsed successfully using {settings.Provider}");
+        }
+
+        private static ParseResumeResponseDto MapMultinetProfileToDto(CandidateProfile profile)
+        {
+            return new ParseResumeResponseDto
+            {
+                FullName = profile.Name,
+                Email = profile.Email,
+                Phone = profile.Phone,
+                Location = profile.Location,
+                Summary = profile.Summary,
+                Skills = profile.Skills ?? new List<string>(),
+                Certifications = profile.CertificationsAndAwards ?? new List<string>(),
+                Languages = profile.SpokenLanguages != null && profile.SpokenLanguages.Any()
+                    ? string.Join(", ", profile.SpokenLanguages)
+                    : null,
+                Experience = profile.Experience?.Select(e => new ResumeExperienceDto
+                {
+                    Company = e.Company,
+                    Position = e.Role,
+                    Duration = e.Duration,
+                    Description = e.Achievements != null && e.Achievements.Any()
+                        ? string.Join("; ", e.Achievements)
+                        : null
+                }).ToList() ?? new List<ResumeExperienceDto>(),
+                Education = profile.Education?.Select(ed => new ResumeEducationDto
+                {
+                    Institution = ed.Institution,
+                    Degree = ed.Degree,
+                    Field = null,
+                    Year = ed.Duration
+                }).ToList() ?? new List<ResumeEducationDto>()
+            };
+        }
+
         /// <summary>
         /// Extracts text from resume file (supports PDF, DOC, DOCX, TXT)
         /// </summary>
@@ -1809,8 +2496,23 @@ Resume Text:
                 byte[] fileBytes;
                 string fullPath = filePath;
 
+                // Check if it's an HTTP/HTTPS URL
+                if (filePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    filePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        fileBytes = await _httpClient.GetByteArrayAsync(filePath);
+                        fullPath = filePath;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to download resume file from URL: {URL}", filePath);
+                        throw new FileNotFoundException($"Could not download resume from URL: {filePath}", ex);
+                    }
+                }
                 // Check if it's a relative path (from storage)
-                if (!Path.IsPathRooted(filePath))
+                else if (!Path.IsPathRooted(filePath))
                 {
                     try
                     {
@@ -2479,6 +3181,7 @@ Return JSON with structure:
                         if (!openaiResult.IsSuccess)
                             return ApiResponse<GetSalaryRecommendationResponseDto>.Fail(openaiResult.Error ?? "Failed to call OpenAI API");
                         break;
+                    
                     case "anthropic":
                         var anthropicResult = await CallAnthropicAsync(apiKey, endpoint, model, prompt, maxTokens, temperature);
                         responseText = anthropicResult.Response;

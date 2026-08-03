@@ -25,15 +25,21 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         }
 
         [Fact]
-        public void Missing_api_key_is_a_startup_failure_because_the_service_is_fail_closed()
+        public void Missing_platform_key_is_allowed_because_tenants_bring_their_own()
         {
+            // The portal is multi-tenant. The key that actually authenticates a
+            // call is the per-company one in Tbl_Ruc_RecruitmentAI_Settings,
+            // entered on the AI Settings screen and stored encrypted; the
+            // configured value is only a fallback for callers with no company
+            // context.
+            //
+            // Failing startup on an empty fallback would reject the normal,
+            // correct deployment — every tenant holding its own key and the
+            // platform holding none.
             var options = Valid();
             options.ApiKey = "";
 
-            var problems = options.Validate();
-
-            Assert.Single(problems);
-            Assert.Contains("ApiKey", problems[0]);
+            Assert.Empty(options.Validate());
         }
 
         [Fact]
