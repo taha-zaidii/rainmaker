@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,7 +139,10 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? AttachedDocument { get; set; }
         public int? DepartmentID { get; set; }
         public decimal? Salary { get; set; }
+        public decimal? MinSalary { get; set; }
+        public decimal? MaxSalary { get; set; }
         public string? ReasonToDelete { get; set; }
+
        // public string? Status { get; set; }
         public IFormFile? AttachmentFile { get; set; }
         public string? AttachmentURL { get; set; }

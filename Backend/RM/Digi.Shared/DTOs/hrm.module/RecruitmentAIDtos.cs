@@ -408,7 +408,20 @@ namespace Digi.Shared.DTOs.hrm.module
         public List<string> Weaknesses { get; set; } = new List<string>();
         public string ScreeningNotes { get; set; } = string.Empty;
         public DateTime ScreenedOn { get; set; }
+        public bool Shortlisted { get; set; }
+        public int ThresholdUsed { get; set; } = 80;
+        public List<string> MatchedSkills { get; set; } = new List<string>();
+        public List<string> MissingSkills { get; set; } = new List<string>();
+        public List<ScreeningReasonDto> Reasons { get; set; } = new List<ScreeningReasonDto>();
     }
+
+    public class ScreeningReasonDto
+    {
+        public string Kind { get; set; } = string.Empty; // "match" | "gap"
+        public string Detail { get; set; } = string.Empty;
+        public string Evidence { get; set; } = string.Empty;
+    }
+
 
     // Candidate Profile
     public class CandidateProfileDto
@@ -508,12 +521,41 @@ namespace Digi.Shared.DTOs.hrm.module
         public int CompanyId { get; set; }
         public int? JobRequisitionId { get; set; }
         public string JobDescription { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The job summary as its own field.
+        ///
+        /// Without this the backend had to scrape the summary back out of the
+        /// rendered JobDescription blob, which only worked when that text
+        /// happened to carry a "Job Summary" heading. The AI wizard holds the
+        /// summary as a discrete value, so it should send it as one — the
+        /// careers page had nothing under "About the role" otherwise.
+        /// Optional: callers that omit it keep the previous extraction path.
+        /// </summary>
+        public string? JobSummary { get; set; }
         public string JobTitle { get; set; } = string.Empty;
         public string? Department { get; set; }
+        public string? Designation { get; set; }
+        public string? EmploymentType { get; set; }
+        public string? Grade { get; set; }
+        public int? Vacancies { get; set; }
         public string? Experience { get; set; }
+        public int? MinExperience { get; set; }
+        public int? MaxExperience { get; set; }
+        public decimal? MinSalary { get; set; }
+        public decimal? MaxSalary { get; set; }
+        public string? Location { get; set; }
         public string? Skills { get; set; }
+        public string? KeyResponsibilities { get; set; }
+        public string? Requirements { get; set; }
+        public string? Qualifications { get; set; }
+        public string? Benefits { get; set; }
         public string? AdditionalInfo { get; set; }
+        public DateTime? ClosingDate { get; set; }
+        public int? IsPublished { get; set; }
     }
+
+
 
     // Save Job Description Response
     public class SaveJobDescriptionResponseDto
@@ -597,6 +639,7 @@ namespace Digi.Shared.DTOs.hrm.module
     public class ParseResumeResponseDto
     {
         public string? FullName { get; set; }
+        public string? CandidateName { get => FullName; set => FullName = value; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public string? Location { get; set; }
@@ -604,6 +647,7 @@ namespace Digi.Shared.DTOs.hrm.module
         public List<string> Skills { get; set; } = new List<string>();
         public List<ResumeExperienceDto> Experience { get; set; } = new List<ResumeExperienceDto>();
         public List<ResumeEducationDto> Education { get; set; } = new List<ResumeEducationDto>();
+        public List<ResumeProjectDto> Projects { get; set; } = new List<ResumeProjectDto>();
         public List<string> Certifications { get; set; } = new List<string>();
         public string? Languages { get; set; }
         public int? TotalYearsExperience { get; set; }
@@ -624,6 +668,13 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? Degree { get; set; }
         public string? Field { get; set; }
         public string? Year { get; set; }
+    }
+
+    public class ResumeProjectDto
+    {
+        public string? Name { get; set; }
+        public string? Technologies { get; set; }
+        public string? Description { get; set; }
     }
 
     // Rank Candidates Request

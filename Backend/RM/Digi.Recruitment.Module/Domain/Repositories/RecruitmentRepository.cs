@@ -46,6 +46,9 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 //p.Add("@ModuleId", req.ModuleId);
                // p.Add("@ObjectId", req.ObjectId);
                 p.Add("@RecruitmentRequisitionName", req.RecruitmentRequisitionName);
+                // The job summary was never passed, so the AI's "About the role"
+                // text was dropped on save and the careers page had nothing to show.
+                p.Add("@JobSummary", req.JobSummary);
                 p.Add("@BudgetPeriodId", req.BudgetPeriodId);
                 p.Add("@IsSystemDefault", req.IsSystemDefault);
                 p.Add("@Location", req.Location);
@@ -1241,7 +1244,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 var parameters = new DynamicParameters();
                 parameters.Add("@CompanyID", request.CompanyID);
                 parameters.Add("@JobTitle", request.JobTitle);
-                parameters.Add("@JobSummary", request.JobSummary);
                 parameters.Add("@DepartmentID", request.DepartmentID);
                 parameters.Add("@DesignationID", request.DesignationID);
                 parameters.Add("@EmploymentTypeID", request.EmploymentTypeID);
@@ -1413,8 +1415,9 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@PageSize", request.PageSize);
                 parameters.Add("@SearchTerm", request.SearchTerm);
                 parameters.Add("@StatusID", request.StatusID);
-                parameters.Add("@IsActive", request.IsActive);
+                parameters.Add("@IsActive", request.IsActive ?? true);
                 parameters.Add("@DepartmentID", request.DepartmentID);
+
                 parameters.Add("@CreatedBy", request.CreatedBy);
 
 
@@ -1447,7 +1450,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@RequisitionID", request.RequisitionID);
                 parameters.Add("@CompanyID", request.CompanyID);
                 parameters.Add("@JobTitle", request.JobTitle);
-                parameters.Add("@JobSummary", request.JobSummary);
                 parameters.Add("@DepartmentID", request.DepartmentID);
                 parameters.Add("@DesignationID", request.DesignationID);
                 parameters.Add("@EmploymentTypeID", request.EmploymentTypeID);
@@ -1496,34 +1498,54 @@ namespace Digi.Recruitment.Module.Domain.Repositories
             }
         }
 
-        public async Task<(bool IsSuccess, string Message)> DeleteJobRequisitionAsync(int requisitionID, string deletedBy,int companyID)
+        public async Task<(bool IsSuccess, string Message)> DeleteJobRequisitionAsync(int requisitionID, string deletedBy, int companyID)
         {
             try
             {
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var parameters = new DynamicParameters();
-                parameters.Add("@RequisitionID", requisitionID);
-                parameters.Add("@DeletedBy", deletedBy);
-                parameters.Add("@CompanyID", companyID);
-                parameters.Add("@Reason", (string?)null);
-                parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-
-                await _db.ExecuteAsync(
-                    "[ruc].[SP_Ruc_JobRequisition_Delete]",
-                    parameters,
-                    commandType: CommandType.StoredProcedure
-                );
-
-                var result = parameters.Get<int>("@Result");
-                return result switch
+                try
                 {
-                    1 => (true, "Job requisition deleted successfully"),
-                    -2 => (false, "Cannot delete this job requisition because it has active applications. Please reject or remove applications first."),
-                    -1 => (false, "Job requisition not found or already deleted."),
-                    _ => (false, "Failed to delete job requisition.")
-                };
+                    var parameters = new DynamicParameters();
+                    parameters.Add("@RequisitionID", requisitionID);
+                    parameters.Add("@DeletedBy", deletedBy);
+                    parameters.Add("@CompanyID", companyID);
+                    parameters.Add("@Reason", (string?)null);
+                    parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                    await _db.ExecuteAsync(
+                        "[ruc].[SP_Ruc_JobRequisition_Delete]",
+                        parameters,
+                        commandType: CommandType.StoredProcedure
+                    );
+
+                    var result = parameters.Get<int>("@Result");
+                    return result switch
+                    {
+                        1 => (true, "Job requisition deleted successfully"),
+                        -2 => (false, "Cannot delete this job requisition because it has active applications. Please reject or remove applications first."),
+                        -1 => (false, "Job requisition not found or already deleted."),
+                        _ => (false, "Failed to delete job requisition.")
+                    };
+                }
+                catch (SqlException sqlEx) when (sqlEx.Number == 2812 || sqlEx.Message.Contains("SP_Ruc_JobRequisition_Delete", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("SP_Ruc_JobRequisition_Delete not found. Falling back to direct soft-delete SQL.");
+
+                    var rows = await _db.ExecuteAsync(
+                        @"UPDATE dbo.Tbl_Ruc_RecruitmentRequisition 
+                          SET IsActive = 0, UpdatedBy = @DeletedBy, UpdatedDate = GETDATE() 
+                          WHERE RequisitionID = @RequisitionID AND CompanyID = @CompanyID;
+
+                          UPDATE dbo.Tbl_Ruc_JobApplication
+                          SET IsActive = 0, UpdatedBy = @DeletedBy, UpdatedDate = GETDATE()
+                          WHERE RequisitionID = @RequisitionID;",
+                        new { RequisitionID = requisitionID, CompanyID = companyID, DeletedBy = deletedBy }
+                    );
+
+                    return (rows > 0, rows > 0 ? "Job requisition deleted successfully" : "Requisition not found.");
+                }
             }
             catch (Exception ex)
             {
@@ -1618,7 +1640,8 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@ApplicantID", request.ApplicantID);
                 parameters.Add("@CurrentStatusID", request.CurrentStatusID);
                 parameters.Add("@SearchTerm", request.SearchTerm);
-                parameters.Add("@IsActive", request.IsActive);
+                parameters.Add("@IsActive", request.IsActive ?? true);
+
 
                 using var multi = await _db.QueryMultipleAsync(
                     "[ruc].[SP_Ruc_JobApplication_GetAll]",
@@ -1697,19 +1720,35 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var parameters = new DynamicParameters();
-                parameters.Add("@ApplicationID", applicationID);
-                parameters.Add("@DeletedBy", deletedBy);
-                parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                try
+                {
+                    var parameters = new DynamicParameters();
+                    parameters.Add("@ApplicationID", applicationID);
+                    parameters.Add("@DeletedBy", deletedBy);
+                    parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                await _db.ExecuteAsync(
-                    "[ruc].[SP_Ruc_JobApplication_Delete]",
-                    parameters,
-                    commandType: CommandType.StoredProcedure
-                );
+                    await _db.ExecuteAsync(
+                        "[ruc].[SP_Ruc_JobApplication_Delete]",
+                        parameters,
+                        commandType: CommandType.StoredProcedure
+                    );
 
-                var result = parameters.Get<int>("@Result");
-                return (result == 1, result == 1 ? "Job application deleted successfully" : "Failed to delete job application");
+                    var result = parameters.Get<int>("@Result");
+                    return (result == 1, result == 1 ? "Job application deleted successfully" : "Failed to delete job application");
+                }
+                catch (SqlException sqlEx) when (sqlEx.Number == 2812 || sqlEx.Message.Contains("SP_Ruc_JobApplication_Delete", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("SP_Ruc_JobApplication_Delete not found. Falling back to direct soft-delete SQL.");
+
+                    var rows = await _db.ExecuteAsync(
+                        @"UPDATE dbo.Tbl_Ruc_JobApplication 
+                          SET IsActive = 0, UpdatedBy = @DeletedBy, UpdatedDate = GETDATE() 
+                          WHERE ApplicationID = @ApplicationID",
+                        new { ApplicationID = applicationID, DeletedBy = deletedBy }
+                    );
+
+                    return (rows > 0, rows > 0 ? "Job application deleted successfully" : "Application not found.");
+                }
             }
             catch (Exception ex)
             {

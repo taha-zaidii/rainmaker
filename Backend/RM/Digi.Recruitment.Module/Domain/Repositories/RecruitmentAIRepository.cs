@@ -224,137 +224,34 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                // Get statistics with proper fallback logic
                 var statsSql = @"
-                    DECLARE @JobsAnalyzed INT = 0;
-                    DECLARE @ResumesScreened INT = 0;
-                    DECLARE @CandidatesMatched INT = 0;
-                    DECLARE @TimeSaved INT = 0;
-
-                    -- 1. Total Jobs Analyzed: Count jobs where AI job description was generated
-                    -- If AI Job Descriptions table exists and has data, use it
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_JobDescriptions')
-                    BEGIN
-                        SELECT @JobsAnalyzed = COUNT(DISTINCT JobRequisitionID)
-                        FROM Tbl_Ruc_RecruitmentAI_JobDescriptions
-                        WHERE CompanyID = @CompanyID;
-                    END
-
-                    -- If no AI job descriptions found, count all active approved requisitions
-                    IF @JobsAnalyzed = 0 AND EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Hr_Ruc_RecruitmentRequisition')
-                    BEGIN
-                        SELECT @JobsAnalyzed = COUNT(*)
-                        FROM Tbl_Hr_Ruc_RecruitmentRequisition
-                        WHERE CompanyID = @CompanyID
-                            AND IsActive = 1
-                            AND ApprovalStatus = 'Approved';
-                    END
-
-                    -- 2. Resumes Screened: Count resumes screened using AI
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_ResumeScreenings')
-                    BEGIN
-                        SELECT @ResumesScreened = COUNT(*)
-                        FROM Tbl_Ruc_RecruitmentAI_ResumeScreenings
-                        WHERE CompanyID = @CompanyID
-                            AND CreatedOn >= DATEADD(MONTH, -12, GETDATE());
-                    END
-
-                    -- 3. Candidates Matched: Count candidates with match score >= 70
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_ResumeScreenings')
-                    BEGIN
-                        SELECT @CandidatesMatched = COUNT(DISTINCT ResumeID)
-                        FROM Tbl_Ruc_RecruitmentAI_ResumeScreenings
-                        WHERE CompanyID = @CompanyID
-                            AND MatchScore >= 70
-                            AND Recommendation IN ('Highly Recommended', 'Recommended', 'Strong Match', 'Good Match');
-                    END
-
-                    -- 4. Time Saved: Calculate based on AI operations
-                    -- Job descriptions: 2 hours per job
-                    -- Resume screenings: 0.25 hours per resume
-                    -- Candidate matching: 0.5 hours per match
-                    DECLARE @JobDescTime DECIMAL(10,2) = 0;
-                    DECLARE @ResumeScreenTime DECIMAL(10,2) = 0;
-                    DECLARE @MatchTime DECIMAL(10,2) = 0;
-
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_JobDescriptions')
-                    BEGIN
-                        SELECT @JobDescTime = COUNT(DISTINCT JobRequisitionID) * 2.0
-                        FROM Tbl_Ruc_RecruitmentAI_JobDescriptions
-                        WHERE CompanyID = @CompanyID;
-                    END
-
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_ResumeScreenings')
-                    BEGIN
-                        SELECT @ResumeScreenTime = COUNT(*) * 0.25
-                        FROM Tbl_Ruc_RecruitmentAI_ResumeScreenings
-                        WHERE CompanyID = @CompanyID;
-                    END
-
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_ResumeScreenings')
-                    BEGIN
-                        SELECT @MatchTime = COUNT(DISTINCT ResumeID) * 0.5
-                        FROM Tbl_Ruc_RecruitmentAI_ResumeScreenings
-                        WHERE CompanyID = @CompanyID
-                            AND MatchScore >= 70;
-                    END
-
-                    SET @TimeSaved = CAST(@JobDescTime + @ResumeScreenTime + @MatchTime AS INT);
-
-                    SELECT 
-                        @JobsAnalyzed AS TotalJobsAnalyzed,
-                        @ResumesScreened AS ResumesScreened,
-                        @CandidatesMatched AS CandidatesMatched,
-                        @TimeSaved AS TimeSaved";
+                    SELECT
+                        TotalRequisitions   = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_RecruitmentRequisition WHERE CompanyID = @CompanyID AND IsActive = 1), 0),
+                        ActiveRequisitions  = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_RecruitmentRequisition WHERE CompanyID = @CompanyID AND IsActive = 1), 0),
+                        TotalApplications   = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_JobApplication WHERE CompanyID = @CompanyID AND IsActive = 1), 0),
+                        InterviewsScheduled = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_JobApplication WHERE CompanyID = @CompanyID AND IsActive = 1 AND (CurrentStatusID = 3 OR StatusCode = 'INTERVIEW')), 0),
+                        HiredCount          = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_JobApplication WHERE CompanyID = @CompanyID AND IsActive = 1 AND (CurrentStatusID = 4 OR StatusCode = 'HIRED')), 0),
+                        PendingEvaluations  = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_Ruc_JobApplication WHERE CompanyID = @CompanyID AND IsActive = 1 AND (CurrentStatusID = 1 OR StatusCode = 'APPLIED')), 0),
+                        TotalJobsAnalyzed   = ISNULL((SELECT COUNT(DISTINCT RequisitionID) FROM dbo.Tbl_Ruc_RecruitmentRequisition WHERE CompanyID = @CompanyID AND IsActive = 1), 0),
+                        ResumesScreened     = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_RecruitmentAI_Screening WHERE CompanyID = @CompanyID), 0),
+                        CandidatesMatched   = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_RecruitmentAI_Screening WHERE CompanyID = @CompanyID AND MatchScore >= 70), 0),
+                        TimeSaved           = ISNULL((SELECT COUNT(*) FROM dbo.Tbl_RecruitmentAI_Screening WHERE CompanyID = @CompanyID) * 2, 0)";
 
                 var stats = await _db.QueryFirstOrDefaultAsync<DashboardStatsDto>(statsSql, new { CompanyID = companyId });
 
-                // Get recent activity - with fallback to recruitment requisitions if AI activity table is empty
                 var activitySql = @"
-                    IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Ruc_RecruitmentAI_Activity')
-                        AND EXISTS (SELECT 1 FROM Tbl_Ruc_RecruitmentAI_Activity WHERE CompanyID = @CompanyID)
-                    BEGIN
-                        -- Get AI activities
-                        SELECT TOP 10
-                            Id,
-                            Title,
-                            Description,
-                            CASE ActivityType
-                                WHEN 'job_description' THEN 'ti ti-file-text'
-                                WHEN 'resume_screening' THEN 'ti ti-user-check'
-                                WHEN 'matching' THEN 'ti ti-users'
-                                WHEN 'questions' THEN 'ti ti-question-mark'
-                                ELSE 'ti ti-activity'
-                            END AS Icon,
-                            CreatedOn AS Timestamp
-                        FROM Tbl_Ruc_RecruitmentAI_Activity
-                        WHERE CompanyID = @CompanyID
-                        ORDER BY CreatedOn DESC
-                    END
-                    ELSE IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Tbl_Hr_Ruc_RecruitmentRequisition')
-                    BEGIN
-                        -- Fallback: Get recent recruitment requisitions
-                        SELECT TOP 10
-                            RecruitmentRequisitionID AS Id,
-                            'Recruitment Created' AS Title,
-                            'Created recruitment for ' + ISNULL(RecruitmentRequisitionName, 'Job Requisition') AS Description,
-                            'ti ti-file-text' AS Icon,
-                            CreatedOn AS Timestamp
-                        FROM Tbl_Hr_Ruc_RecruitmentRequisition
-                        WHERE CompanyID = @CompanyID
-                            AND IsActive = 1
-                        ORDER BY CreatedOn DESC
-                    END
-                    ELSE
-                    BEGIN
-                        -- Return empty result
-                        SELECT TOP 0
-                            CAST(0 AS INT) AS Id,
-                            CAST('' AS NVARCHAR(200)) AS Title,
-                            CAST('' AS NVARCHAR(MAX)) AS Description,
-                            CAST('' AS NVARCHAR(50)) AS Icon,
-                            CAST(GETDATE() AS DATETIME) AS Timestamp
-                    END";
+                    SELECT TOP 10
+                        Id           = ap.ApplicationID,
+                        ActivityType = 'resume_parsing',
+                        Title        = 'Candidate Application',
+                        Description  = 'Candidate ' + ISNULL(a.FirstName + ' ' + ISNULL(a.LastName, ''), 'Applicant') + ' applied for ' + ISNULL(r.JobTitle, 'Job Requisition'),
+                        RelatedId    = ap.ApplicationID,
+                        CreatedOn    = ISNULL(ap.ApplicationDate, GETDATE())
+                    FROM dbo.Tbl_Ruc_JobApplication ap
+                    LEFT JOIN dbo.Tbl_Ruc_Applicant a ON a.ApplicantID = ap.ApplicantID
+                    LEFT JOIN dbo.Tbl_Ruc_RecruitmentRequisition r ON r.RequisitionID = ap.RequisitionID
+                    WHERE ap.CompanyID = @CompanyID AND ap.IsActive = 1
+                    ORDER BY ap.ApplicationID DESC";
 
                 var activities = await _db.QueryAsync<RecentActivityDto>(activitySql, new { CompanyID = companyId });
 
@@ -370,6 +267,7 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 return null;
             }
         }
+
 
         public async Task<(int? Id, bool IsSuccess, string Message)> SaveJobDescriptionAsync(int companyId, int? jobRequisitionId, string generatedDescription, string promptUsed, string model, int tokensUsed, string userId)
         {
@@ -508,41 +406,65 @@ namespace Digi.Recruitment.Module.Domain.Repositories
         {
             try
             {
-                // Extract data from job description
-                var keyResponsibilities = ExtractResponsibilities(request.JobDescription);
-                var skills = ExtractSkills(request.JobDescription, request.Skills);
-                var experience = ExtractExperience(request.JobDescription, request.Experience);
-                var qualifications = ExtractQualifications(request.JobDescription);
-                var additionalInfo = ExtractAdditionalInfo(request.JobDescription, request.AdditionalInfo);
-                var benefits = ExtractBenefits(request.JobDescription);
-                var jobSummary = ExtractJobSummary(request.JobDescription);
+                var keyResponsibilities = !string.IsNullOrWhiteSpace(request.KeyResponsibilities)
+                    ? request.KeyResponsibilities
+                    : ExtractResponsibilities(request.JobDescription);
 
-                // Create new job requisition using stored procedure
-                // Note: JdId will remain NULL as per requirement
+                var skills = !string.IsNullOrWhiteSpace(request.Skills)
+                    ? request.Skills
+                    : ExtractSkills(request.JobDescription, request.Skills);
+
+                var experience = !string.IsNullOrWhiteSpace(request.Experience)
+                    ? request.Experience
+                    : ExtractExperience(request.JobDescription, request.Experience)?.ToString();
+
+                int.TryParse(experience, out var expYears);
+
+                var qualifications = !string.IsNullOrWhiteSpace(request.Qualifications)
+                    ? request.Qualifications
+                    : ExtractQualifications(request.JobDescription);
+
+                var benefits = !string.IsNullOrWhiteSpace(request.Benefits)
+                    ? request.Benefits
+                    : ExtractBenefits(request.JobDescription);
+
+                var additionalInfo = !string.IsNullOrWhiteSpace(request.AdditionalInfo)
+                    ? request.AdditionalInfo
+                    : ExtractAdditionalInfo(request.JobDescription, request.AdditionalInfo);
+
+                var jobSummary = !string.IsNullOrWhiteSpace(request.JobSummary)
+                    ? request.JobSummary
+                    : ExtractJobSummary(request.JobDescription);
+
                 var requisitionRequest = new SaveRecruitmentRequisitionRequest
                 {
                     Action = "INSERT",
                     CompanyID = request.CompanyId,
                     RecruitmentRequisitionName = request.JobTitle ?? "AI Generated Job Position",
                     KeyResponsibilities = keyResponsibilities,
-                    SkillsRequired = skills ?? request.Skills,
-                    ExperienceYears = experience,
+                    SkillsRequired = skills,
+                    ExperienceYears = expYears > 0 ? expYears : null,
                     QualificationsEntryRequirments = qualifications,
-                    Comments = additionalInfo, // Additional Information saved in Comments column
-                    OtherRequirments = benefits, // Benefits saved in OtherRequirments column
-                    JobSummary = jobSummary, // If column exists in DTO
+
+                    Comments = additionalInfo,
+                    OtherRequirments = benefits,
+                    JobSummary = jobSummary,
+                    Location = request.Location,
+                    Vacancies = request.Vacancies ?? 1,
+                    MinSalary = request.MinSalary,
+                    MaxSalary = request.MaxSalary,
                     EmployeeCode = userId,
-                    IsSystemDefault = true, // Auto-publish AI generated requisitions
+                    IsSystemDefault = true,
                     ApprovalStatus = "Pending",
-                    PublishStatus = "Pending",
+                    PublishStatus = request.IsPublished == 1 ? "Published" : "Pending",
                     PublishedDate = DateTime.UtcNow,
                     PublishedBy = userId,
                     RecruitmentRequisitionDate = DateTime.UtcNow,
-                    RecruitmentRequisitionClosingDate = DateTime.UtcNow.AddDays(30), // Default 30 days
-                    AlwaysPublished = false, // Set to false since status is Pending
+                    RecruitmentRequisitionClosingDate = request.ClosingDate ?? DateTime.UtcNow.AddDays(30),
+                    AlwaysPublished = request.IsPublished == 1,
                     IsClosed = false
-                    // JdId is NOT set - remains NULL as per requirement
                 };
+
 
                 // Call Recruitment Repository directly to avoid circular dependency
                 var (newId, isSuccess, message, row) = await _recruitmentRepository.SaveAsync(requisitionRequest);

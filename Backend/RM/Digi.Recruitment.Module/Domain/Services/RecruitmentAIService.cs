@@ -922,29 +922,48 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<ScreenResumeResponseDto>.Fail("ResumeFilePath is required");
                 }
 
-                // Extract text from resume file
                 try
                 {
-                    resumeText = await ExtractTextFromResumeFileAsync(request.ResumeFilePath);
-                    
-                    if (string.IsNullOrWhiteSpace(resumeText))
+                    if (!string.IsNullOrWhiteSpace(request.ResumeFilePath))
                     {
-                        return ApiResponse<ScreenResumeResponseDto>.Fail("Failed to extract text from resume file. The file might be empty or in an unsupported format.");
+                        resumeText = await ExtractTextFromResumeFileAsync(request.ResumeFilePath);
                     }
-                }
-                catch (FileNotFoundException ex)
-                {
-                    _logger.LogWarning(ex, "Resume file not found: {FilePath}", request.ResumeFilePath);
-                    return ApiResponse<ScreenResumeResponseDto>.Fail($"Resume file not found: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to extract text from resume file: {FilePath}", request.ResumeFilePath);
-                    return ApiResponse<ScreenResumeResponseDto>.Fail($"Failed to extract text from resume file: {ex.Message}");
+                    _logger.LogWarning(ex, "Could not extract text from file {FilePath}, falling back to candidate profile in DB", request.ResumeFilePath);
                 }
 
-                // Update request with extracted text for prompt building
+                // Fall back to candidate profile in database if file text is empty or unreadable
+                if (string.IsNullOrWhiteSpace(resumeText) && request.ApplicationID.HasValue && request.ApplicationID.Value > 0)
+                {
+                    var app = await _recruitmentRepository.GetJobApplicationByIdAsync(request.ApplicationID.Value);
+                    if (app != null)
+                    {
+
+
+
+                        var sb = new StringBuilder();
+                        sb.AppendLine($"Candidate Name: {app.FullName}");
+                        sb.AppendLine($"Email: {app.Email}");
+                        sb.AppendLine($"Current Designation: {app.CurrentDesignation ?? app.CurrentJobTitle}");
+                        sb.AppendLine($"Current Company: {app.CurrentCompany}");
+                        sb.AppendLine($"Experience Years: {app.ExperienceYears ?? app.TotalExperience}");
+                        sb.AppendLine($"Skills: {app.Skills}");
+                        sb.AppendLine($"Education: {app.Education}");
+                        sb.AppendLine($"Experience Summary: {app.ExperienceSummary}");
+                        sb.AppendLine($"Cover Letter: {app.CoverLetter}");
+                        resumeText = sb.ToString();
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(resumeText))
+                {
+                    return ApiResponse<ScreenResumeResponseDto>.Fail("No profile data or resume text available for AI screening.");
+                }
+
                 request.ResumeText = resumeText;
+
 
                 // Get API settings
                 var settings = await _repository.GetApiKeySettingsAsync(request.CompanyId);
@@ -967,11 +986,156 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<ScreenResumeResponseDto>.Fail("Invalid API key - decryption failed");
                 }
 
-                // Build prompt
+                // Multinet AI Provider route
+                if (MultinetAiProvider.Matches(settings.Provider))
+                {
+                    var resolution = MultinetAiEndpoints.ResolveBaseUrl(settings.ApiEndpoint);
+                    var threshold = settings.AutoShortlistThreshold > 0 ? settings.AutoShortlistThreshold : 80;
+
+                    JobApplicationResponseDto? appDetails = null;
+                    if (request.ApplicationID.HasValue && request.ApplicationID.Value > 0)
+                    {
+                        appDetails = await _recruitmentRepository.GetJobApplicationByIdAsync(request.ApplicationID.Value);
+                    }
+
+                    var reqRequirements = new List<string>();
+                    if (!string.IsNullOrWhiteSpace(request.JobRequirements.Education))
+                    {
+                        reqRequirements.Add($"Education: {request.JobRequirements.Education}");
+                    }
+                    if (request.JobRequirements.RequiredSkills != null && request.JobRequirements.RequiredSkills.Any())
+                    {
+                        reqRequirements.Add($"Required Skills: {string.Join(", ", request.JobRequirements.RequiredSkills)}");
+                    }
+
+                    var keySkillsList = request.JobRequirements.RequiredSkills ?? new List<string>();
+
+                    var candProfile = new CandidateProfile
+                    {
+                        Name = appDetails?.FullName ?? "Applicant",
+                        Email = appDetails?.Email,
+                        Phone = appDetails?.MobileNumber,
+                        Location = appDetails?.CurrentAddress ?? appDetails?.PreferredLocation,
+                        Headline = appDetails?.CurrentDesignation ?? appDetails?.CurrentJobTitle,
+                        Summary = !string.IsNullOrWhiteSpace(appDetails?.ExperienceSummary) ? appDetails.ExperienceSummary : (!string.IsNullOrWhiteSpace(appDetails?.CoverLetter) ? appDetails.CoverLetter : resumeText),
+                        Skills = !string.IsNullOrWhiteSpace(appDetails?.Skills)
+                            ? appDetails.Skills.Split(new[] { ',', ';', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                            : keySkillsList,
+                        Education = new List<EducationNode>
+                        {
+                            new EducationNode
+                            {
+                                Degree = appDetails?.Education ?? request.JobRequirements.Education ?? "Bachelor Degree"
+                            }
+                        },
+                        Experience = new List<ExperienceNode>
+                        {
+                            new ExperienceNode
+                            {
+                                Company = appDetails?.CurrentCompany ?? "Current Employer",
+                                Role = appDetails?.CurrentDesignation ?? appDetails?.CurrentJobTitle ?? request.JobRequirements.JobTitle ?? "Software Engineer",
+                                Duration = $"{appDetails?.ExperienceYears ?? appDetails?.TotalExperience ?? 3} years"
+                            }
+                        }
+                    };
+
+                    var multinetReq = new ScreenCandidateRequest
+                    {
+                        CandidateProfile = candProfile,
+                        JobTitle = appDetails?.RequisitionJobTitle ?? request.JobRequirements.JobTitle ?? "Position",
+                        JobRequirements = reqRequirements,
+                        KeySkills = keySkillsList,
+                        ExperienceRequired = request.JobRequirements.Experience,
+
+                        Threshold = threshold,
+                        ApplicationId = request.ApplicationID?.ToString(),
+                        CandidateId = appDetails?.ApplicantID.ToString() ?? request.ApplicantID?.ToString()
+                    };
+
+
+                    var startTimeMultinet = DateTime.UtcNow;
+                    var aiResult = await _multinetAiClient.ScreenCandidateAsync(
+                        multinetReq, decryptedApiKey, resolution.BaseUri).ConfigureAwait(false);
+
+                    var processingTimeMs = (int)(DateTime.UtcNow - startTimeMultinet).TotalMilliseconds;
+
+                    if (aiResult.IsFailure)
+                    {
+                        return ApiResponse<ScreenResumeResponseDto>.Fail(
+                            $"Multinet AI screening failed: {aiResult.Error?.Message}");
+                    }
+
+                    var screened = aiResult.Value!;
+
+                    var responseDto = new ScreenResumeResponseDto
+                    {
+                        MatchScore = screened.MatchScore,
+                        Recommendation = screened.Shortlisted ? "Recommended for Shortlist" : "Under Review",
+                        Strengths = screened.MatchedSkills,
+                        Weaknesses = screened.MissingSkills,
+                        ScreeningNotes = string.Join("\n", screened.Reasons.Select(r => $"[{r.Kind.ToUpper()}] {r.Detail} (Evidence: {r.Evidence})")),
+                        ScreenedOn = DateTime.UtcNow,
+                        Shortlisted = screened.Shortlisted,
+                        ThresholdUsed = screened.ThresholdUsed,
+                        MatchedSkills = screened.MatchedSkills,
+                        MissingSkills = screened.MissingSkills,
+                        Reasons = screened.Reasons.Select(r => new ScreeningReasonDto
+                        {
+                            Kind = r.Kind,
+                            Detail = r.Detail,
+                            Evidence = r.Evidence
+                        }).ToList()
+                    };
+
+                    await _repository.SaveResumeScreeningAsync(
+                        companyId: request.CompanyId,
+                        applicationId: request.ApplicationID,
+                        applicantId: request.ApplicantID,
+                        resumeParsingId: request.ResumeParsingID,
+                        matchScore: screened.MatchScore,
+                        skillsMatch: string.Join("; ", screened.MatchedSkills),
+                        experienceMatch: screened.Shortlisted ? "Shortlisted by threshold" : "Review needed",
+                        qualificationsMatch: $"Match score: {screened.MatchScore}/{threshold}",
+                        redFlags: string.Join("; ", screened.MissingSkills),
+                        recommendation: responseDto.Recommendation,
+                        screeningMethod: "AI",
+                        screeningProvider: "multinetai",
+                        modelUsed: settings.Model ?? "qwen3.5:27b",
+                        processingTime: processingTimeMs,
+                        userId: "System"
+                    );
+
+                    if (request.ApplicationID.HasValue && request.ApplicationID > 0)
+                    {
+                        int targetStatusId = screened.Shortlisted ? 2 : 1;
+                        await _recruitmentRepository.UpdateApplicationStatusOnlyAsync(
+                            request.ApplicationID.Value,
+                            targetStatusId,
+                            screened.MatchScore,
+                            screened.MatchScore / 20,
+                            "System"
+                        );
+                    }
+
+
+                    await _repository.SaveActivityAsync(
+                        request.CompanyId,
+                        "resume_screening",
+                        "Resume Screened",
+                        $"Screened resume for {request.JobRequirements.JobTitle} via Multinet AI (Score: {screened.MatchScore})",
+                        request.ResumeId
+                    );
+
+                    return ApiResponse<ScreenResumeResponseDto>.Success(responseDto, "Resume screened successfully");
+                }
+
+
+                // Build prompt (Legacy provider fallback)
                 var prompt = BuildResumeScreeningPrompt(request);
 
                 // Track processing time
                 var startTime = DateTime.UtcNow;
+
 
                 // Call AI API
                 var (isSuccess, aiResponse, tokensUsed, error) = await CallAIAPIAsync(
@@ -1189,8 +1353,66 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<GenerateInterviewQuestionsResponseDto>.Fail("Invalid API key - decryption failed");
                 }
 
+                // Multinet AI Provider route
+                if (MultinetAiProvider.Matches(settings.Provider))
+                {
+                    var resolution = MultinetAiEndpoints.ResolveBaseUrl(settings.ApiEndpoint);
+                    var keySkillsList = request.JobRequirements?.RequiredSkills ?? new List<string>();
+
+                    var multinetReq = new InterviewQuestionsRequest
+                    {
+                        JobTitle = request.JobTitle,
+                        JobDescription = request.JobRequirements?.Education ?? string.Empty,
+                        KeySkills = keySkillsList,
+                        QuestionsPerCategory = request.NumberOfQuestions > 0 ? request.NumberOfQuestions : 5,
+                        Categories = new List<string> { request.QuestionType.ToLower() == "mixed" ? "technical" : request.QuestionType.ToLower(), "behavioral", "role_specific" }
+                    };
+
+                    var aiResult = await _multinetAiClient.GenerateInterviewQuestionsAsync(
+                        multinetReq, decryptedApiKey, resolution.BaseUri).ConfigureAwait(false);
+
+                    if (aiResult.IsFailure)
+                    {
+                        return ApiResponse<GenerateInterviewQuestionsResponseDto>.Fail(
+                            $"Multinet AI questions generation failed: {aiResult.Error?.Message}");
+                    }
+
+                    var generated = aiResult.Value!;
+                    var questionDtos = new List<InterviewQuestionDto>();
+
+                    if (generated.QuestionBank != null)
+                    {
+                        foreach (var categoryPair in generated.QuestionBank)
+                        {
+                            var category = categoryPair.Key;
+                            foreach (var item in categoryPair.Value)
+                            {
+                                questionDtos.Add(new InterviewQuestionDto
+                                {
+                                    Question = item.Question,
+                                    Type = category,
+                                    Category = category,
+                                    ExpectedAnswer = item.WhatToListFor
+                                });
+
+                            }
+                        }
+                    }
+
+                    return ApiResponse<GenerateInterviewQuestionsResponseDto>.Success(
+                        new GenerateInterviewQuestionsResponseDto
+                        {
+                            Questions = questionDtos,
+                            GeneratedOn = DateTime.UtcNow,
+                            TokensUsed = 0
+                        },
+                        "Interview questions generated successfully"
+                    );
+                }
+
                 // Build prompt
                 var prompt = BuildInterviewQuestionsPrompt(request);
+
 
                 // Call AI API
                 var (isSuccess, aiResponse, tokensUsed, error) = await CallAIAPIAsync(
@@ -2292,6 +2514,54 @@ Resume Text:
             }
         }
 
+
+        /// <summary>
+        /// True when a URL is one the AI service could realistically fetch.
+        ///
+        /// Loopback and private addresses are reachable from THIS process but
+        /// not from the GPU host, and handing one over produces a failure that
+        /// looks like a bad document rather than a bad address.
+        /// </summary>
+        private static bool IsRemotelyFetchable(string path)
+        {
+            if (!Uri.TryCreate(path, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+            {
+                return false;
+            }
+
+            if (uri.IsLoopback)
+            {
+                return false;
+            }
+
+            var host = uri.Host;
+
+            // RFC 1918 and link-local ranges, plus the ".local" mDNS suffix.
+            if (host.StartsWith("10.", StringComparison.Ordinal) ||
+                host.StartsWith("192.168.", StringComparison.Ordinal) ||
+                host.StartsWith("169.254.", StringComparison.Ordinal) ||
+                host.EndsWith(".local", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // 172.16.0.0 – 172.31.255.255
+            if (host.StartsWith("172.", StringComparison.Ordinal) &&
+                host.Split('.') is { Length: 4 } parts &&
+                int.TryParse(parts[1], out var second) &&
+                second >= 16 && second <= 31)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private async Task<ApiResponse<ParseResumeResponseDto>> ParseResumeViaMultinetAsync(
             ParseResumeRequestDto request,
             ApiKeySettingsResponseDto settings,
@@ -2315,11 +2585,18 @@ Resume Text:
             var startTime = DateTime.UtcNow;
             AiResult<ParseResumeResult> aiResult;
 
-            if (request.ResumeFilePath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                request.ResumeFilePath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            var resolvedPath = ResolveLocalFilePath(request.ResumeFilePath);
+
+            // A URL is only worth sending if the AI service can actually fetch
+            // it. Ours runs on Multinet's GPU box, so a localhost or private
+            // address is unreachable from there and the parse comes back as a
+            // confusing "could not read the document" rather than a network
+            // error. In that case fall through and upload the bytes instead,
+            // which works from any environment.
+            if (IsRemotelyFetchable(resolvedPath))
             {
                 aiResult = await _multinetAiClient.ExtractResumeByUrlAsync(
-                    documentUrl: request.ResumeFilePath,
+                    documentUrl: resolvedPath,
                     candidateId: request.ApplicantID?.ToString(),
                     applicationId: request.ApplicationID?.ToString(),
                     companyId: request.CompanyId.ToString(),
@@ -2331,22 +2608,37 @@ Resume Text:
                 byte[]? fileBytes = null;
                 string fileName = !string.IsNullOrWhiteSpace(request.ResumeFileName)
                     ? request.ResumeFileName
-                    : Path.GetFileName(request.ResumeFilePath);
+                    : Path.GetFileName(resolvedPath);
 
                 try
                 {
-                    if (File.Exists(request.ResumeFilePath))
+                    if (File.Exists(resolvedPath))
                     {
-                        fileBytes = await File.ReadAllBytesAsync(request.ResumeFilePath);
+                        fileBytes = await File.ReadAllBytesAsync(resolvedPath);
                     }
                     else
                     {
-                        fileBytes = await _fileStorageService.GetFileAsync(request.ResumeFilePath);
+                        var wwwrootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", resolvedPath.TrimStart('/', '\\'));
+                        if (File.Exists(wwwrootPath))
+                        {
+                            fileBytes = await File.ReadAllBytesAsync(wwwrootPath);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                fileBytes = await _fileStorageService.GetFileAsync(resolvedPath);
+                            }
+                            catch
+                            {
+                                // Storage service fallback
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to read resume file bytes for Multinet AI stream upload: {Path}", request.ResumeFilePath);
+                    _logger.LogWarning(ex, "Failed to read resume file bytes for Multinet AI stream upload: {Path}", resolvedPath);
                 }
 
                 if (fileBytes != null && fileBytes.Length > 0)
@@ -2360,7 +2652,7 @@ Resume Text:
                 else
                 {
                     aiResult = await _multinetAiClient.ExtractResumeByUrlAsync(
-                        documentUrl: request.ResumeFilePath,
+                        documentUrl: resolvedPath,
                         candidateId: request.ApplicantID?.ToString(),
                         applicationId: request.ApplicationID?.ToString(),
                         companyId: request.CompanyId.ToString(),
@@ -2481,8 +2773,165 @@ Resume Text:
                     Degree = ed.Degree,
                     Field = null,
                     Year = ed.Duration
-                }).ToList() ?? new List<ResumeEducationDto>()
+                }).ToList() ?? new List<ResumeEducationDto>(),
+                Projects = profile.Projects?.Select(p => new ResumeProjectDto
+                {
+                    Name = p.Name,
+                    Technologies = p.Technologies,
+                    Description = p.Description != null && p.Description.Any()
+                        ? string.Join("; ", p.Description)
+                        : null
+                }).ToList() ?? new List<ResumeProjectDto>(),
+                TotalYearsExperience = EstimateTotalExperienceYears(profile.Experience, profile.Summary)
             };
+        }
+
+        /// <summary>
+        /// Best-effort total years computation from experience duration strings and candidate summary text.
+        /// Extracts explicit stated experience (e.g. "6+ years of experience") when experience node durations are missing or partial.
+        /// Returns null when no usable dates or experience statements are found — never invents a number.
+        /// </summary>
+        private static int? EstimateTotalExperienceYears(List<ExperienceNode>? experiences, string? summary = null)
+        {
+            int? estimatedFromNodes = null;
+
+            if (experiences != null && experiences.Any())
+            {
+                double totalMonths = 0;
+                bool anyParsed = false;
+
+                foreach (var exp in experiences)
+                {
+                    if (string.IsNullOrWhiteSpace(exp.Duration) ||
+                        string.Equals(exp.Duration.Trim(), "Unknown", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var months = ParseDurationToMonths(exp.Duration);
+                    if (months > 0)
+                    {
+                        totalMonths += months;
+                        anyParsed = true;
+                    }
+                }
+
+                if (anyParsed)
+                {
+                    var years = (int)Math.Round(totalMonths / 12.0);
+                    estimatedFromNodes = years < 1 && totalMonths > 0 ? 1 : years;
+                }
+            }
+
+            int? summaryYears = ExtractYearsFromText(summary);
+            if (summaryYears.HasValue && summaryYears.Value > (estimatedFromNodes ?? 0))
+            {
+                return summaryYears.Value;
+            }
+
+            return estimatedFromNodes ?? summaryYears;
+        }
+
+        private static int? ExtractYearsFromText(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return null;
+
+            var match = Regex.Match(text, @"(\d{1,2})\+?\s*years?\s*(?:of\s*)?exp", RegexOptions.IgnoreCase);
+            if (match.Success && int.TryParse(match.Groups[1].Value, out var years))
+            {
+                return years;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Parses a duration string like "May 2026 - Present" or "Jul 2025 - Aug 2025"
+        /// into approximate months. Returns 0 if unparseable.
+        /// </summary>
+        private static double ParseDurationToMonths(string duration)
+        {
+            // Common patterns: "Month Year - Month Year", "Month Year - Present"
+            var parts = Regex.Split(duration, @"\s*[-–—to]+\s*", RegexOptions.IgnoreCase);
+            if (parts.Length < 2) return 0;
+
+            var startStr = parts[0].Trim();
+            var endStr = parts[parts.Length - 1].Trim();
+
+            if (!TryParseFlexibleDate(startStr, out var startDate))
+                return 0;
+
+            DateTime endDate;
+            if (endStr.Equals("Present", StringComparison.OrdinalIgnoreCase) ||
+                endStr.Equals("Current", StringComparison.OrdinalIgnoreCase) ||
+                endStr.Equals("Now", StringComparison.OrdinalIgnoreCase))
+            {
+                endDate = DateTime.UtcNow;
+            }
+            else if (!TryParseFlexibleDate(endStr, out endDate))
+            {
+                return 0;
+            }
+
+            if (endDate < startDate) return 0;
+            return (endDate.Year - startDate.Year) * 12 + (endDate.Month - startDate.Month);
+        }
+
+        private static bool TryParseFlexibleDate(string text, out DateTime result)
+        {
+            result = default;
+            text = text.Trim().Replace(",", "");
+
+            // Try standard DateTime parse first
+            if (DateTime.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out result))
+                return true;
+
+            // Try "Month Year" pattern (e.g., "May 2026")
+            var match = Regex.Match(text, @"^([A-Za-z]+)\s+(\d{4})$");
+            if (match.Success)
+            {
+                var monthStr = match.Groups[1].Value;
+                var yearStr = match.Groups[2].Value;
+                if (DateTime.TryParseExact($"01 {monthStr} {yearStr}", "dd MMMM yyyy",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out result))
+                    return true;
+                if (DateTime.TryParseExact($"01 {monthStr} {yearStr}", "dd MMM yyyy",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None, out result))
+                    return true;
+            }
+
+            // Try just a year "2025"
+            var yearMatch = Regex.Match(text, @"^(\d{4})$");
+            if (yearMatch.Success && int.TryParse(yearMatch.Groups[1].Value, out var year))
+            {
+                result = new DateTime(year, 1, 1);
+                return true;
+            }
+
+            return false;
+        }
+
+
+        private static string ResolveLocalFilePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return path;
+
+            path = path.Trim();
+
+            if (path.StartsWith("~"))
+            {
+                var subPath = path.Substring(1).TrimStart('/', '\\');
+                var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+                if (subPath.StartsWith("Users/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "/" + subPath;
+                }
+
+                return Path.Combine(userProfile, subPath);
+            }
+
+            return path;
         }
 
         /// <summary>
@@ -2492,6 +2941,8 @@ Resume Text:
         {
             try
             {
+                filePath = ResolveLocalFilePath(filePath);
+
                 // Get file bytes using FileStorageService
                 byte[] fileBytes;
                 string fullPath = filePath;

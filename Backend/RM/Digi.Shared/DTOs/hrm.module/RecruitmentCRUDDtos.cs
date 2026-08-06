@@ -530,9 +530,10 @@ namespace Digi.Shared.DTOs.hrm.module
 
         public string? DateOfBirth { get; set; }
         public string? ExpectedSalary { get; set; }
-        public int? ExperienceYears { get; set; }
+        public decimal? ExperienceYears { get; set; }
         public string? NoticePeriod { get; set; }
-        public int? TotalExperience { get; set; }
+        public decimal? TotalExperience { get; set; }
+
         public string? CurrentJobTitle { get; set; }
     }
 
