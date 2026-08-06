@@ -677,5 +677,74 @@ BEGIN
 END
 GO
 
+-- SP 12: [ruc].[SP_Ruc_JobApplication_Delete]
+CREATE OR ALTER PROCEDURE [ruc].[SP_Ruc_JobApplication_Delete]
+    @ApplicationID INT,
+    @DeletedBy NVARCHAR(100) = 'System',
+    @Result INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Tbl_Ruc_JobApplication WHERE ApplicationID = @ApplicationID)
+    BEGIN
+        SET @Result = -1;
+        RETURN;
+    END
+
+    DECLARE @ReqID INT;
+    SELECT @ReqID = RequisitionID FROM dbo.Tbl_Ruc_JobApplication WHERE ApplicationID = @ApplicationID;
+
+    UPDATE dbo.Tbl_Ruc_JobApplication
+    SET IsActive = 0,
+        UpdatedBy = ISNULL(@DeletedBy, 'System'),
+        UpdatedOn = GETDATE()
+    WHERE ApplicationID = @ApplicationID;
+
+    IF @ReqID IS NOT NULL
+    BEGIN
+        UPDATE dbo.Tbl_Ruc_RecruitmentRequisition
+        SET TotalApplications = CASE WHEN ISNULL(TotalApplications, 0) > 0 THEN TotalApplications - 1 ELSE 0 END
+        WHERE RequisitionID = @ReqID;
+    END
+
+    SET @Result = 1;
+END
+GO
+
+-- SP 13: [ruc].[SP_Ruc_JobRequisition_Delete]
+CREATE OR ALTER PROCEDURE [ruc].[SP_Ruc_JobRequisition_Delete]
+    @RequisitionID INT,
+    @CompanyID INT,
+    @DeletedBy NVARCHAR(100) = 'System',
+    @Reason NVARCHAR(MAX) = NULL,
+    @Result INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Tbl_Ruc_RecruitmentRequisition WHERE RequisitionID = @RequisitionID AND CompanyID = @CompanyID)
+    BEGIN
+        SET @Result = -1;
+        RETURN;
+    END
+
+    UPDATE dbo.Tbl_Ruc_RecruitmentRequisition
+    SET IsActive = 0,
+        UpdatedBy = ISNULL(@DeletedBy, 'System'),
+        UpdatedOn = GETDATE()
+    WHERE RequisitionID = @RequisitionID AND CompanyID = @CompanyID;
+
+    UPDATE dbo.Tbl_Ruc_JobApplication
+    SET IsActive = 0,
+        UpdatedBy = ISNULL(@DeletedBy, 'System'),
+        UpdatedOn = GETDATE()
+    WHERE RequisitionID = @RequisitionID;
+
+    SET @Result = 1;
+END
+GO
+
 PRINT 'Demo Recruitment SPs and Tables created in InternDB.';
 GO
+

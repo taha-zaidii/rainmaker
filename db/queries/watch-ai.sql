@@ -10,7 +10,7 @@
    Run a block with the cursor inside it and press Cmd+Shift+E, or select the
    text and hit Run.
 
-   Prepared by Syed Taha, Multinet.
+   Prepared by Syed Taha Zaidi, Multinet.
 ============================================================================= */
 
 USE [InternDB];
@@ -127,3 +127,5 @@ SELECT ROUTINE_NAME, ROUTINE_TYPE
 FROM INFORMATION_SCHEMA.ROUTINES
 ORDER BY ROUTINE_NAME;
 GO
+
+SELECT * FROM  dbo.Tbl_RecruitmentAI_ResumeParsing
