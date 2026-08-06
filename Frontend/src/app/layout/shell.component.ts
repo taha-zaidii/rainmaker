@@ -91,8 +91,14 @@ interface ModuleNavItem {
         <header
           class="h-16 shrink-0 bg-surface border-b border-line flex items-center gap-4 px-6"
         >
-          <a routerLink="/recruitment" class="text-[19px] font-bold text-primary tracking-tight">
-            rainmaker
+          <a routerLink="/recruitment" class="shrink-0" aria-label="Rainmaker home">
+            <img
+            src="assets/logo-rainmaker.png"
+            alt="Rainmaker"
+            width="136"
+            height="26"
+            class="h-[26px] w-auto"
+          />
           </a>
           <span class="text-line-strong">/</span>
           <span class="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
