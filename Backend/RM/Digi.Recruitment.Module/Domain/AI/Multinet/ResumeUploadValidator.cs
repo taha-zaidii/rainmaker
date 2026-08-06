@@ -119,5 +119,77 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
             return false;
         }
+
+        /// <summary>
+        /// Reduce a file name to plain ASCII for the multipart
+        /// <c>Content-Disposition</c> header, keeping the extension intact.
+        ///
+        /// This is not cosmetic. .NET RFC-2047-encodes any file name holding a
+        /// non-ASCII character, so "Dominic Alvarez — Cybersecurity Analyst.pdf"
+        /// (em dash, U+2014) goes on the wire as:
+        ///
+        ///     filename="=?utf-8?B?RG9taW5pYyBBbHZhcmV6IOKAlCBDeWJlcnNlY3VyaXR5IEFuYWx5c3QucGRm?="
+        ///
+        /// The base64 payload contains no dot, so the service reads the suffix
+        /// as empty and answers 422 <c>File type '' is not supported</c> — for a
+        /// perfectly valid PDF. .NET also emits a correct RFC-5987
+        /// <c>filename*</c>, but a parser that reads only <c>filename</c> never
+        /// sees it, and we do not control the parser at the other end.
+        ///
+        /// Sending ASCII means both forms agree and no encoding is triggered.
+        /// The name here is transport packaging only — the candidate's real file
+        /// name is preserved in blob storage and on the parsing record, so
+        /// nothing is lost by flattening it.
+        /// </summary>
+        public static string ToTransportFileName(string? fileName)
+        {
+            var name = Path.GetFileName(fileName ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return "resume";
+            }
+
+            var extension = Path.GetExtension(name);
+            var stem = Path.GetFileNameWithoutExtension(name);
+
+            // FormD splits "é" into "e" + a combining accent, so dropping the
+            // marks keeps a readable "Fernandez" instead of "Fern_ndez".
+            var builder = new System.Text.StringBuilder(stem.Length);
+            foreach (var ch in stem.Normalize(System.Text.NormalizationForm.FormD))
+            {
+                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch)
+                    == System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    continue;
+                }
+
+                if (ch is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '-' or '_')
+                {
+                    builder.Append(ch);
+                }
+                else if (builder.Length > 0 && builder[^1] != '_')
+                {
+                    builder.Append('_');
+                }
+            }
+
+            var safeStem = builder.ToString().Trim('_');
+
+            // A name written entirely in a non-Latin script flattens to nothing.
+            // That is a legitimate CV, not a bad upload, so it gets a neutral
+            // stem rather than a rejection.
+            if (safeStem.Length == 0)
+            {
+                safeStem = "resume";
+            }
+            else if (safeStem.Length > 100)
+            {
+                safeStem = safeStem[..100];
+            }
+
+            // The extension was already checked against AllowedExtensions, so it
+            // is ASCII by construction.
+            return safeStem + extension.ToLowerInvariant();
+        }
     }
 }

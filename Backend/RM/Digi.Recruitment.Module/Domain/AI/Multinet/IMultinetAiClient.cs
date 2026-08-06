@@ -101,6 +101,27 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             Uri? baseUriOverride = null,
             CancellationToken cancellationToken = default);
 
+        /// <summary>
+        /// POST /recruitment/screening/screen — candidate screening against a job requisition.
+        /// Evaluates match score (0-100), shortlisted status (match_score >= threshold), matched/missing skills,
+        /// and evidence-based reasons.
+        /// </summary>
+        Task<AiResult<ScreenCandidateResult>> ScreenCandidateAsync(
+            ScreenCandidateRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// POST /recruitment/interview/questions — generates question bank grouped by category.
+        /// </summary>
+        Task<AiResult<InterviewQuestionsResult>> GenerateInterviewQuestionsAsync(
+            InterviewQuestionsRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default);
+
+
         /// <summary>GET /api/v1/candidates — the corpus the AI service itself holds.</summary>
         Task<AiResult<CandidateIndexResult>> ListCandidatesAsync(
             string? apiKey = null,

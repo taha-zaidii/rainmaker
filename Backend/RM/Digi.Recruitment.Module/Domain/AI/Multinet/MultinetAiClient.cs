@@ -282,7 +282,9 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
                     var filePart = new StreamContent(content);
                     filePart.Headers.ContentType =
                         new MediaTypeHeaderValue(ResumeUploadValidator.ContentTypeFor(extension));
-                    form.Add(filePart, UploadFieldName, Path.GetFileName(fileName));
+                    // ASCII only — a non-ASCII name gets RFC-2047 encoded and the
+                    // service can no longer read the extension. See ToTransportFileName.
+                    form.Add(filePart, UploadFieldName, ResumeUploadValidator.ToTransportFileName(fileName));
 
                     return new HttpRequestMessage(HttpMethod.Post, MultinetAiEndpoints.ExtractResume)
                     {
@@ -397,7 +399,81 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             return result;
         }
 
+        public async Task<AiResult<ScreenCandidateResult>> ScreenCandidateAsync(
+            ScreenCandidateRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+            {
+                return AiResult<ScreenCandidateResult>.Fail(
+                    AiErrorCode.BadRequest, "Screening request cannot be null.");
+            }
+
+            var result = await SendAsync<ScreenCandidateResult>(
+                () => JsonRequest(MultinetAiEndpoints.ScreenCandidate, request),
+                apiKey,
+                cancellationToken,
+                baseUriOverride).ConfigureAwait(false);
+
+            if (result.IsFailure)
+            {
+                return result;
+            }
+
+            var screened = result.Value!;
+            screened.ReviewRequired = true;
+            screened.Advisory = true;
+
+            _logger.LogInformation(
+                "Resume screening completed for '{JobTitle}' with score {Score} (Shortlisted: {Shortlisted}, Threshold: {ThresholdUsed}).",
+                request.JobTitle,
+                screened.MatchScore,
+                screened.Shortlisted,
+                screened.ThresholdUsed);
+
+            return result;
+        }
+
+        public async Task<AiResult<InterviewQuestionsResult>> GenerateInterviewQuestionsAsync(
+            InterviewQuestionsRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+            {
+                return AiResult<InterviewQuestionsResult>.Fail(
+                    AiErrorCode.BadRequest, "Interview questions request cannot be null.");
+            }
+
+            var result = await SendAsync<InterviewQuestionsResult>(
+                () => JsonRequest(MultinetAiEndpoints.InterviewQuestions, request),
+                apiKey,
+                cancellationToken,
+                baseUriOverride).ConfigureAwait(false);
+
+            if (result.IsFailure)
+            {
+                return result;
+            }
+
+            var generated = result.Value!;
+            generated.ReviewRequired = true;
+            generated.Advisory = true;
+
+            _logger.LogInformation(
+                "Generated interview questions for '{JobTitle}' across {CategoryCount} categories.",
+                request.JobTitle,
+                generated.QuestionBank?.Count ?? 0);
+
+            return result;
+        }
+
+
         // ── Matching and scoring ─────────────────────────────────────────────
+
 
         public Task<AiResult<CandidateIndexResult>> ListCandidatesAsync(
             string? apiKey = null,

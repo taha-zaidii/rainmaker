@@ -250,6 +250,152 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     }
 
     /// <summary>
+    /// POST /recruitment/screening/screen — request body shape.
+    /// </summary>
+    public sealed class ScreenCandidateRequest
+    {
+        [JsonPropertyName("candidate_profile")]
+        public CandidateProfile? CandidateProfile { get; set; }
+
+        [JsonPropertyName("job_title")]
+        public string JobTitle { get; set; } = string.Empty;
+
+        [JsonPropertyName("job_requirements")]
+        public List<string> JobRequirements { get; set; } = new();
+
+        [JsonPropertyName("key_skills")]
+        public List<string> KeySkills { get; set; } = new();
+
+        [JsonPropertyName("experience_required")]
+        public string? ExperienceRequired { get; set; }
+
+        [JsonPropertyName("threshold")]
+        public int Threshold { get; set; } = 80;
+
+        [JsonPropertyName("requisition_id")]
+        public string? RequisitionId { get; set; }
+
+        [JsonPropertyName("application_id")]
+        public string? ApplicationId { get; set; }
+
+        [JsonPropertyName("candidate_id")]
+        public string? CandidateId { get; set; }
+    }
+
+    /// <summary>
+    /// Reason detail in /recruitment/screening/screen.
+    /// </summary>
+    public sealed class ScreeningReason
+    {
+        /// <summary>"match" | "gap"</summary>
+        [JsonPropertyName("kind")]
+        public string Kind { get; set; } = string.Empty;
+
+        [JsonPropertyName("detail")]
+        public string Detail { get; set; } = string.Empty;
+
+        [JsonPropertyName("evidence")]
+        public string Evidence { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// POST /recruitment/screening/screen — response envelope.
+    /// </summary>
+    public sealed class ScreenCandidateResult
+    {
+        [JsonPropertyName("status")]
+        public string? Status { get; set; }
+
+        [JsonPropertyName("match_score")]
+        public int MatchScore { get; set; }
+
+        [JsonPropertyName("shortlisted")]
+        public bool Shortlisted { get; set; }
+
+        [JsonPropertyName("threshold_used")]
+        public int ThresholdUsed { get; set; } = 80;
+
+        [JsonPropertyName("matched_skills")]
+        public List<string> MatchedSkills { get; set; } = new();
+
+        [JsonPropertyName("missing_skills")]
+        public List<string> MissingSkills { get; set; } = new();
+
+        [JsonPropertyName("reasons")]
+        public List<ScreeningReason> Reasons { get; set; } = new();
+
+        [JsonPropertyName("review_required")]
+        public bool ReviewRequired { get; set; } = true;
+
+        [JsonPropertyName("advisory")]
+        public bool Advisory { get; set; } = true;
+
+        [JsonPropertyName("execution_time_ms")]
+        public int ExecutionTimeMs { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Additional { get; set; }
+    }
+
+    /// <summary>
+    /// POST /recruitment/interview/questions — request body.
+    /// </summary>
+    public sealed class InterviewQuestionsRequest
+    {
+        [JsonPropertyName("job_title")]
+        public string JobTitle { get; set; } = string.Empty;
+
+        [JsonPropertyName("job_description")]
+        public string JobDescription { get; set; } = string.Empty;
+
+        [JsonPropertyName("key_skills")]
+        public List<string> KeySkills { get; set; } = new();
+
+        [JsonPropertyName("candidate_profile")]
+        public CandidateProfile? CandidateProfile { get; set; }
+
+        [JsonPropertyName("questions_per_category")]
+        public int QuestionsPerCategory { get; set; } = 5;
+
+        [JsonPropertyName("categories")]
+        public List<string> Categories { get; set; } = new() { "technical", "behavioral", "role_specific" };
+    }
+
+    public sealed class InterviewQuestionItem
+    {
+        [JsonPropertyName("question")]
+        public string Question { get; set; } = string.Empty;
+
+        [JsonPropertyName("what_to_listen_for")]
+        public string WhatToListFor { get; set; } = string.Empty;
+
+        [JsonPropertyName("grounded_in")]
+        public string GroundedIn { get; set; } = "jd";
+    }
+
+    /// <summary>
+    /// POST /recruitment/interview/questions — response envelope.
+    /// </summary>
+    public sealed class InterviewQuestionsResult
+    {
+        [JsonPropertyName("status")]
+        public string? Status { get; set; }
+
+        [JsonPropertyName("question_bank")]
+        public Dictionary<string, List<InterviewQuestionItem>> QuestionBank { get; set; } = new();
+
+        [JsonPropertyName("review_required")]
+        public bool ReviewRequired { get; set; } = true;
+
+        [JsonPropertyName("advisory")]
+        public bool Advisory { get; set; } = true;
+
+        [JsonPropertyName("execution_time_ms")]
+        public int ExecutionTimeMs { get; set; }
+    }
+
+    /// <summary>
+
     /// Error body shape: <c>{"detail": {"error": code, "message": text}}</c>.
     /// One path (400, no filename) returns <c>detail</c> as a bare string, so
     /// both forms have to be tolerated.
@@ -259,3 +405,4 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         [JsonPropertyName("detail")] public JsonElement Detail { get; set; }
     }
 }
+

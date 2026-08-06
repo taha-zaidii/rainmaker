@@ -267,6 +267,132 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             return AiResult<ParseResumeResult>.Ok(BuildCannedResult(Path.GetFileName(documentUrl)));
         }
 
+        public async Task<AiResult<ScreenCandidateResult>> ScreenCandidateAsync(
+            ScreenCandidateRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+            {
+                return AiResult<ScreenCandidateResult>.Fail(
+                    AiErrorCode.BadRequest, "Screening request cannot be null.");
+            }
+
+            if (_options.StubLatencySeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(_options.StubLatencySeconds, 2)), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            var threshold = request.Threshold > 0 ? request.Threshold : 80;
+            var matchScore = 85;
+            var isShortlisted = matchScore >= threshold;
+
+            _logger.LogInformation(
+                "STUB screening for '{JobTitle}' — returning canned result (Score: {Score}, Shortlisted: {Shortlisted}).",
+                request.JobTitle, matchScore, isShortlisted);
+
+            return AiResult<ScreenCandidateResult>.Ok(new ScreenCandidateResult
+            {
+                Status = "success",
+                MatchScore = matchScore,
+                Shortlisted = isShortlisted,
+                ThresholdUsed = threshold,
+                MatchedSkills = new List<string> { "C#", ".NET 8", "ASP.NET Core", "SQL Server", "REST API" },
+                MissingSkills = new List<string> { "Kubernetes" },
+                Reasons = new List<ScreeningReason>
+                {
+                    new()
+                    {
+                        Kind = "match",
+                        Detail = "Strong experience in backend .NET software engineering matching position requirements.",
+                        Evidence = "5+ years developing ASP.NET Core web services and SQL microservices."
+                    },
+                    new()
+                    {
+                        Kind = "gap",
+                        Detail = "Lacks direct production experience with Kubernetes orchestration.",
+                        Evidence = "Resume highlights Docker containerization but no explicit Kubernetes deployment."
+                    }
+                },
+                ReviewRequired = true,
+                Advisory = true,
+                ExecutionTimeMs = 1200
+            });
+        }
+
+        public async Task<AiResult<InterviewQuestionsResult>> GenerateInterviewQuestionsAsync(
+            InterviewQuestionsRequest request,
+            string? apiKey = null,
+            Uri? baseUriOverride = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (request is null)
+            {
+                return AiResult<InterviewQuestionsResult>.Fail(
+                    AiErrorCode.BadRequest, "Interview questions request cannot be null.");
+            }
+
+            if (_options.StubLatencySeconds > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Math.Min(_options.StubLatencySeconds, 2)), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            _logger.LogInformation(
+                "STUB generating interview questions for '{JobTitle}'. No GPU call was made.",
+                request.JobTitle);
+
+            var bank = new Dictionary<string, List<InterviewQuestionItem>>
+            {
+                ["technical"] = new()
+                {
+                    new()
+                    {
+                        Question = "How do you manage dependency injection lifetimes (Transient vs Scoped vs Singleton) in ASP.NET Core microservices?",
+                        WhatToListFor = "Clear understanding of memory leaks, DbContext scoping issues, and service provider resolution.",
+                        GroundedIn = "jd"
+                    },
+                    new()
+                    {
+                        Question = "Can you describe how you implement asynchronous streaming and resilience retries with Polly in C#?",
+                        WhatToListFor = "Knowledge of CancellationToken propagation, exponential backoff, and circuit breakers.",
+                        GroundedIn = "jd"
+                    }
+                },
+                ["behavioral"] = new()
+                {
+                    new()
+                    {
+                        Question = "Describe a situation where a production deployment encountered a critical error. How did you diagnose and resolve it under pressure?",
+                        WhatToListFor = "Structured troubleshooting, log inspection, root cause isolation, and post-mortem ownership.",
+                        GroundedIn = "candidate_profile"
+                    }
+                },
+                ["role_specific"] = new()
+                {
+                    new()
+                    {
+                        Question = "Given a high-throughput ERP queue, how would you design database indexing and batch processing to optimize performance?",
+                        WhatToListFor = "Understanding execution plans, index fragmentation, locking vs non-locking reads, and batch transaction bounds.",
+                        GroundedIn = "jd"
+                    }
+                }
+            };
+
+            return AiResult<InterviewQuestionsResult>.Ok(new InterviewQuestionsResult
+            {
+                Status = "success",
+                QuestionBank = bank,
+                ReviewRequired = true,
+                Advisory = true,
+                ExecutionTimeMs = 1450
+            });
+        }
+
+
+
         public Task<AiResult<CandidateIndexResult>> ListCandidatesAsync(
             string? apiKey = null,
             CancellationToken cancellationToken = default) =>
