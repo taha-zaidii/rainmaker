@@ -21,9 +21,15 @@ export const environment = {
    */
   companyId: 133,
 
-  /** Valid 30 days from 2026-08-03. Regenerate with db/../mint-dev-jwt if it expires. */
+  /**
+   * Valid 30 days from 2026-08-05. Carries ADMIN_RECRUITMENT.
+   *
+   * That claim is load-bearing: without it the list endpoints silently scope
+   * to "rows this user created" and every grid renders empty with a 200 and
+   * no error anywhere — which cost real time to track down once already.
+   */
   devAuthToken:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZWlkIjoiMSIsInVuaXF1ZV9uYW1lIjoic3VwZXJhZG1pbiIsIlVzZXJOYW1lIjoic3VwZXJhZG1pbiIsIkNvbXBhbnlJRCI6IjEzMyIsImlzcyI6IkRpZ2lTb2Z0RVJQIiwiYXVkIjoiRGlnaVNvZnRFUlBVc2VycyIsImlhdCI6MTc4NTc0MTYzOSwibmJmIjoxNzg1NzQxNjM5LCJleHAiOjE3ODgzMzM2Mzl9.-YgWUpKLgyIKZCdcG9RCZcCC8Yfmzm12Q0l7P6knGXc',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZWlkIjoiMSIsInVuaXF1ZV9uYW1lIjoic3VwZXJhZG1pbiIsIlVzZXJOYW1lIjoic3VwZXJhZG1pbiIsIkNvbXBhbnlJRCI6IjEzMyIsIkVtcGxveWVlSUQiOiIxIiwiRW1wbG95ZWVDb2RlIjoiU3lzdGVtIiwiUGVybWlzc2lvbiI6WyJBRE1JTl9SRUNSVUlUTUVOVCIsIlJFQ1JVSVRNRU5UX1ZJRVciLCJSRUNSVUlUTUVOVF9DUkVBVEUiLCJSRUNSVUlUTUVOVF9FRElUIiwiUkVDUlVJVE1FTlRfREVMRVRFIiwiUkVDUlVJVE1FTlRfQVBQUk9WRSIsIlJFQ1JVSVRNRU5UX0FJX1NFVFRJTkdTIiwiUkVDUlVJVE1FTlRfQUlfR0VORVJBVEUiXSwiTW9kdWxlcyI6IltcIkhSTVwiLFwiUkVDUlVJVE1FTlRcIl0iLCJpc3MiOiJEaWdpU29mdEVSUCIsImF1ZCI6IkRpZ2lTb2Z0RVJQVXNlcnMiLCJpYXQiOjE3ODU5MDIxNzcsIm5iZiI6MTc4NTkwMjE3NywiZXhwIjoxNzg4NDk0MTc3fQ.tV2eXyi0r1W6oSBUkTg96ScEwoil2DHS9fjitfkXDvg',
 
   /**
    * The AI service takes ~13 s warm and up to ~35 s cold. The browser must be

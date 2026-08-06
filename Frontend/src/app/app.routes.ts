@@ -4,6 +4,22 @@ import { ShellComponent } from './layout/shell.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'recruitment/dashboard' },
+
+  // ── Public careers site ─────────────────────────────────────────────────
+  // Deliberately OUTSIDE the portal shell: no sidebar, no top bar, no auth.
+  // This is the only surface anonymous internet traffic reaches, and the
+  // backend endpoints behind it are [AllowAnonymous] and return published
+  // requisitions only.
+  {
+    path: 'careers',
+    loadComponent: () =>
+      import('./features/careers/careers.component').then((m) => m.CareersComponent),
+  },
+  {
+    path: 'careers/job/:id',
+    loadComponent: () =>
+      import('./features/careers/job-detail.component').then((m) => m.JobDetailComponent),
+  },
   {
     path: 'recruitment',
     component: ShellComponent,

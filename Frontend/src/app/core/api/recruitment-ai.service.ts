@@ -12,8 +12,12 @@ import {
   GenerateJobDescriptionResult,
   SaveApiKeySettingsRequest,
   TestApiKeyRequest,
+  ParsedResume,
   TestApiKeyResult,
+  ScreenResumeRequest,
+  ScreenResumeResponse,
 } from './recruitment-ai.models';
+
 
 /**
  * The one place the recruitment AI endpoints are called.
@@ -154,15 +158,22 @@ export class RecruitmentAiService {
       .pipe(catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e))));
   }
 
+  /**
+   * Runs the AI parser over an already-uploaded CV.
+   *
+   * Takes a PATH, not bytes: the file is uploaded once and referenced
+   * afterwards, so a re-parse costs no second upload. Parsing holds the
+   * service's GPU lock and can take 40-90 s, hence the long timeout.
+   */
   parseResume(payload: {
     companyId?: number;
     jobRequisitionId?: number;
     jobApplicationId?: number;
     resumeFilePath: string;
-  }): Observable<ApiResponse<any>> {
+  }): Observable<ApiResponse<ParsedResume>> {
     const companyId = payload.companyId ?? environment.companyId;
     return this.http
-      .post<ApiResponse<any>>(`${this.base}/ParseResume`, {
+      .post<ApiResponse<ParsedResume>>(`${this.base}/ParseResume`, {
         companyId: companyId,
         companyID: companyId,
         jobRequisitionId: payload.jobRequisitionId ?? 1,
@@ -171,8 +182,29 @@ export class RecruitmentAiService {
         resumePath: payload.resumeFilePath,
         resumeFilePath: payload.resumeFilePath,
       })
-      .pipe(catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e))));
+      .pipe(
+        timeout(environment.aiRequestTimeoutMs),
+        catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e) as ApiResponse<ParsedResume>)),
+      );
   }
+
+  /* ── Resume screening ───────────────────────────────────────────────────── */
+
+  /**
+   * Screens a resume against job requirements using AI.
+   * Computes match score, shortlisted status, matched/missing skills, and evidence reasons.
+   */
+  screenResume(
+    request: ScreenResumeRequest,
+  ): Observable<ApiResponse<ScreenResumeResponse>> {
+    return this.http
+      .post<ApiResponse<ScreenResumeResponse>>(`${this.base}/ScreenResume`, request)
+      .pipe(
+        timeout(environment.aiRequestTimeoutMs),
+        catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e) as ApiResponse<ScreenResumeResponse>)),
+      );
+  }
+
 
   /* ── Plumbing ─────────────────────────────────────────────────────────── */
 

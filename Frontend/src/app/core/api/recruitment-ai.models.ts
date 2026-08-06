@@ -252,3 +252,110 @@ export const AI_CAPABILITY_LABEL: Record<string, string> = {
   'matching.rank': 'Ranking',
   'scoring.score': 'Scoring',
 };
+
+
+/* ── Resume parsing ─────────────────────────────────────────────────────── */
+
+export interface ResumeExperience {
+  company: string | null;
+  role: string | null;
+  jobTitle: string | null;
+  duration: string | null;
+  location: string | null;
+  description: string | null;
+}
+
+export interface ResumeEducation {
+  institution: string | null;
+  degree: string | null;
+  duration: string | null;
+  gpa: string | null;
+}
+
+export interface ResumeProject {
+  name: string | null;
+  technologies: string | null;
+  description: string | null;
+}
+
+/**
+ * Output of the AI resume parser.
+ *
+ * Accuracy is certified around 95% at field level — excellent, not perfect.
+ * Every value here is a SUGGESTION a human confirms before it becomes a
+ * candidate record, which is why the apply form shows these fields filled but
+ * editable and marked as AI-derived rather than silently accepting them.
+ */
+export interface ParsedResume {
+  fullName: string | null;
+  candidateName: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  summary: string | null;
+  skills: string[];
+  experience: ResumeExperience[];
+  education: ResumeEducation[];
+  projects: ResumeProject[];
+  certifications: string[];
+  languages: string | null;
+  totalYearsExperience: number | null;
+  parsedOn: string | null;
+
+  /* The service returns more than the C# DTO documents. These are optional
+     because which of them appear depends on the extraction route the parser
+     took, so a screen must tolerate any of them being absent. */
+  phoneNumber?: string | null;
+  totalExperienceYears?: number | null;
+
+  /** Raw ProfileSchema JSON, stored verbatim in the ParsedData column. */
+  parsedDataJson?: string | null;
+
+  /** Per-field record of HOW each value was obtained. Anything not produced
+   *  and verified by the model itself is worth flagging to a reviewer. */
+  fieldProvenance?: Record<string, string> | null;
+
+  /** Anything added after this client was written — never a hard failure. */
+  [key: string]: unknown;
+}
+
+/* ── Resume screening ───────────────────────────────────────────────────── */
+
+export interface ScreeningReason {
+  kind: 'match' | 'gap' | string;
+  detail: string;
+  evidence: string;
+}
+
+export interface JobRequirements {
+  jobTitle: string;
+  requiredSkills?: string[];
+  experience?: string | null;
+  education?: string | null;
+}
+
+export interface ScreenResumeRequest {
+  companyID: number;
+  applicationID?: number | null;
+  applicantID?: number | null;
+  resumeParsingID?: number | null;
+  resumeId?: number | null;
+  resumePath: string;
+  resumeText?: string | null;
+  jobRequirements: JobRequirements;
+}
+
+export interface ScreenResumeResponse {
+  matchScore: number;
+  recommendation: string;
+  strengths: string[];
+  weaknesses: string[];
+  screeningNotes: string;
+  screenedOn: string;
+  shortlisted?: boolean;
+  thresholdUsed?: number;
+  matchedSkills?: string[];
+  missingSkills?: string[];
+  reasons?: ScreeningReason[];
+}
+
