@@ -4,8 +4,18 @@ Prepared by Syed Taha, Multinet.
 
 Context: the MultinetAI provider is integrated into the recruitment portal backend
 and verified end to end locally (settings save → Test API Key → JD generation →
-database persistence). The items below are what is needed to finish the feature
+resume parsing → AI screening → status sync → database persistence). All database stored procedure fixes are packaged in `db/seed/005_demo_ruc_fixes.sql`. The items below are what is needed to finish the feature
 and hand it over cleanly. Each one says *why*, so nothing here is a nice-to-have.
+
+---
+
+## ★ Stored Procedures Packaged in `db/seed/005_demo_ruc_fixes.sql`
+
+The following stored procedures were created and verified locally, ready for deployment to live:
+1. **`[ruc].[SP_Recruitment_ShortlistCandidate]`**: Updates candidate application status to `SHORTLISTED` (StatusID = 2).
+2. **`[ruc].[SP_Recruitment_RejectApplication]`**: Updates application status to `REJECTED` (StatusID = 7) with remarks.
+3. **`[ruc].[SP_Ruc_JobApplication_Update]`**: Updates application status, screening score (`ScreeningScore`), and remarks.
+
 
 ---
 

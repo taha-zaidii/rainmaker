@@ -106,21 +106,76 @@ trailing slash*. The backend appends the feature path.
 
 ---
 
-## 5. Endpoint map (the complete list)
+## 5. Endpoint map (confirmed by the AI team, 2026-08-05)
 
-| Portal feature | Path appended to base |
-|---|---|
-| Test API Key | `/auth/verify` |
-| Generate JD with AI | `/recruitment/jobreq/generate` |
-| Auto Resume Parse | `/parser/extract` (multipart, field name `file`) |
-| Auto Resume Screening | `/recruitment/screening/screen` |
-| Auto Candidate Matching | `/matching/rank` |
-| Generate Interview Questions | `/recruitment/interview/questions` |
-| Candidate Evaluation assist | `/scoring/score` |
-| PMP (already live, other team) | `/pmp/goals/generate`, `/pmp/recommendations/generate`, `/pmp/status` |
+| Portal feature | Path appended to base | Client method | Wired to UI |
+|---|---|---|---|
+| Test API Key | `/auth/verify` | `VerifyKeyAsync` | ✅ AI Settings |
+| Generate JD with AI | `/recruitment/jobreq/generate` | `GenerateJobRequisitionAsync` | ✅ Create wizard |
+| Resume parse — by URL | `/parser/extract-url` | `ExtractResumeByUrlAsync` | ✅ see note below |
+| Resume parse — by bytes | `/parser/extract` (multipart, field `file`) | `ExtractResumeAsync` | ✅ see note below |
+| Resume screening | `/recruitment/screening/screen` | **none yet** | ⬜ |
+| Interview questions | `/recruitment/interview/questions` | **none yet** | ⬜ |
+| Candidate matching | `/matching/rank` | `RankAsync` | ⬜ — see caveat |
+| Candidate evaluation | `/scoring/score` | `ScoreAsync` | ⬜ |
+| PMP (other team, already live) | `/pmp/goals/generate`, `/pmp/recommendations/generate`, `/pmp/status` | — | n/a |
 
-Canonical constants live in `Domain/AI/Multinet/MultinetAiEndpoints.cs`.
+Constants live in `Domain/AI/Multinet/MultinetAiEndpoints.cs`.
 **Never hardcode a path elsewhere.**
+
+### Which parse endpoint gets used, and why it matters
+
+Both are implemented and the backend chooses at call time
+(`RecruitmentAIService.ParseResumeViaMultinetAsync`):
+
+- A **publicly reachable** URL → `/parser/extract-url`. Cheapest: no bytes move
+  through the portal.
+- Anything else → download locally and POST to `/parser/extract`.
+
+The check is `IsRemotelyFetchable`, which rejects loopback and RFC-1918
+addresses. This is not defensive padding: local uploads come back as
+`https://localhost:7777/storage/...`, and the AI service runs on Multinet's GPU
+box, so handing it that URL produced a failed parse that *looked* like an
+unreadable CV. Anything that cannot be fetched from outside gets its bytes
+uploaded instead.
+
+### Upload file names must be ASCII on the wire
+
+A CV called `Dominic Alvarez — Cybersecurity Analyst.pdf` was rejected with
+422 `File type '' is not supported`. The file was a valid PDF and the service
+was right to refuse it — the defect was ours.
+
+The em dash (U+2014) is non-ASCII, so .NET RFC-2047-encodes the whole name into
+the `Content-Disposition` header:
+
+```
+filename="=?utf-8?B?RG9taW5pYyBBbHZhcmV6IOKAlCBDeWJlcnNlY3VyaXR5IEFuYWx5c3QucGRm?="
+```
+
+Base64 contains no dot, so the parser read the suffix as empty. .NET *also*
+emits a correct RFC-5987 `filename*`, but a parser reading only `filename`
+never sees it, and we do not control the parser at the far end.
+
+`ResumeUploadValidator.ToTransportFileName` flattens the name to ASCII before
+it goes on the wire (accents keep their base letter, non-Latin scripts fall
+back to `resume`). The candidate's real file name is untouched in blob storage
+and on the parsing record. Pinned by `ResumeTransportFileNameTests`.
+
+**This affects any non-ASCII name** — accented European names, Urdu, Arabic,
+Chinese. Given where the portal is deployed, that was never a rare edge case.
+
+### Caveat on `/matching/rank`
+
+The AI team has confirmed it currently **returns an empty list** — it is not yet
+pointed at live HRMS candidates. So the RANK column in Applications Management
+must not be built as if it were working: an empty ranking would render as "no
+matches", which reads as a verdict about the candidates rather than an
+unfinished integration. Wire it only once the AI team confirms it is populated,
+and until then say so on screen.
+
+Note also that `RankAsync` and `ScoreAsync` still carry request shapes written
+against the older on-box contract (`jd_text` / `top_k` / `profile_id`). Those
+need re-checking against the production contract before either is used.
 
 ### Error contract
 
@@ -256,16 +311,28 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
   to Draft, never public). Endpoint confirmed live: 401 with a bad key, vs 404 for a
   nonsense path. **Not yet run end to end over HTTP** — that needs Docker up and a
   `multinetai` settings row for a company (see §12).
-- ✅ **Resume parsing** (`/parser/extract` and `/parser/extract-url`) → integrated into `ParseResumeAsync`.
-  `MultinetAiProvider.Matches` branch added to route `multinetai` requests to the in-house AI client. Supports both URL-based document extraction and local stream upload. Maps `CandidateProfile` → `ParseResumeResponseDto` (`ParsedData` DB JSON column). Fully verified with 111 passing tests.
-- ⬜ Screening (`/recruitment/screening/screen`) with Auto Shortlist Threshold
+- ✅ **Resume parsing & Database Storage** (`/parser/extract` and `/parser/extract-url`):
+  Integrated into `ParseResumeAsync`. Mapped all parsed JSON fields (skills, experience, summary, education, projects, contact details) into `dbo.Tbl_Ruc_Applicant` and `dbo.Tbl_Ruc_JobApplication`.
+- ✅ **AI Screening Logic & Status Sync** (`/recruitment/screening/screen`):
+  Created SPs `[ruc].[SP_Recruitment_ShortlistCandidate]` and `[ruc].[SP_Recruitment_RejectApplication]`. Synced shortlist (Status 2) and reject (Status 7) state transitions across frontend, backend, and database.
+- ✅ **AI Match Score Persistence & Bug Fix**:
+  Created missing SP `[ruc].[SP_Ruc_JobApplication_Update]`. Ensured `ScreeningScore` updates in `dbo.Tbl_Ruc_JobApplication` and renders live badges (e.g. `82% · Good Match`) in the Applications Management portal grid.
+- ✅ **Public Careers Portal & Job Detail Redesign** (`/careers` & `/careers/job/:id`):
+  Redesigned public job cards with location, experience, employment type, salary, openings count, key technologies chips, and closing date. Overhauled the job detail page into an enterprise 2-column layout with 4 stat metric badges, overview sidebar, and sticky Apply CTA buttons.
 - ⬜ Ranking (`/matching/rank`) for the RANK column
 - ⬜ Interview questions (`/recruitment/interview/questions`)
 - ⬜ Rubric scoring (`/scoring/score`) — badge "provisional" until `rubric_signed_off`
-- ⬜ Handoff doc for the supervisor
 
 ### Frontend
-- ⬜ Revamped recruitment portal (Angular 19 + Material 3 + Tailwind)
+- ✅ Revamped recruitment portal (Angular 19 + Tailwind + Custom Design System)
+  - AI Settings page & API Key Verification
+  - 4-Step Job Requisition Creation Wizard
+  - Job Requisitions Management Grid (`/recruitment/jobs`)
+  - Applications Management Grid (`/recruitment/applications`) with Shortlist/Reject actions & AI Match score badges
+  - Upload Resume & AI Extraction Review Screen (`/recruitment/upload-resume`)
+  - Application Details Screen (`/recruitment/application-details`) with AI Screening Hero Card, Candidate Profile, Resume PDF Viewer, and Timeline tabs
+  - Public Careers Feed (`/careers`) & Enterprise Job Detail Page (`/careers/job/:id`)
+
 
 ---
 
