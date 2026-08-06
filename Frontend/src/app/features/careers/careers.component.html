@@ -1,0 +1,224 @@
+<div class="min-h-screen bg-canvas">
+  <!-- Brand bar. The careers site is public-facing, so it leads with the
+       company mark rather than the module chrome candidates never see. -->
+  <div class="bg-surface border-b border-line">
+    <div class="max-w-[1180px] mx-auto px-6 h-16 flex items-center">
+      <img
+        src="assets/logo-rainmaker.png"
+        alt="Rainmaker"
+        width="136"
+        height="26"
+        class="h-[26px] w-auto"
+      />
+    </div>
+  </div>
+
+  <!-- ══ Hero ═══════════════════════════════════════════════════════════ -->
+  <header class="bg-surface border-b border-line">
+    <div class="max-w-[1180px] mx-auto px-6 pt-10 pb-14 text-center">
+
+      <h1 class="mt-5 text-[38px] font-bold tracking-[-0.02em] text-ink leading-tight">
+        Career Opportunities
+      </h1>
+      <p class="mt-3 text-[15px] text-ink-muted max-w-[560px] mx-auto leading-6">
+        Find your next professional chapter in a space designed for growth,
+        transparency and high-impact career development.
+      </p>
+
+      <div class="mt-8 max-w-[640px] mx-auto flex gap-2">
+        <div class="rm-search-box">
+          <rm-icon
+            name="search"
+            [size]="18"
+            class="rm-search-icon"
+          />
+          <input
+            class="rm-search-input !h-12 !pl-11"
+            placeholder="Search for jobs, skills or departments…"
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)"
+            name="q"
+          />
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══ Listings ═══════════════════════════════════════════════════════ -->
+  <main class="max-w-[1180px] mx-auto px-6 py-8">
+    @if (loading()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="rm-card p-6 animate-pulse">
+            <div class="h-4 w-24 bg-surface-sunken rounded"></div>
+            <div class="mt-4 h-5 w-3/4 bg-surface-sunken rounded"></div>
+            <div class="mt-3 h-3 w-full bg-surface-sunken rounded"></div>
+            <div class="mt-2 h-3 w-2/3 bg-surface-sunken rounded"></div>
+          </div>
+        }
+      </div>
+    } @else if (filtered().length === 0) {
+      <div class="rm-card p-14 text-center">
+        <div
+          class="w-12 h-12 mx-auto rounded-xl bg-surface-muted text-ink-muted grid place-items-center"
+        >
+          <rm-icon name="search" [size]="22" />
+        </div>
+        <h2 class="mt-4 text-[17px] font-semibold text-ink">
+          @if (search()) {
+            No roles match "{{ search() }}"
+          } @else {
+            No open positions right now
+          }
+        </h2>
+        <p class="mt-1.5 text-sm text-ink-muted">
+          @if (search()) {
+            Try a broader search, or clear it to see everything open.
+          } @else {
+            Nothing is published at the moment. Please check back soon.
+          }
+        </p>
+        @if (search()) {
+          <button class="rm-btn-secondary mt-5" (click)="search.set('')">
+            Clear search
+          </button>
+        }
+      </div>
+    } @else {
+      <div class="flex items-center justify-between mb-5">
+        <p class="text-sm text-ink-muted">
+          <strong class="text-ink font-medium">{{ filtered().length }}</strong>
+          open {{ filtered().length === 1 ? 'position' : 'positions' }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        @for (job of filtered(); track job.requisitionID) {
+          <article class="rm-card p-6 flex flex-col hover:border-primary hover:shadow-lg transition-all duration-200 group">
+            <div class="flex items-start justify-between gap-3">
+              <div class="w-11 h-11 rounded-xl bg-primary-tint text-primary grid place-items-center shrink-0 group-hover:scale-105 transition-transform">
+                <rm-icon name="briefcase" [size]="20" />
+              </div>
+              <div class="flex items-center gap-1.5">
+                @if (job.vacancies) {
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-surface-muted text-ink-muted border border-line">
+                    {{ job.vacancies }} {{ job.vacancies === 1 ? 'opening' : 'openings' }}
+                  </span>
+                }
+                <span class="rm-chip-success">Published</span>
+              </div>
+            </div>
+
+            <h2 class="mt-4 text-[18px] font-bold text-ink leading-snug group-hover:text-primary transition-colors">
+              {{ job.jobTitle }}
+            </h2>
+
+            <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-ink-muted flex items-center gap-1.5">
+              <span>{{ departmentLabel(job) }}</span>
+            </p>
+
+            <!-- Metadata Badges -->
+            <div class="mt-3.5 flex flex-wrap gap-1.5">
+              @if (job.location) {
+                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-muted text-ink-soft border border-line flex items-center gap-1">
+                  📍 {{ job.location }}
+                </span>
+              }
+              @if (experienceLabel(job); as exp) {
+                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-muted text-ink-soft border border-line flex items-center gap-1">
+                  💼 {{ exp }}
+                </span>
+              }
+              @if (job.employmentTypeName) {
+                <span class="px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-muted text-ink-soft border border-line flex items-center gap-1">
+                  🕒 {{ job.employmentTypeName }}
+                </span>
+              }
+              @if (salaryText(job); as sal) {
+                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 flex items-center gap-1">
+                  💵 {{ sal }}
+                </span>
+              }
+            </div>
+
+            <!-- Job Summary -->
+            @if (job.jobSummary) {
+              <p class="mt-3.5 text-[13px] text-ink-muted leading-relaxed line-clamp-3">
+                {{ job.jobSummary }}
+              </p>
+            }
+
+            <!-- Required Skills Chips Preview -->
+            @if (skillsPreview(job).length) {
+              <div class="mt-4 pt-3 border-t border-line/60 space-y-1.5">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-ink-faint">Key Technologies</div>
+                <div class="flex flex-wrap gap-1.5">
+                  @for (s of skillsPreview(job); track s) {
+                    <span class="rm-chip-blue !h-6 !text-[11px] !px-2">{{ s }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="flex-1 min-h-[16px]"></div>
+
+            <div class="mt-5 pt-4 border-t border-line flex items-center gap-2">
+              <button class="rm-btn-primary flex-1 !h-10 text-xs font-semibold shadow-sm" (click)="apply(job)">Apply Now</button>
+              <a
+                class="rm-btn-secondary !h-10 text-xs font-semibold"
+                [routerLink]="['/careers/job', job.requisitionID]"
+                [queryParams]="{ companyId: companyId }"
+                >View Details</a
+              >
+            </div>
+
+            <div class="mt-3.5 flex items-center justify-between text-[11px] text-ink-muted">
+              <span class="font-mono text-ink-faint">{{ job.requisitionCode || ('REQ-' + job.requisitionID) }}</span>
+              <div class="flex items-center gap-2">
+                <span>{{ postedAgo(job) }}</span>
+                @if (closingText(job); as closeTxt) {
+                  <span>•</span>
+                  <span class="text-amber-700 font-medium">{{ closeTxt }}</span>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+    }
+
+    <!-- Job bank fallback, as on the live portal: a candidate who finds
+         nothing today should still be able to leave a CV. -->
+    <section
+      class="rm-card mt-8 p-6 flex flex-col sm:flex-row items-center gap-5 border-dashed"
+    >
+      <div class="w-11 h-11 rounded-lg bg-surface-muted text-ink-muted grid place-items-center shrink-0">
+        <rm-icon name="file-text" [size]="20" />
+      </div>
+      <div class="flex-1 text-center sm:text-left">
+        <h3 class="text-[15px] font-semibold text-ink">Don't see the right role?</h3>
+        <p class="mt-0.5 text-[13px] text-ink-muted">
+          Leave your CV and we will reach out when something matching opens up.
+        </p>
+      </div>
+      <a
+        class="rm-btn-secondary"
+        [routerLink]="['/careers/job-bank']"
+        [queryParams]="{ companyId: companyId }"
+      >
+        <rm-icon name="upload" [size]="16" /> Submit resume
+      </a>
+    </section>
+  </main>
+
+  <footer class="border-t border-line mt-8">
+    <div
+      class="max-w-[1180px] mx-auto px-6 py-6 flex items-center justify-between text-xs text-ink-muted"
+    >
+      <span>Rainmaker HRMS · Multinet</span>
+      <span>Company {{ companyId }}</span>
+    </div>
+  </footer>
+</div>
