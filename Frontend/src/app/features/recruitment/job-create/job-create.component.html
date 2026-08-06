@@ -610,8 +610,9 @@
           >
             <rm-icon name="info" [size]="16" class="text-primary shrink-0 mt-0.5" />
             <p class="text-[13px] text-ink-soft">
-              Saving creates the requisition as a <strong>Draft</strong>. It will not appear
-              on the public careers page until someone publishes it explicitly.
+              <strong>Save as Draft</strong> keeps this off the careers page so you can
+              come back to it. <strong>Save &amp; Publish</strong> makes it publicly
+              visible straight away. Drafts can be published later from Job Requisitions.
             </p>
           </div>
         </div>
@@ -629,12 +630,24 @@
           Continue <rm-icon name="chevron-right" [size]="16" />
         </button>
       } @else {
-        <button class="rm-btn-primary" (click)="saveRequisition()" [disabled]="isSaving()">
-          @if (isSaving()) {
-            Saving Requisition...
-          } @else {
-            Save & Publish Requisition
-          }
+        <!-- Two intents, two buttons. Saving and going public are different
+             decisions, and the footer should not quietly do the second while
+             the copy above promises only the first. -->
+        <button
+          class="rm-btn-secondary"
+          (click)="saveRequisition(false)"
+          [disabled]="isSaving() !== null"
+          title="Create the requisition as a draft. It stays off the careers page."
+        >
+          {{ isSaving() === 'draft' ? 'Saving…' : 'Save as Draft' }}
+        </button>
+        <button
+          class="rm-btn-primary"
+          (click)="saveRequisition(true)"
+          [disabled]="isSaving() !== null"
+          title="Create the requisition and make it visible on the public careers page"
+        >
+          {{ isSaving() === 'publish' ? 'Publishing…' : 'Save & Publish' }}
         </button>
       }
     </div>

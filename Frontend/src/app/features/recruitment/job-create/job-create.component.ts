@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 
 import { IconComponent } from '../../../shared/icon.component';
 import { RecruitmentAiService } from '../../../core/api/recruitment-ai.service';
+import { RecruitmentService } from '../../../core/api/recruitment.service';
+import { SessionService } from '../../../core/auth/session.service';
 import {
   AiJobDraft,
   GenerateJobDescriptionResult,
@@ -66,6 +68,8 @@ const GRADES = ['Assistant', 'Officer', 'Sr. Officer', 'Manager', 'Sr. Manager']
 export class JobCreateComponent {
   private readonly api = inject(RecruitmentAiService);
   private readonly router = inject(Router);
+  private readonly recruitment = inject(RecruitmentService);
+  private readonly session = inject(SessionService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly jobCategoryOptions = JOB_CATEGORY_OPTIONS;
@@ -100,7 +104,7 @@ export class JobCreateComponent {
   protected draft = signal<AiJobDraft | null>(null);
   protected meta = signal<GenerateJobDescriptionResult | null>(null);
   protected error = signal<string | null>(null);
-  protected isSaving = signal(false);
+  protected isSaving = signal<'draft' | 'publish' | null>(null);
   protected bannerDismissed = signal(false);
   protected elapsed = signal(0);
 
@@ -178,17 +182,26 @@ export class JobCreateComponent {
       });
   }
 
-  protected saveRequisition(): void {
+  /**
+   * Save the draft.
+   *
+   * `publish` is an explicit choice the person makes at the footer, never a
+   * side effect of saving. The requisition is created as a Draft either way;
+   * publishing is a second, separate call — which is what makes "this advert
+   * went public" an action somebody took rather than something that happened.
+   */
+  protected saveRequisition(publish: boolean): void {
     const d = this.draft();
     if (!d) return;
 
-    this.isSaving.set(true);
+    this.isSaving.set(publish ? 'publish' : 'draft');
     this.error.set(null);
 
     const payload = {
       companyId: environment.companyId,
       jobTitle: d.basicInfo.jobTitle,
       jobDescription: d.basicInfo.jobSummary || d.basicInfo.jobTitle,
+      jobSummary: d.basicInfo.jobSummary,
       department: d.basicInfo.department,
       designation: d.basicInfo.designation,
       employmentType: d.basicInfo.employmentType,
@@ -197,30 +210,68 @@ export class JobCreateComponent {
       experience: d.requirements.experienceYears
         ? `${d.requirements.experienceYears.minimum ?? ''}-${d.requirements.experienceYears.maximum ?? ''}`
         : null,
-      skills: d.requirements.skills?.join(', '),
-      qualifications: d.requirements.qualifications?.join('\n'),
-      keyResponsibilities: d.requirements.keyResponsibilities?.join('\n'),
-      requirements: d.requirements.requirements?.join('\n'),
+      minExperience: d.requirements.experienceYears?.minimum ?? null,
+      maxExperience: d.requirements.experienceYears?.maximum ?? null,
+      location: d.compensation.location || 'Karachi, Pakistan',
+      skills: d.requirements.skills?.filter(Boolean).join(', '),
+
+      qualifications: d.requirements.qualifications?.filter(Boolean).join('\n'),
+      keyResponsibilities: d.requirements.keyResponsibilities?.filter(Boolean).join('\n'),
+      requirements: d.requirements.requirements?.filter(Boolean).join('\n'),
       benefits: d.compensation.benefits,
       justification: d.publishing.justification,
       closingDate: d.publishing.closingDate,
-      isPublished: true,
-      status: 'Published'
+      isPublished: publish ? 1 : 0,
     };
+
 
     this.api.saveJobDescription(payload).subscribe({
       next: (res) => {
-        this.isSaving.set(false);
-        if (res.isSuccess) {
-          this.router.navigate(['/recruitment/applications']);
-        } else {
-          this.error.set(res.message || 'Failed to save job requisition');
+        if (!res.isSuccess) {
+          this.isSaving.set(null);
+          this.error.set(res.message || 'The requisition could not be saved.');
+          return;
         }
+
+        const requisitionId = (res.data as { jobRequisitionId?: number } | null)
+          ?.jobRequisitionId;
+
+        if (!publish) {
+          this.isSaving.set(null);
+          this.router.navigate(['/recruitment/jobs']);
+          return;
+        }
+
+        if (!requisitionId) {
+          // Saved, but we cannot publish what we cannot identify. Say so
+          // rather than claiming a publish that did not happen.
+          this.isSaving.set(null);
+          this.error.set(
+            'The requisition was saved as a draft, but the server did not return ' +
+              'its id so it could not be published. Publish it from Job Requisitions.',
+          );
+          return;
+        }
+
+        this.recruitment
+          .publishRequisition(requisitionId, environment.companyId, this.session.userName())
+          .subscribe({
+            next: () => {
+              this.isSaving.set(null);
+              this.router.navigate(['/recruitment/jobs']);
+            },
+            error: (e: Error) => {
+              this.isSaving.set(null);
+              this.error.set(
+                `The requisition was saved as a draft but publishing failed: ${e.message}`,
+              );
+            },
+          });
       },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.error.set(err.message || 'Error saving job requisition');
-      }
+      error: (err: Error) => {
+        this.isSaving.set(null);
+        this.error.set(err.message || 'The requisition could not be saved.');
+      },
     });
   }
 

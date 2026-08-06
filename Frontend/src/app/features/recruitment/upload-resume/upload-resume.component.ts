@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { IconComponent } from '../../../shared/icon.component';
 import { RecruitmentAiService } from '../../../core/api/recruitment-ai.service';
+import { RecruitmentService } from '../../../core/api/recruitment.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -239,26 +240,73 @@ import { environment } from '../../../../environments/environment';
 })
 export class UploadResumeComponent {
   private readonly api = inject(RecruitmentAiService);
+  private readonly recruitment = inject(RecruitmentService);
   private readonly router = inject(Router);
 
-  protected selectedFileName = signal<string | null>('ayesha-khan-cv.pdf');
-  protected jobRequisitionId = 1;
-  protected resumeFilePath = 'https://ai.rainmaker.pk/samples/senior_frontend_resume.pdf';
+  // Nothing is pre-filled. The previous version shipped a canned "Ayesha
+  // Khan" profile and a fixed sample CV URL, which made the screen look like
+  // it worked before anything had been uploaded — and told you nothing about
+  // how the parser handles a real document.
+  protected selectedFileName = signal<string | null>(null);
+  protected selectedFile = signal<File | null>(null);
+  protected jobRequisitionId = 0;
+  protected resumeFilePath = '';
+  protected isUploading = signal(false);
   protected isParsing = signal(false);
-  protected extractedProfile = signal<any | null>({
-    candidateName: 'Ayesha Khan',
-    email: 'ayesha.khan@example.com',
-    phone: '+92 300 1234567',
-    location: 'Karachi, Pakistan',
-    summary: 'Senior Frontend Developer with 6+ years of hands-on experience crafting high-performance enterprise UI applications using Angular, TypeScript, and RxJS.',
-    skills: ['Angular', 'TypeScript', 'RxJS', 'HTML5', 'CSS3', 'RESTful APIs', 'Git'],
-  });
+  protected error = signal<string | null>(null);
+  protected extractedProfile = signal<any | null>(null);
 
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.selectedFileName.set(input.files[0].name);
+    const chosen = input.files?.[0];
+    if (!chosen) {
+      return;
     }
+
+    // Same limits the backend enforces, checked here so a predictable
+    // rejection does not cost a round trip.
+    const ext = chosen.name.slice(chosen.name.lastIndexOf('.')).toLowerCase();
+    if (!['.pdf', '.doc', '.docx'].includes(ext)) {
+      this.error.set('Please choose a PDF, DOC or DOCX file.');
+      return;
+    }
+    if (chosen.size > 10 * 1024 * 1024) {
+      this.error.set('That file is larger than 10 MB.');
+      return;
+    }
+
+    this.error.set(null);
+    this.extractedProfile.set(null);
+    this.selectedFile.set(chosen);
+    this.selectedFileName.set(chosen.name);
+    this.upload(chosen);
+  }
+
+  /** Store the CV first, then parse it by path. */
+  private upload(chosen: File): void {
+    this.isUploading.set(true);
+
+    this.recruitment.uploadResume(chosen, environment.companyId).subscribe({
+      next: (uploaded) => {
+        this.isUploading.set(false);
+        // relativePath, NOT url — see UploadResumeResult for why.
+        const path = uploaded.relativePath || '';
+        this.resumeFilePath = path;
+
+        if (!path) {
+          this.error.set(
+            'The file uploaded but the server returned no path, so it cannot be parsed.',
+          );
+          return;
+        }
+
+        this.extractProfile();
+      },
+      error: (e: Error) => {
+        this.isUploading.set(false);
+        this.error.set(e.message);
+      },
+    });
   }
 
   protected extractProfile(): void {
@@ -285,13 +333,39 @@ export class UploadResumeComponent {
               dataObj = {};
             }
 
+            const exp = res.data.experience?.length ? res.data.experience : (dataObj.experience || dataObj.work_experience || []);
+            const edu = res.data.education?.length ? res.data.education : (dataObj.education || []);
+            const proj = res.data.projects?.length ? res.data.projects : (dataObj.projects || []);
+
+            const expSummaryStr = Array.isArray(exp) && exp.length
+              ? exp.map((e: any) => `${e.position || e.role || ''} at ${e.company || ''} (${e.duration || ''})`).join('; ')
+              : (res.data.summary || dataObj.summary || '');
+
+            const eduSummaryStr = Array.isArray(edu) && edu.length
+              ? edu.map((ed: any) => `${ed.degree || ''} ${ed.field ? 'in ' + ed.field : ''} from ${ed.institution || ''}`).join('; ')
+              : (dataObj.educationSummary || 'Bachelor Degree');
+
+            const extractedName =
+              res.data.fullName ||
+              res.data.candidateName ||
+              dataObj.fullName ||
+              dataObj.candidateName ||
+              dataObj.full_name ||
+              dataObj.name;
+
             this.extractedProfile.set({
-              candidateName: res.data.candidateName || dataObj.full_name || 'Extracted Candidate',
-              email: res.data.email || dataObj.email || 'candidate@example.com',
-              phone: res.data.phoneNumber || dataObj.phone || '+92 300 0000000',
-              location: dataObj.location || 'Pakistan',
-              summary: dataObj.summary || 'Candidate resume extracted via Multinet AI.',
-              skills: dataObj.skills || res.data.skills || ['Angular', 'TypeScript', 'CSS'],
+              candidateName: extractedName || 'Extracted Candidate',
+              email: res.data.email || dataObj.email || '',
+              phone: res.data.phone || res.data.phoneNumber || dataObj.phone || dataObj.phone_number || '',
+              location: res.data.location || dataObj.location || '',
+              summary: res.data.summary || dataObj.summary || 'Candidate resume extracted via Multinet AI.',
+              skills: res.data.skills?.length ? res.data.skills : (dataObj.skills || dataObj.skills_list || []),
+              experience: exp,
+              education: edu,
+              projects: proj,
+              experienceSummaryStr: expSummaryStr,
+              educationSummaryStr: eduSummaryStr,
+              totalYearsExperience: res.data.totalYearsExperience || dataObj.totalYearsExperience || dataObj.total_years_experience || '',
             });
           }
         },
@@ -313,6 +387,70 @@ export class UploadResumeComponent {
   }
 
   protected acceptAndSave(): void {
-    this.router.navigate(['/recruitment/applications']);
+    const profile = this.extractedProfile();
+    if (!profile) {
+      this.router.navigate(['/recruitment/applications']);
+      return;
+    }
+
+    this.isUploading.set(true);
+
+    const nameParts = (profile.candidateName || 'Candidate').split(' ');
+    const firstName = nameParts[0] || 'Candidate';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    const applicantReq = {
+      companyID: environment.companyId,
+      firstName: firstName,
+      lastName: lastName,
+      email: profile.email || 'candidate@example.com',
+      mobileNumber: profile.phone || '',
+      currentAddress: profile.location || '',
+      skills: Array.isArray(profile.skills) ? profile.skills.join(', ') : profile.skills || '',
+      experienceSummary: profile.experienceSummaryStr || profile.summary || '',
+      education: profile.educationSummaryStr || 'Bachelor Degree',
+      experienceYears: Number(profile.totalYearsExperience) || 0,
+      resumePath: this.resumeFilePath || 'sample_resume.pdf',
+    };
+
+
+    this.recruitment.createApplicant(applicantReq).subscribe({
+      next: (applicant) => {
+        const applicantID = applicant?.applicantID || 1;
+        const appReq = {
+          companyID: environment.companyId,
+          requisitionID: this.jobRequisitionId || 1,
+          applicantID: applicantID,
+          currentStatusID: 1, // Applied
+          resumePath: this.resumeFilePath || 'sample_resume.pdf',
+          coverLetter: profile.summary || '',
+          remarks: `AI Extracted Profile (Skills: ${applicantReq.skills})`,
+        };
+
+        this.recruitment.createApplication(appReq).subscribe({
+          next: (app) => {
+            this.isUploading.set(false);
+            const appID = app?.applicationID;
+            if (appID) {
+              this.router.navigate(['/recruitment/application-details'], {
+                queryParams: { id: appID },
+              });
+            } else {
+              this.router.navigate(['/recruitment/applications']);
+            }
+          },
+          error: () => {
+            this.isUploading.set(false);
+            this.router.navigate(['/recruitment/applications']);
+          },
+        });
+      },
+      error: () => {
+        this.isUploading.set(false);
+        this.router.navigate(['/recruitment/applications']);
+      },
+    });
   }
+
 }
+

@@ -1,0 +1,351 @@
+<div class="max-w-[1400px] mx-auto px-6 py-6">
+  <div class="flex items-start gap-4 mb-6">
+    <div class="flex-1">
+      <h1 class="rm-page-title">Applications Management</h1>
+      <p class="mt-1 text-sm text-ink-muted">
+        Review candidates, run AI extraction on their CVs, and move them through the
+        hiring pipeline.
+      </p>
+    </div>
+    <a routerLink="/recruitment/jobs" class="rm-btn-secondary">
+      <rm-icon name="briefcase" [size]="16" /> View Jobs
+    </a>
+  </div>
+
+  @if (message(); as m) {
+    <div
+      class="rm-card p-4 mb-5 flex items-center gap-3 border-l-4"
+      [class.border-l-success]="m.ok"
+      [class.border-l-danger]="!m.ok"
+    >
+      <rm-icon
+        [name]="m.ok ? 'check-circle' : 'x-circle'"
+        [size]="18"
+        [class]="m.ok ? 'text-success' : 'text-danger'"
+      />
+      <span class="text-sm text-ink flex-1">{{ m.text }}</span>
+      <button class="p-1.5 rounded text-ink-muted hover:bg-surface-muted" (click)="message.set(null)">
+        <rm-icon name="x" [size]="15" />
+      </button>
+    </div>
+  }
+
+  <!-- Counters, derived from the rows on screen -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+    @for (c of [
+      { label: 'Total Applications', value: counts().total, icon: 'user-plus' },
+      { label: 'Shortlisted', value: counts().shortlisted, icon: 'check-circle' },
+      { label: 'In Interview', value: counts().interview, icon: 'calendar' },
+      { label: 'Hired', value: counts().hired, icon: 'clipboard-check' }
+    ]; track c.label) {
+      <div class="rm-card p-5">
+        <div class="w-10 h-10 rounded-lg bg-primary-tint text-primary grid place-items-center">
+          <rm-icon [name]="$any(c.icon)" [size]="19" />
+        </div>
+        <div class="mt-4 text-sm text-ink-muted">{{ c.label }}</div>
+        <div class="mt-0.5 text-[28px] font-semibold leading-9 text-ink tabular">
+          {{ c.value }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="rm-card rm-card-pad mb-5 flex flex-wrap items-center gap-3">
+    <div class="rm-search-box">
+      <rm-icon
+        name="search"
+        [size]="16"
+        class="rm-search-icon"
+      />
+      <input
+        class="rm-search-input"
+        placeholder="Search by candidate, email, job or code…"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        name="q"
+      />
+    </div>
+
+
+    <select
+      class="rm-input w-[200px]"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event === 'null' || $event === null ? null : +$event)"
+      name="status"
+    >
+      <option [ngValue]="null">All statuses</option>
+      @for (s of statuses(); track s.statusID) {
+        <option [ngValue]="s.statusID">{{ s.statusName }}</option>
+      }
+    </select>
+
+    <button class="rm-btn-secondary" (click)="refresh()">
+      <rm-icon name="refresh" [size]="16" /> Refresh
+    </button>
+  </div>
+
+  <div class="flex gap-5 items-start">
+    <!-- Table -->
+    <section class="rm-card overflow-hidden flex-1 min-w-0">
+      <div class="px-6 py-4 border-b border-line flex items-center gap-3">
+        <h2 class="rm-section-title">Applications</h2>
+        <span class="rm-chip-neutral">{{ filtered().length }}</span>
+      </div>
+
+      @if (loading()) {
+        <div class="p-8 text-sm text-ink-muted">Loading applications…</div>
+      } @else if (filtered().length === 0) {
+        <div class="p-14 text-center">
+          <div
+            class="w-12 h-12 mx-auto rounded-xl bg-surface-muted text-ink-muted grid place-items-center"
+          >
+            <rm-icon name="user-plus" [size]="22" />
+          </div>
+          <h3 class="mt-4 text-[15px] font-semibold text-ink">
+            @if (applications().length === 0) {
+              No applications yet
+            } @else {
+              Nothing matches this filter
+            }
+          </h3>
+          <p class="mt-1.5 text-sm text-ink-muted max-w-[420px] mx-auto">
+            @if (applications().length === 0) {
+              Publish a requisition and applications submitted through the careers page
+              will appear here.
+            } @else {
+              Try a different search or status.
+            }
+          </p>
+          @if (applications().length === 0) {
+            <a routerLink="/recruitment/jobs" class="rm-btn-primary mt-5">
+              Go to Job Requisitions
+            </a>
+          }
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="rm-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Applied For</th>
+                <th class="text-center">AI Match</th>
+                <th>Status</th>
+                <th>Applied</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of filtered(); track a.applicationID) {
+                <tr [class.bg-primary-tint]="parsedFor()?.applicationID === a.applicationID">
+                  <td class="!h-auto py-3">
+                    <div class="font-medium text-ink">{{ a.fullName || '—' }}</div>
+                    <div class="text-xs text-ink-muted">
+                      {{ a.applicationCode }}
+                      @if (a.email) {
+                        · {{ a.email }}
+                      }
+                    </div>
+                  </td>
+                  <td class="!h-auto py-3">
+                    <div class="text-ink-soft">{{ a.requisitionJobTitle || '—' }}</div>
+                    <div class="text-xs text-ink-muted font-mono">
+                      {{ a.requisitionCode || '' }}
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    @if (a.screeningScore != null) {
+                      <span [class]="scoreTone(a.screeningScore) + ' inline-flex items-center gap-1 font-medium px-2.5 py-1 rounded-full text-xs'">
+                        <rm-icon name="sparkles" [size]="12" />
+                        {{ a.screeningScore }}% · {{ getRatingLabel(a.screeningScore) }}
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-ink-muted bg-surface-muted border border-line">
+                        Unscreened
+                      </span>
+                    }
+                  </td>
+                  <td><span [class]="statusTone(a)">{{ a.statusName || 'Applied' }}</span></td>
+                  <td class="text-ink-muted text-[13px]">
+                    {{ a.applicationDate ? (a.applicationDate | date: 'dd MMM yyyy') : '—' }}
+                  </td>
+                  <td>
+                    <div class="flex items-center justify-end gap-1">
+                      <button
+                        class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors disabled:opacity-30"
+                        (click)="shortlist(a)"
+                        [disabled]="(a.statusCode || '').toUpperCase() === 'SHORTLISTED'"
+                        title="Shortlist Candidate"
+                      >
+                        <rm-icon name="user-plus" [size]="16" />
+                      </button>
+                      <button
+                        class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
+                        (click)="reject(a)"
+                        [disabled]="(a.statusCode || '').toUpperCase() === 'REJECTED'"
+                        title="Reject Candidate"
+                      >
+                        <rm-icon name="alert-triangle" [size]="16" />
+                      </button>
+                      <button
+                        class="p-2 rounded-lg transition-colors"
+                        [class.text-ai]="a.resumePath"
+                        [class.hover:bg-ai-tint]="a.resumePath"
+                        [class.text-ink-faint]="!a.resumePath"
+                        [disabled]="!a.resumePath || parsingId() === a.applicationID"
+                        (click)="parse(a)"
+                        [title]="
+                          a.resumePath
+                            ? 'Extract candidate profile with AI'
+                            : 'No CV was attached'
+                        "
+                      >
+                        <rm-icon name="sparkles" [size]="17" />
+                      </button>
+                      <a
+                        class="p-2 rounded-lg text-ink-muted hover:bg-surface-muted transition-colors"
+                        [routerLink]="['/recruitment/application-details']"
+                        [queryParams]="{ id: a.applicationID }"
+                        title="Open application details"
+                      >
+                        <rm-icon name="eye" [size]="17" />
+                      </a>
+                      <button
+                        class="p-2 rounded-lg text-danger hover:bg-surface-muted transition-colors"
+                        (click)="deleteApplication(a)"
+                        [disabled]="deletingId() === a.applicationID"
+                        title="Delete application"
+                      >
+                        <rm-icon name="trash" [size]="17" />
+                      </button>
+                    </div>
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <!-- ══ AI extraction drawer ═════════════════════════════════════════
+         Orange throughout: everything in here came from the model and is a
+         suggestion a recruiter confirms. -->
+    @if (parsedFor(); as target) {
+      <aside class="rm-card w-[420px] shrink-0 overflow-hidden sticky top-6">
+        <div class="rm-ai-surface px-5 py-4 flex items-start gap-2.5">
+          <rm-icon name="sparkles" [size]="18" class="text-ai shrink-0 mt-0.5" />
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-ai-deep">AI Extracted Profile</div>
+            <div class="text-xs text-ai-deep/80 truncate">
+              {{ target.fullName }} · {{ target.applicationCode }}
+            </div>
+          </div>
+          <button
+            class="p-1.5 rounded text-ai-deep/70 hover:bg-ai-border"
+            (click)="closeDrawer()"
+            aria-label="Close"
+          >
+            <rm-icon name="x" [size]="16" />
+          </button>
+        </div>
+
+        <div class="p-5">
+          @if (parsingId() === target.applicationID) {
+            <div class="py-10 text-center">
+              <rm-icon name="sparkles" [size]="26" class="text-ai animate-pulse mx-auto" />
+              <p class="mt-3 text-sm font-medium text-ink">Reading the CV…</p>
+              <p class="mt-1 text-xs text-ink-muted">
+                Parsing runs on a single GPU and can take up to a minute.
+              </p>
+            </div>
+          } @else if (parseError()) {
+            <div class="flex gap-2.5 text-[13px] text-ink-soft">
+              <rm-icon name="alert-triangle" [size]="16" class="text-warning shrink-0 mt-0.5" />
+              <span>{{ parseError() }}</span>
+            </div>
+          } @else if (parsed()) {
+            @let p = parsed()!;
+            <div class="space-y-4">
+              @for (field of [
+                { label: 'Name', value: p.fullName },
+                { label: 'Email', value: p.email },
+                { label: 'Phone', value: p.phone },
+                { label: 'Location', value: p.location }
+              ]; track field.label) {
+                @if (field.value) {
+                  <div>
+                    <div class="rm-label !mb-1">{{ field.label }}</div>
+                    <div class="text-sm text-ink">{{ field.value }}</div>
+                  </div>
+                }
+              }
+
+              @if (p.totalYearsExperience != null) {
+                <div>
+                  <div class="rm-label !mb-1">Total experience</div>
+                  <div class="text-sm text-ink">{{ p.totalYearsExperience }} years</div>
+                </div>
+              }
+
+              @if (p.summary) {
+                <div>
+                  <div class="rm-label !mb-1">Summary</div>
+                  <p class="text-[13px] text-ink-soft leading-5">{{ p.summary }}</p>
+                </div>
+              }
+
+              @if (p.skills?.length) {
+                <div>
+                  <div class="rm-label !mb-1.5">Skills</div>
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (s of p.skills; track s) {
+                      <span class="rm-chip-blue">{{ s }}</span>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (p.experience?.length) {
+                <div>
+                  <div class="rm-label !mb-1.5">Experience</div>
+                  <div class="space-y-2.5">
+                    @for (e of p.experience; track $index) {
+                      <div class="text-[13px]">
+                        <div class="font-medium text-ink">{{ e.role || e.jobTitle }}</div>
+                        <div class="text-ink-muted">
+                          {{ e.company }}@if (e.duration) { · {{ e.duration }} }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (p.education?.length) {
+                <div>
+                  <div class="rm-label !mb-1.5">Education</div>
+                  <div class="space-y-2">
+                    @for (ed of p.education; track $index) {
+                      <div class="text-[13px]">
+                        <div class="font-medium text-ink">{{ ed.degree }}</div>
+                        <div class="text-ink-muted">{{ ed.institution }}</div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="pt-3 border-t border-line text-xs text-ink-muted">
+                Extracted by AI at roughly 95% field-level accuracy. Confirm anything you
+                rely on before it becomes a record.
+              </div>
+            </div>
+          }
+        </div>
+      </aside>
+    }
+  </div>
+</div>
