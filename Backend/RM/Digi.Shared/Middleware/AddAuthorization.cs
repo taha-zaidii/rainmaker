@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 
-namespace Digi.Shared.Middlerware
+namespace Digi.Shared.Middleware
 {
     public static class AuthorizationServiceExtensions
     {

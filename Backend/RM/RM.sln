@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digi.Shared", "Digi.Shared\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digi.Recruitment.Module.Tests", "Digi.Recruitment.Module.Tests\Digi.Recruitment.Module.Tests.csproj", "{616E5E7B-A2C1-4FF5-B2F5-282F179B1416}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digi.Core.AI", "Digi.Core.AI\Digi.Core.AI.csproj", "{7A83859F-7C1B-459E-986D-752BA5B34C21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{616E5E7B-A2C1-4FF5-B2F5-282F179B1416}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{616E5E7B-A2C1-4FF5-B2F5-282F179B1416}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{616E5E7B-A2C1-4FF5-B2F5-282F179B1416}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A83859F-7C1B-459E-986D-752BA5B34C21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A83859F-7C1B-459E-986D-752BA5B34C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A83859F-7C1B-459E-986D-752BA5B34C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A83859F-7C1B-459E-986D-752BA5B34C21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

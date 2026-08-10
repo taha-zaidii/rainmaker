@@ -1,4 +1,4 @@
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Configuration
 {
     /// <summary>
     /// Identifies the provider key for Multinet's in-house AI service.
@@ -14,7 +14,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     ///
     /// The dropdown says what the client chose. That is the whole signal.
     /// </summary>
-    public static class MultinetAiProvider
+    public static class MultinetAiConstants
     {
         /// <summary>Canonical provider key. Stored lowercase, like the other providers.</summary>
         public const string Name = "multinetai";

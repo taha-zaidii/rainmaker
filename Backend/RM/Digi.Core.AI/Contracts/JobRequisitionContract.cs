@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Contracts
 {
     // ─────────────────────────────────────────────────────────────────────────
     // POST {base}/recruitment/jobreq/generate — the "Generate Job Description

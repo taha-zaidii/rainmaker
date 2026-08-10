@@ -1,4 +1,4 @@
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Contracts
 {
     /// <summary>
     /// Every way a call to the in-house AI service can fail, as a domain concept
@@ -56,7 +56,16 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         ContractViolation,
 
         /// <summary>Refused before leaving this process (e.g. oversized file, disallowed extension, no key configured).</summary>
-        RejectedLocally
+        RejectedLocally,
+
+        /// <summary>
+        /// The feature has no equivalent on this provider. Candidate ranking and
+        /// rubric scoring depend on Multinet's own embeddings corpus and rubric
+        /// engine; a general-purpose chat model has nothing behind it to serve
+        /// either honestly, so it declines rather than approximating a result
+        /// that would look real but rest on nothing.
+        /// </summary>
+        NotSupportedByProvider
     }
 
     /// <summary>

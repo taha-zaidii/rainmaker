@@ -1,4 +1,4 @@
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Contracts
 {
     /// <summary>
     /// Cleans free-text field values before they are sent to the AI service.

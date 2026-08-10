@@ -1,14 +1,17 @@
 using System.Net;
+using Microsoft.Extensions.Logging;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Configuration;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Providers
 {
     /// <summary>
-    /// HTTP implementation of <see cref="IMultinetAiClient"/>.
+    /// HTTP implementation of <see cref="IAIServiceProvider"/>.
     ///
     /// Registered as a typed client so HttpClientFactory owns socket lifetime and
     /// the resilience policy (see MultinetAiRegistration). This class holds no
@@ -16,7 +19,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     /// this stays a thin, testable translation between the wire contract and the
     /// domain result type.
     /// </summary>
-    public sealed class MultinetAiClient : IMultinetAiClient
+    public sealed class MultinetAiProvider : IAIServiceProvider
     {
         /// <summary>Header the service authenticates on. It is fail-closed: no key, no business endpoint.</summary>
         internal const string ApiKeyHeader = "X-API-Key";
@@ -33,15 +36,15 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
 
         private readonly HttpClient _http;
         private readonly MultinetAiOptions _options;
-        private readonly ILogger<MultinetAiClient> _logger;
+        private readonly ILogger<MultinetAiProvider> _logger;
 
-        public MultinetAiClient(
-            HttpClient http,
-            IOptions<MultinetAiOptions> options,
-            ILogger<MultinetAiClient> logger)
+        public MultinetAiProvider(
+            HttpClient httpClient,
+            IOptionsSnapshot<MultinetAiOptions> optionsAccessor,
+            ILogger<MultinetAiProvider> logger)
         {
-            _http = http;
-            _options = options.Value;
+            _http = httpClient;
+            _options = optionsAccessor.Value;
             _logger = logger;
         }
 
@@ -132,6 +135,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             JobRequisitionRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
             if (request is null)
@@ -241,6 +245,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             Stream content,
             string fileName,
             string? apiKey = null,
+            string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
             if (content is null)
@@ -340,6 +345,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             string? companyId = null,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(documentUrl))
@@ -403,6 +409,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             ScreenCandidateRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
             if (request is null)
@@ -440,6 +447,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             InterviewQuestionsRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
             if (request is null)

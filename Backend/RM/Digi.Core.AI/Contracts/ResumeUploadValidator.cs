@@ -1,4 +1,7 @@
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+using System.IO;
+using Digi.Core.AI.Configuration;
+
+namespace Digi.Core.AI.Contracts
 {
     /// <summary>
     /// Local gate for resume uploads, mirroring the AI service's own checks.

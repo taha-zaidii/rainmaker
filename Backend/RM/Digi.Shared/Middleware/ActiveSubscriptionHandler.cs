@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Digi.Shared.Middlerware
+namespace Digi.Shared.Middleware
 {
     public class ActiveSubscriptionRequirement : IAuthorizationRequirement { }
 

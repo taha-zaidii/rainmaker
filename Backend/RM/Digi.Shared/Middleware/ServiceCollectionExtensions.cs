@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Digi.Shared.Middlerware
+namespace Digi.Shared.Middleware
 {
     public static class ServiceCollectionExtensions
     {

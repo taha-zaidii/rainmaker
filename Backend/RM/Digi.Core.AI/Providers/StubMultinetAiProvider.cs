@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Configuration;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Providers
 {
     /// <summary>
     /// Contract-shaped canned responses, used when <c>MultinetAI:StubMode</c> is on.
@@ -15,14 +18,14 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
     /// The canned profile is synthetic. No real candidate data is embedded here —
     /// resumes and anything derived from them never enter source control.
     /// </summary>
-    public sealed class StubMultinetAiClient : IMultinetAiClient
+    public sealed class StubMultinetAiProvider : IAIServiceProvider
     {
         private readonly MultinetAiOptions _options;
-        private readonly ILogger<StubMultinetAiClient> _logger;
+        private readonly ILogger<StubMultinetAiProvider> _logger;
 
-        public StubMultinetAiClient(
+        public StubMultinetAiProvider(
             IOptions<MultinetAiOptions> options,
-            ILogger<StubMultinetAiClient> logger)
+            ILogger<StubMultinetAiProvider> logger)
         {
             _options = options.Value;
             _logger = logger;
@@ -68,6 +71,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             JobRequisitionRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {
             if (request is null || string.IsNullOrWhiteSpace(request.JobTitle))
@@ -195,6 +199,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             Stream content,
             string fileName,
             string? apiKey = null,
+            string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {
             // Stub mode still enforces the real upload rules. Otherwise the error
@@ -245,6 +250,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             string? companyId = null,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(documentUrl))
@@ -271,6 +277,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             ScreenCandidateRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {
             if (request is null)
@@ -326,6 +333,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
             InterviewQuestionsRequest request,
             string? apiKey = null,
             Uri? baseUriOverride = null,
+            string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {
             if (request is null)

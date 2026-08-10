@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Configuration
 {
     /// <summary>
     /// The single source of truth for every path on Multinet's in-house AI

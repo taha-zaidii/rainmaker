@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Contracts
 {
     // ─────────────────────────────────────────────────────────────────────────
     // The frozen wire contract of hrms-ai-service, mirrored exactly.
@@ -131,7 +131,7 @@ namespace Digi.Recruitment.Module.Domain.AI.Multinet
         /// <summary>Field names a reviewer should check, derived from provenance.</summary>
         public IReadOnlyCollection<string> FieldsNeedingReview() =>
             FieldProvenance
-                .Where(kv => Multinet.FieldProvenance.NeedsReview(kv.Value))
+                .Where(kv => Digi.Core.AI.Contracts.FieldProvenance.NeedsReview(kv.Value))
                 .Select(kv => kv.Key)
                 .ToArray();
     }

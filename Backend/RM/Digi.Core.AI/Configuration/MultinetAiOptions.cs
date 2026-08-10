@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Digi.Recruitment.Module.Domain.AI.Multinet
+namespace Digi.Core.AI.Configuration
 {
     /// <summary>
     /// Configuration for Multinet's in-house AI service (hrms-ai-service).

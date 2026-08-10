@@ -11,7 +11,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Digi.Shared.Middlerware
+namespace Digi.Shared.Middleware
 {
     public class SubscriptionCheckMiddleware
     {
