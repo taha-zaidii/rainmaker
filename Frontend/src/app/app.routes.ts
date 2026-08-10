@@ -92,5 +92,47 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'admin',
+    component: ShellComponent,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/admin/admin-dashboard.component').then(
+            (m) => m.AdminDashboardComponent,
+          ),
+      },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/admin/admin-dashboard.component').then(
+            (m) => m.AdminDashboardComponent,
+          ),
+      },
+    ],
+  },
+  {
+    path: 'hrms',
+    component: ShellComponent,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/hrms/hrms-dashboard.component').then(
+            (m) => m.HrmsDashboardComponent,
+          ),
+      },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/hrms/hrms-dashboard.component').then(
+            (m) => m.HrmsDashboardComponent,
+          ),
+      },
+    ],
+  },
   { path: '**', redirectTo: 'recruitment/dashboard' },
 ];
