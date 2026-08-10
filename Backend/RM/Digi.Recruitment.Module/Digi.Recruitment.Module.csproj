@@ -10,12 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="16.1.1" />
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="EPPlus" Version="8.2.0" />
-    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
-    <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
     <PackageReference Include="itext" Version="9.5.0" />
     <PackageReference Include="itext.pdfhtml" Version="6.3.1" />
     <PackageReference Include="itext7.bouncy-castle-adapter" Version="9.5.0" />
@@ -26,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Digi.Shared\Digi.Shared.csproj" />
+    <ProjectReference Include="..\Digi.Core.AI\Digi.Core.AI.csproj" />
   </ItemGroup>
 
   <!--
@@ -42,7 +38,7 @@
 
   <!-- Automatically free port 5019 before running backend to prevent port-in-use errors -->
   <Target Name="FreePort5019" BeforeTargets="BeforeBuild">
-    <Exec Command="lsof -ti:5019 | xargs kill -9 2>/dev/null || true" ContinueOnError="true" />
+    <Exec Command="lsof -ti:5019 | xargs kill -9 2&gt;/dev/null || true" ContinueOnError="true" />
   </Target>
 
 </Project>

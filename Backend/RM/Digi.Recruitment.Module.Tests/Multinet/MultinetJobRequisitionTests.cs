@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text.Json;
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Configuration;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Providers;
 using Digi.Recruitment.Module.Tests.TestDoubles;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Digi.Recruitment.Module.Tests.Multinet
@@ -24,7 +25,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
     {
         private const string ProductionBase = "https://ai.rainmaker.pk/hrms/api/v1";
 
-        private static (MultinetAiClient Client, StubHttpMessageHandler Handler) Build()
+        private static (MultinetAiProvider Client, StubHttpMessageHandler Handler) Build()
         {
             var handler = new StubHttpMessageHandler();
             var http = new HttpClient(handler) { BaseAddress = new Uri(ProductionBase + "/") };
@@ -38,8 +39,8 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             };
 
             return (
-                new MultinetAiClient(http, new OptionsWrapper<MultinetAiOptions>(options),
-                    NullLogger<MultinetAiClient>.Instance),
+                new MultinetAiProvider(http, new FakeOptionsSnapshot<MultinetAiOptions>(options),
+                    NullLogger<MultinetAiProvider>.Instance),
                 handler);
         }
 
@@ -342,7 +343,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             Assert.Equal(typeof(long?), property.PropertyType);
 
             var parsed = JsonSerializer.Deserialize<JobRequisitionResult>(
-                """{"execution_time_ms": 20909}""", MultinetAiClient.Json);
+                """{"execution_time_ms": 20909}""", MultinetAiProvider.Json);
             Assert.Equal(20909L, parsed!.ExecutionTimeMs);
         }
     }

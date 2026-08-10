@@ -1,9 +1,10 @@
 using System.Net;
 using System.Text;
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Configuration;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Providers;
 using Digi.Recruitment.Module.Tests.TestDoubles;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Digi.Recruitment.Module.Tests.Multinet
@@ -42,7 +43,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             return options;
         }
 
-        private static (MultinetAiClient Client, StubHttpMessageHandler Handler) Build(
+        private static (MultinetAiProvider Client, StubHttpMessageHandler Handler) Build(
             Action<MultinetAiOptions>? tweak = null)
         {
             var handler = new StubHttpMessageHandler();
@@ -51,10 +52,10 @@ namespace Digi.Recruitment.Module.Tests.Multinet
                 BaseAddress = new Uri(OnBoxBase + "/")
             };
 
-            var client = new MultinetAiClient(
+            var client = new MultinetAiProvider(
                 http,
-                new OptionsWrapper<MultinetAiOptions>(Options(tweak)),
-                NullLogger<MultinetAiClient>.Instance);
+                new FakeOptionsSnapshot<MultinetAiOptions>(Options(tweak)),
+                NullLogger<MultinetAiProvider>.Instance);
 
             return (client, handler);
         }
@@ -225,7 +226,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         {
             // POST /parser/extract with no filename returns detail as a STRING,
             // not an object. Reading it must not throw and must not lose the text.
-            var (code, message) = MultinetAiClient.ReadErrorDetail("""{"detail":"No filename provided."}""");
+            var (code, message) = MultinetAiProvider.ReadErrorDetail("""{"detail":"No filename provided."}""");
 
             Assert.Null(code);
             Assert.Equal("No filename provided.", message);
@@ -234,7 +235,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [Fact]
         public void Unparseable_error_body_does_not_mask_the_status_code()
         {
-            var error = MultinetAiClient.MapError(HttpStatusCode.Unauthorized, "<html>gateway error</html>");
+            var error = MultinetAiProvider.MapError(HttpStatusCode.Unauthorized, "<html>gateway error</html>");
 
             Assert.Equal(AiErrorCode.Unauthorized, error.Code);
             Assert.Equal(401, error.HttpStatus);

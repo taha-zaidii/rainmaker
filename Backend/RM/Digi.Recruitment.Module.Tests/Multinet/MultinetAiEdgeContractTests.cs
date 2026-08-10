@@ -1,10 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Configuration;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Providers;
 using Digi.Recruitment.Module.Tests.TestDoubles;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Digi.Recruitment.Module.Tests.Multinet
@@ -28,7 +29,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
     {
         private const string ProductionBase = "https://ai.rainmaker.pk/hrms/api/v1";
 
-        private static (MultinetAiClient Client, StubHttpMessageHandler Handler) Build()
+        private static (MultinetAiProvider Client, StubHttpMessageHandler Handler) Build()
         {
             var handler = new StubHttpMessageHandler();
             var http = new HttpClient(handler) { BaseAddress = new Uri(ProductionBase + "/") };
@@ -42,8 +43,8 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             };
 
             return (
-                new MultinetAiClient(http, new OptionsWrapper<MultinetAiOptions>(options),
-                    NullLogger<MultinetAiClient>.Instance),
+                new MultinetAiProvider(http, new FakeOptionsSnapshot<MultinetAiOptions>(options),
+                    NullLogger<MultinetAiProvider>.Instance),
                 handler);
         }
 
@@ -138,7 +139,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [InlineData("  multinetai  ")]
         public void The_dedicated_provider_is_recognised_by_name(string provider)
         {
-            Assert.True(MultinetAiProvider.Matches(provider));
+            Assert.True(MultinetAiConstants.Matches(provider));
         }
 
         [Theory]
@@ -150,7 +151,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [InlineData(null)]
         public void No_other_provider_is_ever_claimed_as_ours(string? provider)
         {
-            Assert.False(MultinetAiProvider.Matches(provider));
+            Assert.False(MultinetAiConstants.Matches(provider));
         }
 
         [Fact]
@@ -161,7 +162,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
             // "this URL looks like ours, so I will handle it" would silently
             // hijack their configuration, and nothing in the settings UI would
             // show it happening. The dropdown selection is the only signal.
-            Assert.False(MultinetAiProvider.Matches("custom"));
+            Assert.False(MultinetAiConstants.Matches("custom"));
         }
 
         // ── Feature paths ────────────────────────────────────────────────────
@@ -253,7 +254,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [Fact]
         public void A_429_body_yields_Busy_and_the_wait_the_service_asked_for()
         {
-            var error = MultinetAiClient.MapError(
+            var error = MultinetAiProvider.MapError(
                 HttpStatusCode.TooManyRequests, """{"error":"busy","retry_after_s":12}""");
 
             Assert.Equal(AiErrorCode.Busy, error.Code);
@@ -290,7 +291,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [Fact]
         public void A_503_names_the_model_backend_rather_than_blaming_the_service_generally()
         {
-            var error = MultinetAiClient.MapError(
+            var error = MultinetAiProvider.MapError(
                 HttpStatusCode.ServiceUnavailable, """{"error":"llm_unreachable"}""");
 
             Assert.Equal(AiErrorCode.NotReady, error.Code);
@@ -302,19 +303,19 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         [Fact]
         public void Root_level_and_nested_error_shapes_are_both_understood()
         {
-            var nested = MultinetAiClient.ReadErrorPayload("""{"detail":{"error":"unauthorized"}}""");
+            var nested = MultinetAiProvider.ReadErrorPayload("""{"detail":{"error":"unauthorized"}}""");
             Assert.Equal("unauthorized", nested.Code);
 
-            var root = MultinetAiClient.ReadErrorPayload("""{"error":"internal_error"}""");
+            var root = MultinetAiProvider.ReadErrorPayload("""{"error":"internal_error"}""");
             Assert.Equal("internal_error", root.Code);
 
             // The 400 path still returns detail as a bare string.
-            var bare = MultinetAiClient.ReadErrorPayload("""{"detail":"No filename provided."}""");
+            var bare = MultinetAiProvider.ReadErrorPayload("""{"detail":"No filename provided."}""");
             Assert.Null(bare.Code);
             Assert.Equal("No filename provided.", bare.Message);
 
             // An nginx HTML page must not mask the status code.
-            var junk = MultinetAiClient.ReadErrorPayload("<html>502 Bad Gateway</html>");
+            var junk = MultinetAiProvider.ReadErrorPayload("<html>502 Bad Gateway</html>");
             Assert.Null(junk.Code);
             Assert.Null(junk.RetryAfterSeconds);
         }
@@ -323,7 +324,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         public void A_404_is_a_configuration_problem_and_is_never_retried()
         {
             // What a wrong base URL actually looks like from here.
-            var error = MultinetAiClient.MapError(HttpStatusCode.NotFound, "");
+            var error = MultinetAiProvider.MapError(HttpStatusCode.NotFound, "");
 
             Assert.Equal(AiErrorCode.BadRequest, error.Code);
             Assert.False(error.Retryable);

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Configuration;
+using Digi.Core.AI.Contracts;
+using Digi.Core.AI.Providers;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -14,7 +16,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         public async Task StubClient_ReturnsValidScreeningResult()
         {
             var options = Options.Create(new MultinetAiOptions { StubMode = true });
-            var stubClient = new StubMultinetAiClient(options, NullLogger<StubMultinetAiClient>.Instance);
+            var stubClient = new StubMultinetAiProvider(options, NullLogger<StubMultinetAiProvider>.Instance);
 
             var req = new ScreenCandidateRequest
             {
@@ -60,7 +62,7 @@ namespace Digi.Recruitment.Module.Tests.Multinet
         public async Task StubClient_ReturnsValidInterviewQuestions()
         {
             var options = Options.Create(new MultinetAiOptions { StubMode = true });
-            var stubClient = new StubMultinetAiClient(options, NullLogger<StubMultinetAiClient>.Instance);
+            var stubClient = new StubMultinetAiProvider(options, NullLogger<StubMultinetAiProvider>.Instance);
 
             var req = new InterviewQuestionsRequest
             {

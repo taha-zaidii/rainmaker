@@ -1,5 +1,5 @@
 using System.Net.Http.Headers;
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Contracts;
 using Xunit;
 
 namespace Digi.Recruitment.Module.Tests.Multinet

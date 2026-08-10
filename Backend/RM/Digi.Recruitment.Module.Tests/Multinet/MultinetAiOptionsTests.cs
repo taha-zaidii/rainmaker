@@ -1,4 +1,5 @@
-using Digi.Recruitment.Module.Domain.AI.Multinet;
+using Digi.Core.AI.Configuration;
+using Digi.Core.AI.Contracts;
 using Xunit;
 
 namespace Digi.Recruitment.Module.Tests.Multinet
