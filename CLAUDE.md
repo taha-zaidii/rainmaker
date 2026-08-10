@@ -1,3 +1,6 @@
+> ⚠️ **MANDATORY SYSTEM SPECIFICATION:**
+> Before taking any action, reading code, or executing terminal commands, you MUST read and strictly adhere to `RAINMAKER_MASTER_CONTEXT.md` in the root directory.
+
 # Rainmaker HRMS — Recruitment Portal (Multinet)
 
 > Master context for anyone (human or agent) picking up this workspace.
@@ -52,6 +55,7 @@ Angular 19 · Docker (local SQL Server) · Azure Data Studio.
 ```
 rainmaker-hrms/
 ├── CLAUDE.md                                  ← this file
+├── RAINMAKER_MASTER_CONTEXT.md                ← refactor/reorg directive (read first, mandatory)
 ├── PROMPT_ERP_BOOTSTRAP.md                    ← environment bootstrap brief
 ├── PROMPT_PORTAL_BACKEND_AI_INTEGRATION.md    ← THE AI contract spec (authoritative)
 ├── Backend/
@@ -59,17 +63,27 @@ rainmaker-hrms/
 │   └── RM/
 │       ├── Digi.Shared/                       ← shared DTOs + helpers (cross-module)
 │       │   └── DTOs/hrm.module/RecruitmentAIDtos.cs
+│       ├── Digi.Core.AI/                      ← ★ OUR provider-agnostic AI gateway (see below)
 │       ├── Digi.Recruitment.Module/           ← the recruitment API
 │       │   ├── Controllers/RecruitmentAIController.cs
 │       │   ├── Domain/Services/RecruitmentAIService.cs      ← 2.5k lines, senior devs'
-│       │   ├── Domain/Repositories/RecruitmentAIRepository.cs
-│       │   └── Domain/AI/Multinet/            ← ★ OUR self-contained AI integration
+│       │   └── Domain/Repositories/RecruitmentAIRepository.cs
 │       └── Digi.Recruitment.Module.Tests/     ← xUnit, dependency-light
-└── Frontend/                                  ← bare Angular 19 scaffold (see §7)
+├── db/seed/                                   ← demo schema/SPs, 001-007, numbered incrementally
+├── docs/                                      ← REFACTOR_STATE.md (current status, read first),
+│                                                 AUDIT_PHASE1.md, AI_CONTRACT_SPEC.md,
+│                                                 ARCHITECTURE.md, DESIGN_SYSTEM_TOKENS.md
+└── Frontend/                                  ← full Angular 19 portal, not a scaffold (see §7)
 ```
 
-**`Domain/AI/Multinet/` is entirely ours.** It does not exist in the supervisor's
-build. It ships as one folder plus a short list of additive edits elsewhere.
+**`Digi.Core.AI/` is entirely ours.** It does not exist in the supervisor's build
+(superseded the original `Digi.Recruitment.Module/Domain/AI/Multinet/` folder —
+same idea, now a standalone project so any module, not just recruitment, can
+depend on it). Ships as one project plus a short list of additive edits
+elsewhere. `IAIServiceProvider` (13 methods) is implemented by 6 providers —
+`MultinetAiProvider`/`StubMultinetAiProvider` and 4 generic ones
+(`OpenAiProvider`/`AnthropicProvider`/`GoogleGeminiProvider`/`CustomAiProvider`)
+— see `docs/AI_CONTRACT_SPEC.md`.
 
 ---
 
@@ -114,8 +128,8 @@ trailing slash*. The backend appends the feature path.
 | Generate JD with AI | `/recruitment/jobreq/generate` | `GenerateJobRequisitionAsync` | ✅ Create wizard |
 | Resume parse — by URL | `/parser/extract-url` | `ExtractResumeByUrlAsync` | ✅ see note below |
 | Resume parse — by bytes | `/parser/extract` (multipart, field `file`) | `ExtractResumeAsync` | ✅ see note below |
-| Resume screening | `/recruitment/screening/screen` | **none yet** | ⬜ |
-| Interview questions | `/recruitment/interview/questions` | **none yet** | ⬜ |
+| Resume screening | `/recruitment/screening/screen` | `ScreenCandidateAsync` | ✅ Application Details |
+| Interview questions | `/recruitment/interview/questions` | `GenerateInterviewQuestionsAsync` | 🔄 backend/all-providers done, no frontend screen yet |
 | Candidate matching | `/matching/rank` | `RankAsync` | ⬜ — see caveat |
 | Candidate evaluation | `/scoring/score` | `ScoreAsync` | ⬜ |
 | PMP (other team, already live) | `/pmp/goals/generate`, `/pmp/recommendations/generate`, `/pmp/status` | — | n/a |
@@ -202,47 +216,47 @@ metered key and the base endpoint, and the recruitment AI features light up.
 
 **`custom` is NOT an alias for us.** It is the client's escape hatch for a
 third-party service they bring themselves — Groq, DeepSeek, a self-hosted
-gateway. `MultinetAiProvider.Matches()` therefore keys on the **provider name
+gateway. `MultinetAiConstants.Matches()` therefore keys on the **provider name
 only** and never inspects the endpoint URL. Sniffing the URL to decide "this
 looks like ours" would silently hijack a client's own configuration, and nothing
 in the settings UI would reveal it.
 
-Any new feature branch must use `MultinetAiProvider.Matches(provider)`.
+Any new feature branch must use `MultinetAiConstants.Matches(provider)`
+(`Digi.Core.AI.Configuration`).
 
-### Two open items this creates
+### Open items this creates
 
 1. **Company 133 must be re-pointed.** It is currently saved as `custom` with the
    AI service URL. Once the frontend ships the MultinetAI option, that tenant has
    to re-select it, or its AI features will not route anywhere.
-2. **`custom` has no backend at all today.** `TestApiKeyAsync` and
-   `CallAIAPIAsync` both handle only openai/anthropic/google; `custom` falls to
-   `default:` and returns *"Unsupported provider"*. So the "Custom API" option has
-   never actually worked for generation — only saving the settings worked. Giving
-   it a real OpenAI-compatible implementation (Groq, DeepSeek and most others
-   speak `/chat/completions`) is its own task, not part of this integration.
+2. **RESOLVED — `custom` now has a real backend.** `CustomAiProvider`
+   (`Digi.Core.AI.Providers`) implements the full `IAIServiceProvider` contract
+   as an OpenAI-compatible `/chat/completions` client (Groq, DeepSeek, a
+   self-hosted gateway — most speak this shape). `TestApiKeyAsync` and every
+   generation call now route `custom` (and every other provider) through
+   `IAIServiceProviderResolver` uniformly — no more `default:` fallthrough.
 
 ---
 
 ## 7. Frontend status
 
-`Frontend/` is a **bare Angular 19 scaffold** (`ng new` output). The real portal UI
-— the AI Settings page and the 4-step job-create wizard in the screenshots — lives
-in the deployed portal's own repo, which is **not in this workspace**.
+**No longer a bare scaffold — this is the real, revamped portal**, built locally
+in this workspace (Angular 19 + Tailwind v4 + a custom design-token system in
+`core/theme/tokens.css`, enforced by `npm run lint:tokens`). See §9 for the full
+screen list. `MultinetAI` is already a first-class provider option; the frontend
+changes below that were "owed to the supervisor" are done.
 
 Run it: `cd Frontend && npm start` → http://localhost:4200 (verified working).
 
-Planned: a revamped recruitment portal frontend built locally, after the backend
-integration is solid.
-
-**Frontend changes owed to the supervisor** (he applies them in the live build):
-1. Add `MultinetAI` to the AI Provider dropdown.
-2. Fix the helper text under API Endpoint — it currently says *"Prefer full path
-   `https://ai.rainmaker.pk/hrms/api/query`"*, which **404s**. Replace with:
-   "Base URL only (e.g. `https://ai.rainmaker.pk/hrms/api/v1`); the backend
-   appends the feature path."
-3. Validate the **Model** field or make it read-only — it has been used to hold
-   arbitrary text (an email address in one case).
-4. JD spinner must tolerate 35 s with a clear error path.
+**Resolved (were "owed to the supervisor," now done in this tree):**
+1. ~~Add `MultinetAI` to the AI Provider dropdown.~~ Done — plus `custom` now has
+   a real working backend too (§6).
+2. ~~Fix the helper text under API Endpoint.~~ Base-URL-only guidance is current.
+3. ~~Validate/lock the **Model** field.~~ The company's saved Model now actually
+   reaches every provider (`IAIServiceProvider`'s `model` parameter) rather than
+   being ignored or free text with no effect.
+4. ~~JD spinner must tolerate 35 s.~~ All provider timeouts are 180s minimum
+   (§4), including the 4 generic providers.
 
 ---
 
@@ -319,8 +333,25 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
   Created missing SP `[ruc].[SP_Ruc_JobApplication_Update]`. Ensured `ScreeningScore` updates in `dbo.Tbl_Ruc_JobApplication` and renders live badges (e.g. `82% · Good Match`) in the Applications Management portal grid.
 - ✅ **Public Careers Portal & Job Detail Redesign** (`/careers` & `/careers/job/:id`):
   Redesigned public job cards with location, experience, employment type, salary, openings count, key technologies chips, and closing date. Overhauled the job detail page into an enterprise 2-column layout with 4 stat metric badges, overview sidebar, and sticky Apply CTA buttons.
-- ⬜ Ranking (`/matching/rank`) for the RANK column
-- ⬜ Interview questions (`/recruitment/interview/questions`)
+- ✅ **Universal AI Provider Gateway** (`Digi.Core.AI`): all 6 providers
+  (`MultinetAiProvider`/`StubMultinetAiProvider`/`OpenAiProvider`/
+  `AnthropicProvider`/`GoogleGeminiProvider`/`CustomAiProvider`) are real,
+  working `IAIServiceProvider` implementations — previously the 4 generic ones
+  were `NotImplementedException` stubs. `RecruitmentAIService.cs`'s 5 AI-facing
+  entry points (JD gen, resume parse, screening, interview questions, test-key)
+  route every provider through the resolver; `custom` works for the first time.
+- ✅ **Design system enforcement**: `npm run lint:tokens` (gated into
+  `npm run build`) fails on raw hex/arbitrary color/font-size values outside
+  `tokens.css`. Typography scale added (`--text-10/11/13/15/17/19/28/38`).
+- ✅ **Stored-procedure hardening**: fixed 2 SP-name collisions that threw on
+  every call (`SaveSettingsAsync` vs `SaveApiKeySettingsAsync`;
+  `CreateJobRequisitionAsync`/`UpdateJobRequisitionAsync` vs `SaveAsync`'s
+  legacy shape), a wrong SP name in `AutoShortlistCandidateAsync`, and SP-ified
+  the last raw-inline-SQL write in `RecruitmentAIRepository.cs`. See
+  `db/seed/007_demo_realism_audit_fixes.sql` and `docs/REFACTOR_STATE.md`.
+- ⬜ Ranking (`/matching/rank`) for the RANK column — AI team confirms it still
+  returns an empty list; not wired to UI, correctly.
+- 🔄 Interview questions — backend done for all providers, no frontend screen yet.
 - ⬜ Rubric scoring (`/scoring/score`) — badge "provisional" until `rubric_signed_off`
 
 ### Frontend
@@ -466,9 +497,15 @@ which makes one bad image look like a broken machine. Fix:
 restart Docker Desktop if needed.
 
 **The seed is demo scaffolding.** Column names are exact (taken from the
-repository's inline SQL); types are guesses. Only the AI settings / job-description
-/ activity paths are supported — everything stored-procedure backed (requisitions,
-applications, interviews, dashboards) still needs the real `InternDB.bak`.
+repository's inline SQL); types are guesses. AI settings / job-description /
+activity / requisition create-update-publish-delete / application
+create-shortlist-reject-delete are all confirmed working against this seed as
+of the 2026-08-10 stored-procedure hardening pass (`db/seed/007_...sql`,
+`docs/REFACTOR_STATE.md`). **Still needs the real `InternDB.bak`:** interview
+scheduling, panel assignment, evaluations, the hire flow, dashboards, and
+JobBank candidate matching — those call stored procedures with no definition
+anywhere in `db/seed/*.sql`, and some need schema this workspace doesn't have
+(e.g. employee onboarding tables).
 
 ---
 
@@ -503,8 +540,9 @@ applications, interviews, dashboards) still needs the real `InternDB.bak`.
    `[ModuleAuthorize("RECRUITMENT_")]`; a token with `UserName: superadmin` signed
    with the dev `Jwt:SecretKey` (issuer `DigiSoftERP`, audience `DigiSoftERPUsers`)
    bypasses the module check.
-4. **`custom` provider has no backend** — see §6. Groq/DeepSeek and most others
-   speak OpenAI's `/chat/completions`, so one generic implementation covers them.
+4. **RESOLVED — `custom` provider now has a real backend.** See §6 — closed via
+   `CustomAiProvider`, an OpenAI-compatible `/chat/completions` implementation
+   (Groq/DeepSeek/self-hosted gateways all speak this shape).
 7. **Multinet AI Resume Parser & Angular Frontend Screens Completed (2026-08-03)**:
    - **Backend**: Implemented `ExtractResumeByUrlAsync` and URL-based resume parsing (`parser/extract-url` endpoint) in `MultinetAiClient.cs` and `RecruitmentAIService.cs`.
    - **Database**: Applied complete Stored Procedures seed `003_demo_recruitment_sps.sql` to SQL Server (`InternDB`), creating tables (`Tbl_Ruc_RecruitmentRequisition`, `Tbl_Ruc_JobApplication`, `Tbl_RecruitmentAI_ResumeParsing`, `Tbl_RecruitmentAI_Screening`) and SPs (`sp_Hr_Ruc_RecruitmentRequisition_Insert`, `SP_Ruc_JobRequisition_Create`, `SP_Ruc_JobApplication_Create`, `SP_Ruc_RecruitmentAI_ResumeParsing_Save`).
