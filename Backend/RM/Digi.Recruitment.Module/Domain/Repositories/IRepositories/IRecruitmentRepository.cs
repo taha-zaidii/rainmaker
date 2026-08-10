@@ -45,8 +45,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories.IRepositories
         Task<InterviewScheduleCollectionDto> GetAllInterviewSchedulesAsync(int CompanyID);
         Task<IEnumerable<CandidateEvaluationDto>> GetCandidateEvaluationsAsync(long? requisitionId, int? interviewRound);
 
-        Task<IEnumerable<SchedulePanelAssignListDto>> GetAssignListAsync(int? InterviewerID, int CompanyID);
-        Task<IEnumerable<ScheduleAssignInterviewListDto>> GetAssignListJobReqAsync(int CompanyID , int? interviewerID);
         Task<ApiResponse<bool>> DeleteRecruitmentRequisitionAsync(int recruitmentRequisitionID, string employeeCode, string? reasonToDelete);
 
         // =============================================
@@ -107,15 +105,9 @@ namespace Digi.Recruitment.Module.Domain.Repositories.IRepositories
         
         // Submit Evaluation
         Task<(int EvaluationID, bool IsSuccess, string Message)> SubmitEvaluationAsync(SubmitEvaluationRequestDto request, string createdBy);
-        
-        // Complete Round and Move to Next
-        Task<(int? NewStatusID, string? NewStatusCode, int? NewScheduleID, bool IsSuccess, string Message)> CompleteRoundAndMoveToNextAsync(CompleteRoundRequestDto request, string updatedBy);
-        
+
         // Mark as Hired
         Task<(int NewStatusID, string NewStatusCode, bool IsSuccess, string Message)> MarkAsHiredAsync(MarkAsHiredRequestDto request, string updatedBy);
-        
-        // Get Application Workflow Status
-        Task<ApplicationWorkflowStatusDto?> GetApplicationWorkflowStatusAsync(int applicationID);
 
         // =============================================
         // MANUAL PROCESSING

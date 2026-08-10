@@ -136,40 +136,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 // Encrypt API key before storing
                 var encryptedApiKey = EncryptionHelper.EncryptText(request.ApiKey);
 
-                var sql = @"
-                    IF EXISTS (SELECT 1 FROM Tbl_Ruc_RecruitmentAI_Settings WHERE CompanyID = @CompanyID AND IsActive = 1)
-                    BEGIN
-                        UPDATE Tbl_Ruc_RecruitmentAI_Settings
-                        SET Provider = @Provider,
-                            ApiKey = @ApiKey,
-                            ApiEndpoint = @ApiEndpoint,
-                            Model = @Model,
-                            MaxTokens = @MaxTokens,
-                            Temperature = @Temperature,
-                            AutoScreening = @AutoScreening,
-                            AutoMatching = @AutoMatching,
-                            GenerateQuestions = @GenerateQuestions,
-                            EmailNotifications = @EmailNotifications,
-                            UpdatedBy = @UpdatedBy,
-                            UpdatedOn = GETDATE()
-                        WHERE CompanyID = @CompanyID AND IsActive = 1
-                        
-                        SELECT Id FROM Tbl_Ruc_RecruitmentAI_Settings WHERE CompanyID = @CompanyID AND IsActive = 1
-                    END
-                    ELSE
-                    BEGIN
-                        INSERT INTO Tbl_Ruc_RecruitmentAI_Settings 
-                        (CompanyID, Provider, ApiKey, ApiEndpoint, Model, MaxTokens, Temperature, 
-                         AutoScreening, AutoMatching, GenerateQuestions, EmailNotifications, 
-                         CreatedBy, CreatedOn, UpdatedBy, UpdatedOn, IsActive)
-                        VALUES 
-                        (@CompanyID, @Provider, @ApiKey, @ApiEndpoint, @Model, @MaxTokens, @Temperature,
-                         @AutoScreening, @AutoMatching, @GenerateQuestions, @EmailNotifications,
-                         @CreatedBy, GETDATE(), @UpdatedBy, GETDATE(), 1)
-                        
-                        SELECT CAST(SCOPE_IDENTITY() AS INT)
-                    END";
-
                 var parameters = new DynamicParameters();
                 parameters.Add("@CompanyID", request.CompanyId);
                 parameters.Add("@Provider", request.Provider);
@@ -184,8 +150,14 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@EmailNotifications", request.Settings?.EmailNotifications ?? true);
                 parameters.Add("@CreatedBy", userId);
                 parameters.Add("@UpdatedBy", userId);
+                parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var id = await _db.QueryFirstOrDefaultAsync<int?>(sql, parameters);
+                await _db.ExecuteAsync(
+                    "ruc.SP_Ruc_RecruitmentAI_Settings_Save",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                var id = parameters.Get<int?>("@Id");
                 return (id, true, "API key settings saved successfully");
             }
             catch (Exception ex)
@@ -202,12 +174,16 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var sql = @"
-                    UPDATE Tbl_Ruc_RecruitmentAI_Settings
-                    SET IsActive = 0, UpdatedOn = GETDATE()
-                    WHERE CompanyID = @CompanyID AND IsActive = 1";
+                var parameters = new DynamicParameters();
+                parameters.Add("@CompanyID", companyId);
+                parameters.Add("@RowsAffected", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var rowsAffected = await _db.ExecuteAsync(sql, new { CompanyID = companyId });
+                await _db.ExecuteAsync(
+                    "ruc.SP_Ruc_RecruitmentAI_Settings_Delete",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                var rowsAffected = parameters.Get<int>("@RowsAffected");
                 return rowsAffected > 0;
             }
             catch (Exception ex)
@@ -276,14 +252,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var sql = @"
-                    INSERT INTO Tbl_Ruc_RecruitmentAI_JobDescriptions 
-                    (CompanyID, JobRequisitionID, GeneratedDescription, PromptUsed, Model, TokensUsed, CreatedBy, CreatedOn)
-                    VALUES 
-                    (@CompanyID, @JobRequisitionID, @GeneratedDescription, @PromptUsed, @Model, @TokensUsed, @CreatedBy, GETDATE())
-                    
-                    SELECT CAST(SCOPE_IDENTITY() AS INT)";
-
                 var parameters = new DynamicParameters();
                 parameters.Add("@CompanyID", companyId);
                 parameters.Add("@JobRequisitionID", jobRequisitionId);
@@ -292,8 +260,14 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@Model", model);
                 parameters.Add("@TokensUsed", tokensUsed);
                 parameters.Add("@CreatedBy", userId);
+                parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var id = await _db.QueryFirstOrDefaultAsync<int?>(sql, parameters);
+                await _db.ExecuteAsync(
+                    "ruc.SP_Ruc_RecruitmentAI_JobDescriptions_Save",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                var id = parameters.Get<int>("@Id");
                 return (id, true, "Job description saved successfully");
             }
             catch (Exception ex)
@@ -340,18 +314,16 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                     }
 
                     // Step 3: Update Tbl_Ruc_RecruitmentAI_JobDescriptions - only JobRequisitionID
-                    var updateJobDescSql = @"
-                        UPDATE Tbl_Ruc_RecruitmentAI_JobDescriptions
-                        SET JobRequisitionID = @JobRequisitionID
-                        WHERE Id = @Id AND CompanyID = @CompanyID";
+                    var parameters = new DynamicParameters();
+                    parameters.Add("@Id", jobDescId.Value);
+                    parameters.Add("@CompanyID", request.CompanyId);
+                    parameters.Add("@JobRequisitionID", jobRequisitionId.Value);
+                    parameters.Add("@UpdatedBy", userId);
 
-                    await _db.ExecuteAsync(updateJobDescSql, new
-                    {
-                        Id = jobDescId.Value,
-                        JobRequisitionID = jobRequisitionId.Value,
-                        CompanyID = request.CompanyId,
-                        UpdatedBy = userId
-                    });
+                    var rowsAffected = await _db.ExecuteAsync(
+                        "ruc.SP_Ruc_RecruitmentAI_JobDescriptions_Update",
+                        parameters,
+                        commandType: CommandType.StoredProcedure);
                 }
                 else
                 {
@@ -375,25 +347,15 @@ namespace Digi.Recruitment.Module.Domain.Repositories
         {
             try
             {
-                // Find the most recent activity of this type for this company
-                var updateActivitySql = @"
-                    UPDATE Tbl_Ruc_RecruitmentAI_Activity
-                    SET RelatedId = @RelatedId
-                    WHERE Id = (
-                        SELECT TOP 1 Id
-                        FROM Tbl_Ruc_RecruitmentAI_Activity
-                        WHERE CompanyID = @CompanyID 
-                            AND ActivityType = @ActivityType
-                            AND (RelatedId IS NULL OR RelatedId = 0)
-                        ORDER BY CreatedOn DESC
-                    )";
+                var parameters = new DynamicParameters();
+                parameters.Add("@CompanyID", companyId);
+                parameters.Add("@ActivityType", activityType);
+                parameters.Add("@RelatedId", relatedId);
 
-                await _db.ExecuteAsync(updateActivitySql, new
-                {
-                    CompanyID = companyId,
-                    ActivityType = activityType,
-                    RelatedId = relatedId
-                });
+                await _db.ExecuteAsync(
+                    "ruc.SP_Ruc_RecruitmentAI_Activity_UpdateRelatedId",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
             }
             catch (Exception ex)
             {
@@ -449,6 +411,7 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                     Comments = additionalInfo,
                     OtherRequirments = benefits,
                     JobSummary = jobSummary,
+                    Justification = request.Justification,
                     Location = request.Location,
                     Vacancies = request.Vacancies ?? 1,
                     MinSalary = request.MinSalary,
@@ -780,39 +743,31 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var sql = @"
-                    INSERT INTO [RUC].[Tbl_RecruitmentAI_ResumeScreening]
-                    ([ApplicationID], [ApplicantID], [ResumeParsingID], [MatchScore], [SkillsMatch], 
-                     [ExperienceMatch], [QualificationsMatch], [RedFlags], [Recommendation], 
-                     [ScreeningMethod], [ScreeningProvider], [ModelUsed], [ProcessingTime], 
-                     [CompanyID], [IsActive], [CreatedBy], [CreatedOn], [UpdatedBy], [UpdatedOn])
-                    VALUES 
-                    (@ApplicationID, @ApplicantID, @ResumeParsingID, @MatchScore, @SkillsMatch, 
-                     @ExperienceMatch, @QualificationsMatch, @RedFlags, @Recommendation, 
-                     @ScreeningMethod, @ScreeningProvider, @ModelUsed, @ProcessingTime, 
-                     @CompanyID, 1, @CreatedBy, GETDATE(), @UpdatedBy, GETDATE())
-                    
-                    SELECT CAST(SCOPE_IDENTITY() AS INT)";
-
                 var parameters = new DynamicParameters();
                 parameters.Add("@ApplicationID", applicationId);
                 parameters.Add("@ApplicantID", applicantId);
                 parameters.Add("@ResumeParsingID", resumeParsingId);
                 parameters.Add("@MatchScore", matchScore);
-                parameters.Add("@SkillsMatch", skillsMatch ?? (object)DBNull.Value);
-                parameters.Add("@ExperienceMatch", experienceMatch ?? (object)DBNull.Value);
-                parameters.Add("@QualificationsMatch", qualificationsMatch ?? (object)DBNull.Value);
-                parameters.Add("@RedFlags", redFlags ?? (object)DBNull.Value);
-                parameters.Add("@Recommendation", recommendation ?? (object)DBNull.Value);
-                parameters.Add("@ScreeningMethod", screeningMethod ?? "AI");
-                parameters.Add("@ScreeningProvider", screeningProvider ?? (object)DBNull.Value);
-                parameters.Add("@ModelUsed", modelUsed ?? (object)DBNull.Value);
+                parameters.Add("@SkillsMatch", skillsMatch);
+                parameters.Add("@ExperienceMatch", experienceMatch);
+                parameters.Add("@QualificationsMatch", qualificationsMatch);
+                parameters.Add("@RedFlags", redFlags);
+                parameters.Add("@Recommendation", recommendation);
+                parameters.Add("@ScreeningMethod", screeningMethod);
+                parameters.Add("@ScreeningProvider", screeningProvider);
+                parameters.Add("@ModelUsed", modelUsed);
                 parameters.Add("@ProcessingTime", processingTime);
                 parameters.Add("@CompanyID", companyId);
                 parameters.Add("@CreatedBy", userId ?? "System");
                 parameters.Add("@UpdatedBy", userId ?? "System");
+                parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var id = await _db.QueryFirstOrDefaultAsync<int?>(sql, parameters);
+                await _db.ExecuteAsync(
+                    "ruc.SP_Ruc_RecruitmentAI_ResumeScreening_Save",
+                    parameters,
+                    commandType: CommandType.StoredProcedure);
+
+                var id = parameters.Get<int>("@Id");
                 return (id, true, "Resume screening saved successfully");
             }
             catch (Exception ex)
@@ -829,22 +784,21 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var sql = @"
-                    INSERT INTO Tbl_Ruc_RecruitmentAI_Activity 
-                    (CompanyID, ActivityType, Title, Description, RelatedId, CreatedOn)
-                    VALUES 
-                    (@CompanyID, @ActivityType, @Title, @Description, @RelatedId, GETDATE())
-                    
-                    SELECT CAST(SCOPE_IDENTITY() AS INT)";
-
                 var parameters = new DynamicParameters();
                 parameters.Add("@CompanyID", companyId);
                 parameters.Add("@ActivityType", activityType);
                 parameters.Add("@Title", title);
                 parameters.Add("@Description", description);
                 parameters.Add("@RelatedId", relatedId);
+                parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                var id = await _db.QueryFirstOrDefaultAsync<int?>(sql, parameters);
+                await _db.ExecuteAsync(
+                    "[ruc].[SP_Ruc_RecruitmentAI_Activity_Save]",
+                    parameters,
+                    commandType: CommandType.StoredProcedure
+                );
+
+                var id = parameters.Get<int?>("@Id");
                 return (id, true, "Activity saved successfully");
             }
             catch (Exception ex)
@@ -1023,19 +977,16 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
-                var apiKey = request.ApiKeySettings;
-
+                // Deliberately NOT [ruc].[SP_Ruc_RecruitmentAI_Settings_Save] — that SP
+                // is SaveApiKeySettingsAsync's, and requires @Provider/@ApiKey/@CreatedBy/
+                // @UpdatedBy this method never had. This is the feature-toggle-only save
+                // (auto screening/matching/parsing, threshold) for a company that has
+                // already configured its provider; it must never touch Provider/ApiKey/
+                // ApiEndpoint/Model, or a settings-panel toggle would silently wipe the
+                // saved API key.
                 var parameters = new DynamicParameters();
 
                 parameters.Add("@CompanyID", request.CompanyId);
-
-                parameters.Add("@Provider", apiKey?.Provider);
-                parameters.Add("@ApiKey", apiKey?.ApiKey);
-                parameters.Add("@ApiEndpoint", apiKey?.ApiEndpoint);
-                parameters.Add("@Model", apiKey?.Model);
-                parameters.Add("@MaxTokens", apiKey?.MaxTokens);
-                parameters.Add("@Temperature", apiKey?.Temperature);
-
                 parameters.Add("@AutoScreening", request.Settings.AutoScreening);
                 parameters.Add("@AutoMatching", request.Settings.AutoMatching);
                 parameters.Add("@AutoParse", request.Settings.AutoParse);
@@ -1046,14 +997,19 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
                 await _db.ExecuteAsync(
-                    "[ruc].[SP_Ruc_RecruitmentAI_Settings_Save]",
+                    "[ruc].[SP_Ruc_RecruitmentAI_FeatureSettings_Save]",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
 
                 var result = parameters.Get<int>("@Result");
 
-                return (result == 1, "Settings saved successfully");
+                return result switch
+                {
+                    1 => (true, "Settings saved successfully"),
+                    0 => (false, "AI provider settings must be configured for this company before feature toggles can be saved."),
+                    _ => (false, "Failed to save settings"),
+                };
             }
             catch (Exception ex)
             {
@@ -1284,12 +1240,12 @@ namespace Digi.Recruitment.Module.Domain.Repositories
 
             var experienceSummary = parsed.Experience != null
                 ? string.Join(" | ", parsed.Experience.Select(e =>
-                    $"{e.Position} at {e.Company} ({e.Duration})"))
+                    $"{e.Role} at {e.Company} ({e.Duration})"))
                 : null;
 
             var education = parsed.Education != null
                 ? string.Join(", ", parsed.Education.Select(e =>
-                    $"{e.Degree} {e.Field} - {e.Institution}"))
+                    $"{e.Degree} - {e.Institution}"))
                 : null;
 
             var sql = @"

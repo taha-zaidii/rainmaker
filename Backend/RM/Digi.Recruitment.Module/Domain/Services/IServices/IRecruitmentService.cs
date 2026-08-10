@@ -39,9 +39,6 @@ namespace Digi.Recruitment.Module.Domain.Services.IServices
         //Task<ApiResponse<bool>> UpdateInterviewScheduleAsync(bool isHired, int jobApplicationID, int interviewStateID, int applicantID, int companyID, string empCode);
         //Task<ApiResponse<InterviewScheduleCollectionDto>> GetAllInterviewSchedulesAsync(int CompanyID);
         //Task<ApiResponse<IEnumerable<CandidateEvaluationDto>>> GetCandidateEvaluationsAsync(long? requisitionId, int? interviewRound);
-        //Task<ApiResponse<IEnumerable<SchedulePanelAssignListDto>>> GetAssignListAsync(int? scheduleHeaderId,int CompanyID);
-
-        //Task<ApiResponse<IEnumerable<ScheduleAssignInterviewListDto>>> GetAssignListJobReqAsync(int companyID, int? interviewerID);
 
         //Task<EmployeeEmailDto> GetEmployeeEmailsAsync(int employeeIds);
         //Task<ApiResponse<bool>> DeleteRecruitmentRequisitionAsync(int recruitmentRequisitionID, string employeeCode, string? reasonToDelete);

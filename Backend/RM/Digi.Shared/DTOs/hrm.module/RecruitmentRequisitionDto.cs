@@ -119,7 +119,7 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? RequiredExperiencesDesirable { get; set; }
         public string? RequiredTrainings { get; set; }
         public string? RequiredTrainingsDesirable { get; set; }
-        //public string? Justification { get; set; }
+        public string? Justification { get; set; }
         //public int? JustificationBy { get; set; }
         //public DateTime? JustificationDate { get; set; }
         public bool? ToInternal { get; set; }
@@ -326,99 +326,4 @@ namespace Digi.Shared.DTOs.hrm.module
         public string Status { get; set; }
         public string EvaluationStatus { get; set; }
     }
-    public class SchedulePanelAssignListDto
-    {
-        public int PanelId { get; set; }
-        public int ScheduleHeaderId { get; set; }
-        public DateTime InterviewDate { get; set; }
-        public int InterviewDuration { get; set; }
-
-
-        public int NotificationMethodID { get; set; }
-        public string NotificationMethod { get; set; }
-
-
-        public int ScheduleStageID { get; set; }
-        public string ScheduleStage { get; set; }
-        
-        public int InterviewStateID { get; set; }
-        public string InterViewState { get; set; }
-
-        public int VenueID { get; set; }
-        public string Venue { get; set; }
-
-        public int RecommendationID { get; set; }
-        public string Recommendation { get; set; }
-
-        public int DepartmentID { get; set; }
-        public string DeparmentName { get; set; }
-
-
-        public int InterviewerId { get; set; }
-        public string InterviewerName { get; set; }
-        public string RecruitmentRequisitionName { get; set; }
-        public int JobApplicationID { get; set; }
-        public int ApplicantID { get; set; }
-        public string CandidateName { get; set; }
-        public string Comments { get; set; }
-        public decimal? EvaluationScore { get; set; }
-        public bool IsHead { get; set; }
-        public bool IsActive { get; set; }
-        public string CreatedByName { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string? UpdatedByName { get; set; }
-        public int AttachmentDetailID { get; set; }
-        public string? EmployeeImage { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-        public List<CandidateEvaluationCriteria_V1Dto> EvaluationCriteria { get; set; } = new();
-    }
-
-
-    public class ScheduleAssignInterviewListDto
-    {
-       
-        public int PanelId { get; set; }
-        public int InterviewerId { get; set; }
-        public string? InterviewerName { get; set; }
-        public string? CandidateName { get; set; }
-        public DateTime? InterviewDate { get; set; }
-        public TimeSpan? StartTime { get; set; }
-        public TimeSpan? EndTime { get; set; }
-        public int? NotificationMethodID { get; set; }
-        public string? NotificationMethod { get; set; }
-        public int? InterviewStateID { get; set; }
-        public string? InterViewState { get; set; }
-        public int? VenueID { get; set; }
-        public string? Venue { get; set; }
-        public string? RecruitmentRequisitionName { get; set; }
-        public bool? IsHead { get; set; }
-        public int? DepartmentID { get; set; }
-        public string? DepartmentName { get; set; }
-        public string? EmployeeImage { get; set; }
-        public int? AttachmentDetailID { get; set; }
-        public decimal? EvaluationScore { get; set; }
-        public int? JobApplicationID { get; set; }
-        public int? ScheduleHeaderId { get; set; }
-
-    }
-    //public class SchedulePanelAssignList_V1Dto
-    //{
-    //    public int ScheduleHeaderId { get; set; }
-    //    public string? CandidateName { get; set; }
-    //    public int InterviewerID { get; set; }
-    //    public int CompanyID { get; set; }
-
-    //    // Child List
-    //    public List<CandidateEvaluationCriteria_V1Dto> EvaluationCriteria { get; set; } = new();
-    //}
-
-    public class CandidateEvaluationCriteria_V1Dto
-    {
-        public int EvaluationDetailID { get; set; }
-        public int CompanyID { get; set; }
-        public int EvaluationID { get; set; }
-        public int CriteriaID { get; set; }
-        public int RatingScaleID { get; set; }
-    }
-
 }

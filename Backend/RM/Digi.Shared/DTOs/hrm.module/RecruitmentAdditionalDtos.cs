@@ -528,32 +528,6 @@ namespace Digi.Shared.DTOs.hrm.module
     // =============================================
 
 
-    //public class PanelMemberScheduleDto
-    //{
-    //    public int ScheduleID { get; set; }
-    //    public string ScheduleCode { get; set; } = string.Empty;
-    //    public int ApplicationID { get; set; }
-    //    public string ApplicationCode { get; set; } = string.Empty;
-    //    public string FirstName { get; set; } = string.Empty;
-    //    public string LastName { get; set; } = string.Empty;
-    //    public string Email { get; set; } = string.Empty;
-    //    public string JobTitle { get; set; } = string.Empty;
-    //    public int InterviewRound { get; set; }
-    //    public DateTime ScheduledDate { get; set; }
-    //    public int DurationMinutes { get; set; }
-    //    public string? Venue { get; set; }
-    //    public string? OnlineMeetingLink { get; set; }
-    //    public int StatusID { get; set; }
-    //    public string StatusCode { get; set; } = string.Empty;
-    //    public string StatusName { get; set; } = string.Empty;
-    //    public int PanelID { get; set; }
-    //    public bool IsPanelHead { get; set; }
-    //    public bool IsRequired { get; set; }
-    //    public bool IsConfirmed { get; set; }
-    //    public DateTime? ConfirmedOn { get; set; }
-    //    public bool EvaluationSubmitted { get; set; }
-    //    public decimal? EvaluationScore { get; set; }
-    //}
     public class PanelMemberScheduleDto
     {
         public int ScheduleID { get; set; }

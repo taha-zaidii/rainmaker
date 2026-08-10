@@ -550,6 +550,14 @@ namespace Digi.Shared.DTOs.hrm.module
         public string? Requirements { get; set; }
         public string? Qualifications { get; set; }
         public string? Benefits { get; set; }
+
+        /// <summary>
+        /// HR's stated reason for requisitioning the role, entered on the
+        /// wizard's Step 4 (Publishing) — never AI-generated (see CLAUDE.md
+        /// §10: justification is null-by-design out of the AI response).
+        /// Optional: callers that omit it behave exactly as before.
+        /// </summary>
+        public string? Justification { get; set; }
         public string? AdditionalInfo { get; set; }
         public DateTime? ClosingDate { get; set; }
         public int? IsPublished { get; set; }
@@ -657,8 +665,15 @@ namespace Digi.Shared.DTOs.hrm.module
     public class ResumeExperienceDto
     {
         public string? Company { get; set; }
-        public string? Position { get; set; }
+
+        /// <summary>
+        /// Named Role, not Position — the Angular ResumeExperience interface
+        /// reads role/jobTitle, never position; the old name meant every parsed
+        /// experience entry's title was silently blank in the review screen.
+        /// </summary>
+        public string? Role { get; set; }
         public string? Duration { get; set; }
+        public string? Location { get; set; }
         public string? Description { get; set; }
     }
 
@@ -666,8 +681,16 @@ namespace Digi.Shared.DTOs.hrm.module
     {
         public string? Institution { get; set; }
         public string? Degree { get; set; }
-        public string? Field { get; set; }
-        public string? Year { get; set; }
+
+        /// <summary>
+        /// Duration/Gpa, not Field/Year — matches Digi.Core.AI's EducationNode
+        /// and the Angular ResumeEducation interface. The old fields didn't
+        /// exist on the wire (Field was always hardcoded null; Year meant
+        /// nothing to the frontend, which reads duration/gpa), so this data
+        /// was always blank in the review screen despite the parser returning it.
+        /// </summary>
+        public string? Duration { get; set; }
+        public string? Gpa { get; set; }
     }
 
     public class ResumeProjectDto
@@ -1041,32 +1064,6 @@ namespace Digi.Shared.DTOs.hrm.module
 
     // SubmitEvaluationRequestDto and SubmitEvaluationResponseDto moved to RecruitmentAdditionalDtos.cs
 
-    // Complete Round and Move to Next Request
-    public class CompleteRoundRequestDto
-    {
-        [Required]
-        public int ApplicationID { get; set; }
-        [Required]
-        public int ScheduleID { get; set; }
-        [Required]
-        public int CompanyID { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Action { get; set; } = string.Empty; // 'NEXT_ROUND', 'HIRED', 'REJECTED', 'ON_HOLD'
-        public int? NextRoundNumber { get; set; } // Required if Action = 'NEXT_ROUND'
-        public string? Remarks { get; set; }
-    }
-
-    // Complete Round Response
-    public class CompleteRoundResponseDto
-    {
-        public bool IsSuccess { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public int? NewStatusID { get; set; }
-        public string? NewStatusCode { get; set; }
-        public int? NewScheduleID { get; set; } // If next round scheduled
-    }
-
     // Mark as Hired Request
     public class MarkAsHiredRequestDto
     {
@@ -1094,47 +1091,6 @@ namespace Digi.Shared.DTOs.hrm.module
         public string Message { get; set; } = string.Empty;
         public int? NewStatusID { get; set; }
         public string? NewStatusCode { get; set; }
-    }
-
-    // Application Workflow Status Response
-    public class ApplicationWorkflowStatusDto
-    {
-        public int ApplicationID { get; set; }
-        public string? ApplicationCode { get; set; }
-        public int CurrentStatusID { get; set; }
-        public string? CurrentStatusCode { get; set; }
-        public string? CurrentStatusName { get; set; }
-        public decimal? ScreeningScore { get; set; }
-        public decimal? OverallRating { get; set; }
-        public string? FinalRecommendation { get; set; }
-        public int ApplicantID { get; set; }
-        public string? ApplicantCode { get; set; }
-        public string? ApplicantFirstName { get; set; }
-        public string? ApplicantLastName { get; set; }
-        public string? ApplicantEmail { get; set; }
-        public string? ApplicantMobileNumber { get; set; }
-        public int RequisitionID { get; set; }
-        public string? RequisitionCode { get; set; }
-        public string? RequisitionJobTitle { get; set; }
-        public int TotalRounds { get; set; }
-        public int? CurrentRound { get; set; }
-        public int TotalEvaluations { get; set; }
-        public int TotalPanelMembers { get; set; }
-        public List<InterviewRoundStatusDto> InterviewRounds { get; set; } = new();
-    }
-
-    public class InterviewRoundStatusDto
-    {
-        public int ScheduleID { get; set; }
-        public string? ScheduleCode { get; set; }
-        public int InterviewRound { get; set; }
-        public DateTime? ScheduledDate { get; set; }
-        public int StatusID { get; set; }
-        public string? ScheduleStatusCode { get; set; }
-        public string? ScheduleStatusName { get; set; }
-        public string? FeedbackSummary { get; set; }
-        public int PanelMemberCount { get; set; }
-        public int EvaluationCount { get; set; }
     }
 
     public class ParseJobBankResumeRequestDto

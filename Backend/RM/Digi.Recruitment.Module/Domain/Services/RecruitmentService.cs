@@ -8,7 +8,6 @@ using Digi.Shared.DTOs.hrm.module;
 using Digi.Shared.Helper;
 using Digi.Shared.Services;
 using Digi.Shared.SharedLibrary.Interfaces;
-using DocumentFormat.OpenXml.Bibliography;
 using iText.Html2pdf;
 using Newtonsoft.Json;
 using System.Security.Claims;
@@ -501,43 +500,6 @@ namespace Digi.Recruitment.Module.Domain.Services
                 return ApiResponse<IEnumerable<CandidateEvaluationDto>>.Fail($"Failed to retrieve candidate evaluations: {ex.Message}");
             }            
         }
-        //public async Task<ApiResponse<IEnumerable<SchedulePanelAssignListDto>>> GetAssignListAsync(int? InterviewerID, int CompanyID)
-        //{
-        //    try
-        //    {
-        //        var result =  await _repo.GetAssignListAsync(InterviewerID, CompanyID);
-        //        if (result == null || !result.Any())
-        //        {
-        //            return ApiResponse<IEnumerable<SchedulePanelAssignListDto>>.Fail("No panel assignments found.");
-        //        }
-        //        return ApiResponse<IEnumerable<SchedulePanelAssignListDto>>.Success(result, "Panel assignments retrieved successfully.");
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error retrieving panel assignments");
-        //        return ApiResponse<IEnumerable<SchedulePanelAssignListDto>>.Fail($"Failed to retrieve panel assignments: {ex.Message}");
-        //    }
-        //}
-
-        //public async Task<ApiResponse<IEnumerable<ScheduleAssignInterviewListDto>>> GetAssignListJobReqAsync(int companyID, int? interviewerID)
-        //{
-        //    try
-        //    {
-        //        var result = await _repo.GetAssignListJobReqAsync(companyID, interviewerID);
-        //        if (result == null || !result.Any())
-        //        {
-        //            return ApiResponse<IEnumerable<ScheduleAssignInterviewListDto>>.Fail("No assign found.");
-        //        }
-        //        return ApiResponse<IEnumerable<ScheduleAssignInterviewListDto>>.Success(result, "Assign retrieved successfully.");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error retrieving assign");
-        //        return ApiResponse<IEnumerable<ScheduleAssignInterviewListDto>>.Fail($"Failed to retrieve assign : {ex.Message}");
-        //    }
-        //}
-
         //public async Task<EmployeeEmailDto> GetEmployeeEmailsAsync(int employeeIds)
         //{
         //    // Convert List<int> to comma-separated string

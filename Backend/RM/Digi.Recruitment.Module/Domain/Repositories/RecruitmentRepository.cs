@@ -2,8 +2,6 @@ using Dapper;
 using Digi.Recruitment.Module.Domain.Repositories.IRepositories;
 using Digi.Shared.DTOs.hrm.module;
 using Digi.Shared.Helper;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using System.Data;
@@ -79,7 +77,10 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 p.Add("@RequiredExperiencesDesirable", req.RequiredExperiencesDesirable);
                 p.Add("@RequiredTrainings", req.RequiredTrainings);
                 p.Add("@RequiredTrainingsDesirable", req.RequiredTrainingsDesirable);
-                //p.Add("@Justification", req.Justification);
+                // Was dropped silently: HR's Step 4 justification (why this role is
+                // being requisitioned) never reached the SP despite the wizard
+                // collecting it and the SP accepting it — see SaveJobDescriptionRequestDto.
+                p.Add("@Justification", req.Justification);
                 //p.Add("@JustificationBy", req.JustificationBy);
                 //p.Add("@JustificationDate", req.JustificationDate);
                 //p.Add("@ToInternal", req.ToInternal);
@@ -118,7 +119,7 @@ namespace Digi.Recruitment.Module.Domain.Repositories
 
                 // Execute stored proc — SP returns the row via SELECT at the end
                 using var multi = await _db.QueryMultipleAsync(
-                    "sp_Hr_Ruc_RecruitmentRequisition_Insert",
+                    "ruc.SP_Ruc_JobRequisition_Create",
                     p,
                     commandType: CommandType.StoredProcedure);
 
@@ -591,41 +592,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
 
             return result;
         }
-        public async Task<IEnumerable<SchedulePanelAssignListDto>> GetAssignListAsync(int? InterviewerID, int CompanyID)
-        {
-            var parameters = new DynamicParameters();
-            parameters.Add("@InterviewerID", InterviewerID, DbType.Int32);
-            parameters.Add("@CompanyID", CompanyID, DbType.Int32);
-
-            var panelLookup = new Dictionary<int, SchedulePanelAssignListDto>();
-
-            var result = await _db.QueryAsync<SchedulePanelAssignListDto, CandidateEvaluationCriteria_V1Dto, SchedulePanelAssignListDto>(
-                "sp_Hr_Ruc_SchedulePanel_GetAssignList",
-                (panel, criteria) =>
-                {
-                    if (!panelLookup.TryGetValue(panel.ScheduleHeaderId, out var existingPanel))
-                    {
-                        existingPanel = panel;
-                        existingPanel.EvaluationCriteria = new List<CandidateEvaluationCriteria_V1Dto>();
-                        panelLookup.Add(existingPanel.ScheduleHeaderId, existingPanel);
-                    }
-
-                    if (criteria != null &&
-                        !existingPanel.EvaluationCriteria.Any(c => c.EvaluationDetailID == criteria.EvaluationDetailID))
-                    {
-                        existingPanel.EvaluationCriteria.Add(criteria);
-                    }
-
-                    return existingPanel;
-                },
-                parameters,
-                splitOn: "EvaluationDetailID",
-                commandType: CommandType.StoredProcedure
-            );
-
-            return panelLookup.Values.ToList();
-        }
-
         public async Task<EmployeeEmailDto> GetEmployeeEmailsAsync(int employeeIds)
         {
             //var employees = new List<EmployeeEmailDto>();
@@ -640,21 +606,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
 
             return result;
         }
-        public async Task<IEnumerable<ScheduleAssignInterviewListDto>> GetAssignListJobReqAsync(int companyID, int? interviewerID)
-        {
-            var parameters = new DynamicParameters();
-            parameters.Add("@CompanyID", companyID, DbType.Int64);
-            parameters.Add("@InterviewerID", interviewerID, DbType.Int64);
-
-            var result = await _db.QueryAsync<ScheduleAssignInterviewListDto>(
-                "[sp_Hr_Ruc_SchedulePanel_GetAssignListJobReq]",
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
-
-            return result;
-        }
-
         public async Task<ApiResponse<bool>> DeleteRecruitmentRequisitionAsync(int recruitmentRequisitionID,string employeeCode,string? reasonToDelete)
         {
             try
@@ -806,15 +757,27 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 if (_db.State != ConnectionState.Open)
                     _db.Open();
 
+                // The SP actually defined for this operation is SP_AI_AutoShortlistCandidate
+                // (003_demo_recruitment_sps.sql) — SP_Recruitment_AutoShortlistCandidate,
+                // called here previously, does not exist anywhere in db/seed and threw on
+                // every call. Its full parameter list is kept even though this method only
+                // surfaces IsSuccess/Message upward: RecruitmentService re-reads the new
+                // status via GetApplicationStatusAsync rather than these outputs.
                 var parameters = new DynamicParameters();
                 parameters.Add("@CompanyID", request.CompanyID);
                 parameters.Add("@ApplicationID", request.ApplicationID);
                 parameters.Add("@AIScreeningScore", request.AIScreeningScore);
-                parameters.Add("@CreatedBy", createdBy);
+                parameters.Add("@Threshold", request.Threshold > 0 ? request.Threshold : 80);
+                parameters.Add("@PreviousStatusID", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parameters.Add("@PreviousStatusCode", dbType: DbType.String, size: 50, direction: ParameterDirection.Output);
+                parameters.Add("@NewStatusID", dbType: DbType.Int32, direction: ParameterDirection.Output);
+                parameters.Add("@NewStatusCode", dbType: DbType.String, size: 50, direction: ParameterDirection.Output);
+                parameters.Add("@AutoShortlisted", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+                parameters.Add("@AutoShortlistDate", dbType: DbType.DateTime, direction: ParameterDirection.Output);
                 parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
                 await _db.ExecuteAsync(
-                    "[ruc].[SP_Recruitment_AutoShortlistCandidate]",
+                    "[ruc].[SP_AI_AutoShortlistCandidate]",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
@@ -1269,8 +1232,8 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@StatusID", request.StatusID);
                 parameters.Add("@JobCategoryID", request.JobCategoryID);
                 parameters.Add("@Isbudget", request.Isbudget);
-                parameters.Add("@IsNonBudget ", request.IsNonBudget);
-                parameters.Add("@IsPublic  ", request.IsPublic);
+                parameters.Add("@IsNonBudget", request.IsNonBudget);
+                parameters.Add("@IsPublic", request.IsPublic);
                 parameters.Add("@IsDefault", request.IsDefault);
                 parameters.Add("@SalaryRecommendationID", request.SalaryRecommendationID);
                 parameters.Add("@CreatedBy", request.CreatedBy);
@@ -1278,8 +1241,15 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@RequisitionCode", dbType: DbType.String, size: 50, direction: ParameterDirection.Output);
                 parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
+                // Distinct SP from SaveAsync's ruc.SP_Ruc_JobRequisition_Create — that
+                // one mirrors the legacy production form's field names
+                // (RecruitmentRequisitionName, AgeText, ...); this method's DTO is the
+                // newer, FK-normalized shape (DepartmentID, MinAge/MaxAge as ints,
+                // etc.). They cannot share one SP name with two different parameter
+                // lists, and a prior edit collided them — this call was throwing
+                // "expects parameter '@NewID'" on every invocation until this fix.
                 await _db.ExecuteAsync(
-                    "[ruc].[SP_Ruc_JobRequisition_Create]",
+                    "[ruc].[SP_Ruc_JobRequisition_CreateDetailed]",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
@@ -1469,7 +1439,7 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@Skills", request.Skills);
                 parameters.Add("@Benefits", request.Benefits);
                 parameters.Add("@Justification", request.Justification);
-                parameters.Add("IsPublic", request.IsPublic);
+                parameters.Add("@IsPublic", request.IsPublic);
                 parameters.Add("@IsPublished", request.IsPublished);
                 parameters.Add("@PublishedDate", request.PublishedDate);
                 parameters.Add("@ClosingDate", request.ClosingDate);
@@ -1482,8 +1452,11 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@UpdatedBy", updatedBy);
                 parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
+                // Paired with SP_Ruc_JobRequisition_CreateDetailed — see that call
+                // site's comment for why this needs its own SP name rather than
+                // reusing SP_Ruc_JobRequisition_Update (legacy shape, used elsewhere).
                 await _db.ExecuteAsync(
-                    "[ruc].[SP_Ruc_JobRequisition_Update]",
+                    "[ruc].[SP_Ruc_JobRequisition_UpdateDetailed]",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );
@@ -2151,50 +2124,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
             }
         }
 
-        public async Task<(int? NewStatusID, string? NewStatusCode, int? NewScheduleID, bool IsSuccess, string Message)> CompleteRoundAndMoveToNextAsync(CompleteRoundRequestDto request, string updatedBy)
-        {
-            try
-            {
-                if (_db.State != ConnectionState.Open)
-                    _db.Open();
-
-                var parameters = new DynamicParameters();
-                parameters.Add("@ApplicationID", request.ApplicationID);
-                parameters.Add("@ScheduleID", request.ScheduleID);
-                parameters.Add("@CompanyID", request.CompanyID);
-                parameters.Add("@Action", request.Action);
-                parameters.Add("@NextRoundNumber", request.NextRoundNumber);
-                parameters.Add("@Remarks", request.Remarks);
-                parameters.Add("@UpdatedBy", updatedBy);
-                parameters.Add("@Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                parameters.Add("@NewStatusID", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                parameters.Add("@NewStatusCode", dbType: DbType.String, size: 50, direction: ParameterDirection.Output);
-                parameters.Add("@NewScheduleID", dbType: DbType.Int32, direction: ParameterDirection.Output);
-
-                await _db.ExecuteAsync(
-                    "[ruc].[SP_Recruitment_CompleteRoundAndMoveToNext]",
-                    parameters,
-                    commandType: CommandType.StoredProcedure
-                );
-
-                var result = parameters.Get<int>("@Result");
-                var newStatusID = parameters.Get<int?>("@NewStatusID");
-                var newStatusCode = parameters.Get<string>("@NewStatusCode");
-                var newScheduleID = parameters.Get<int?>("@NewScheduleID");
-
-                var message = result == 1 
-                    ? $"Round completed. Action: {request.Action}" + (newScheduleID.HasValue ? $". Next round scheduled (ID: {newScheduleID})" : "")
-                    : "Failed to complete round";
-
-                return (newStatusID, newStatusCode, newScheduleID, result == 1, message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in CompleteRoundAndMoveToNextAsync");
-                return (null, null, null, false, ex.Message);
-            }
-        }
-
         public async Task<(int NewStatusID, string NewStatusCode, bool IsSuccess, string Message)> MarkAsHiredAsync(MarkAsHiredRequestDto request, string updatedBy)
         {
             try
@@ -2238,38 +2167,6 @@ namespace Digi.Recruitment.Module.Domain.Repositories
             {
                 _logger.LogError(ex, "Error in MarkAsHiredAsync");
                 return (0, "", false, ex.Message);
-            }
-        }
-
-        public async Task<ApplicationWorkflowStatusDto?> GetApplicationWorkflowStatusAsync(int applicationID)
-        {
-            try
-            {
-                if (_db.State != ConnectionState.Open)
-                    _db.Open();
-
-                var parameters = new DynamicParameters();
-                parameters.Add("@ApplicationID", applicationID);
-
-                using var multi = await _db.QueryMultipleAsync(
-                    "[ruc].[SP_Recruitment_GetApplicationWorkflowStatus]",
-                    parameters,
-                    commandType: CommandType.StoredProcedure
-                );
-
-                var application = await multi.ReadFirstOrDefaultAsync<ApplicationWorkflowStatusDto>();
-                if (application == null)
-                    return null;
-
-                var rounds = (await multi.ReadAsync<InterviewRoundStatusDto>()).ToList();
-                application.InterviewRounds = rounds;
-
-                return application;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetApplicationWorkflowStatusAsync");
-                return null;
             }
         }
 

@@ -1,7 +1,6 @@
 using Digi.Recruitment.Module.Middleware;
 using Digi.Shared.Helper;
 using Digi.Shared.Services;
-using Digi.Shared.Middlerware;
 using Digi.Shared.Middleware;
 using Digi.Shared.SharedLibrary.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -134,7 +133,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Recruitment Module API", Version = "v1" });
-    // opt.OperationFilter<Digi.Recruitment.Module.Domain.Services.SwaggerFileUploadFilter>();
+    opt.OperationFilter<Digi.Recruitment.Module.Middleware.SwaggerFileUploadFilter>();
 
     // Avoid 500 when generating swagger.json: prevent duplicate schema IDs and conflicting actions
     //opt.CustomSchemaIds(type => type.FullName?.Replace("+", ".").Replace("[]", "Array") ?? type.Name);

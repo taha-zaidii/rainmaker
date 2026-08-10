@@ -565,3 +565,298 @@ PRINT '────────────────────────�
 GO
 
 
+
+-- ============================================================================
+-- AI Feature Write Operations (Migrated from Inline SQL in Phase 4)
+-- ============================================================================
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_Settings_Save
+    @CompanyID INT,
+    @Provider NVARCHAR(100),
+    @ApiKey NVARCHAR(500),
+    @ApiEndpoint NVARCHAR(500) = NULL,
+    @Model NVARCHAR(100) = NULL,
+    @MaxTokens INT,
+    @Temperature DECIMAL(5,2),
+    @AutoScreening BIT,
+    @AutoMatching BIT,
+    @GenerateQuestions BIT,
+    @EmailNotifications BIT,
+    @CreatedBy NVARCHAR(100),
+    @UpdatedBy NVARCHAR(100),
+    @Id INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Tbl_Ruc_RecruitmentAI_Settings WHERE CompanyID = @CompanyID AND IsActive = 1)
+    BEGIN
+        UPDATE Tbl_Ruc_RecruitmentAI_Settings
+        SET Provider = @Provider,
+            ApiKey = @ApiKey,
+            ApiEndpoint = @ApiEndpoint,
+            Model = @Model,
+            MaxTokens = @MaxTokens,
+            Temperature = @Temperature,
+            AutoScreening = @AutoScreening,
+            AutoMatching = @AutoMatching,
+            GenerateQuestions = @GenerateQuestions,
+            EmailNotifications = @EmailNotifications,
+            UpdatedBy = @UpdatedBy,
+            UpdatedOn = GETDATE()
+        WHERE CompanyID = @CompanyID AND IsActive = 1;
+        
+        SELECT @Id = Id FROM Tbl_Ruc_RecruitmentAI_Settings WHERE CompanyID = @CompanyID AND IsActive = 1;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Tbl_Ruc_RecruitmentAI_Settings 
+        (CompanyID, Provider, ApiKey, ApiEndpoint, Model, MaxTokens, Temperature, 
+         AutoScreening, AutoMatching, GenerateQuestions, EmailNotifications, 
+         CreatedBy, CreatedOn, UpdatedBy, UpdatedOn, IsActive)
+        VALUES 
+        (@CompanyID, @Provider, @ApiKey, @ApiEndpoint, @Model, @MaxTokens, @Temperature,
+         @AutoScreening, @AutoMatching, @GenerateQuestions, @EmailNotifications,
+         @CreatedBy, GETDATE(), @UpdatedBy, GETDATE(), 1);
+        
+        SET @Id = CAST(SCOPE_IDENTITY() AS INT);
+    END
+END
+GO
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_Settings_Delete
+    @CompanyID INT,
+    @RowsAffected INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Tbl_Ruc_RecruitmentAI_Settings
+    SET IsActive = 0, UpdatedOn = GETDATE()
+    WHERE CompanyID = @CompanyID AND IsActive = 1;
+    
+    SET @RowsAffected = @@ROWCOUNT;
+END
+GO
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_JobDescriptions_Save
+    @CompanyID INT,
+    @JobRequisitionID INT = NULL,
+    @GeneratedDescription NVARCHAR(MAX),
+    @PromptUsed NVARCHAR(MAX),
+    @Model NVARCHAR(100) = NULL,
+    @TokensUsed INT,
+    @CreatedBy NVARCHAR(100),
+    @Id INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO Tbl_Ruc_RecruitmentAI_JobDescriptions 
+    (CompanyID, JobRequisitionID, GeneratedDescription, PromptUsed, Model, TokensUsed, CreatedBy, CreatedOn)
+    VALUES 
+    (@CompanyID, @JobRequisitionID, @GeneratedDescription, @PromptUsed, @Model, @TokensUsed, @CreatedBy, GETDATE());
+    
+    SET @Id = CAST(SCOPE_IDENTITY() AS INT);
+END
+GO
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_JobDescriptions_Update
+    @Id INT,
+    @CompanyID INT,
+    @JobRequisitionID INT,
+    @UpdatedBy NVARCHAR(100)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Tbl_Ruc_RecruitmentAI_JobDescriptions
+    SET JobRequisitionID = @JobRequisitionID
+    WHERE Id = @Id AND CompanyID = @CompanyID;
+END
+GO
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_Activity_UpdateRelatedId
+    @CompanyID INT,
+    @ActivityType NVARCHAR(100),
+    @RelatedId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Tbl_Ruc_RecruitmentAI_Activity
+    SET RelatedId = @RelatedId
+    WHERE Id = (
+        SELECT TOP 1 Id
+        FROM Tbl_Ruc_RecruitmentAI_Activity
+        WHERE CompanyID = @CompanyID 
+            AND ActivityType = @ActivityType
+            AND (RelatedId IS NULL OR RelatedId = 0)
+        ORDER BY CreatedOn DESC
+    );
+END
+GO
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_ResumeScreening_Save
+    @ApplicationID INT = NULL,
+    @ApplicantID INT = NULL,
+    @ResumeParsingID INT = NULL,
+    @MatchScore INT,
+    @SkillsMatch NVARCHAR(MAX) = NULL,
+    @ExperienceMatch NVARCHAR(MAX) = NULL,
+    @QualificationsMatch NVARCHAR(MAX) = NULL,
+    @RedFlags NVARCHAR(MAX) = NULL,
+    @Recommendation NVARCHAR(MAX) = NULL,
+    @ScreeningMethod NVARCHAR(100) = NULL,
+    @ScreeningProvider NVARCHAR(100) = NULL,
+    @ModelUsed NVARCHAR(100) = NULL,
+    @ProcessingTime INT,
+    @CompanyID INT,
+    @CreatedBy NVARCHAR(100),
+    @UpdatedBy NVARCHAR(100),
+    @Id INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO [RUC].[Tbl_RecruitmentAI_ResumeScreening]
+    ([ApplicationID], [ApplicantID], [ResumeParsingID], [MatchScore], [SkillsMatch], 
+     [ExperienceMatch], [QualificationsMatch], [RedFlags], [Recommendation], 
+     [ScreeningMethod], [ScreeningProvider], [ModelUsed], [ProcessingTime], 
+     [CompanyID], [IsActive], [CreatedBy], [CreatedOn], [UpdatedBy], [UpdatedOn])
+    VALUES 
+    (@ApplicationID, @ApplicantID, @ResumeParsingID, @MatchScore, @SkillsMatch, 
+     @ExperienceMatch, @QualificationsMatch, @RedFlags, @Recommendation, 
+     @ScreeningMethod, @ScreeningProvider, @ModelUsed, @ProcessingTime, 
+     @CompanyID, 1, @CreatedBy, GETDATE(), @UpdatedBy, GETDATE());
+    
+    SET @Id = CAST(SCOPE_IDENTITY() AS INT);
+END
+GO
+
+-- ============================================================================
+-- Requisition Creation (Draft by default logic)
+-- ============================================================================
+
+CREATE OR ALTER PROCEDURE ruc.SP_Ruc_JobRequisition_Create
+    @CompanyID                          INT,
+    @RecruitmentRequisitionName         NVARCHAR(500)  = NULL,
+    @JobSummary                         NVARCHAR(MAX)  = NULL,
+    @KeyResponsibilities                NVARCHAR(MAX)  = NULL,
+    @SkillsRequired                     NVARCHAR(MAX)  = NULL,
+    @QualificationsEntryRequirments     NVARCHAR(MAX)  = NULL,
+    @OtherRequirments                   NVARCHAR(MAX)  = NULL,
+    @Location                           NVARCHAR(200)  = NULL,
+    @Vacancies                          INT            = 1,
+    @EmploymentTypeID                   INT            = NULL,
+    @GradeID                            INT            = NULL,
+    @DepartmentID                       INT            = NULL,
+    @DesignationID                      INT            = NULL,
+    @JobCategoryID                      INT            = NULL,
+    @ExperienceYears                    NVARCHAR(100)  = NULL,
+    @RecruitmentRequisitionDate         DATETIME       = NULL,
+    @RecruitmentRequisitionClosingDate  DATETIME       = NULL,
+
+    @IsPublished                        BIT            = 0,
+
+    @AgeText NVARCHAR(100) = NULL, @AlwaysPublished BIT = NULL,
+    @ApprovalStatus NVARCHAR(50) = NULL, @AttachedDocument NVARCHAR(500) = NULL,
+    @AttachmentURL NVARCHAR(MAX) = NULL, @BudgetPeriodId INT = NULL,
+    @ClusterId INT = NULL, @CommenceWorkOn DATETIME = NULL,
+    @Comments NVARCHAR(MAX) = NULL, @EducationalQualifications NVARCHAR(MAX) = NULL,
+    @EducationalQualificationsDesirable NVARCHAR(MAX) = NULL,
+    @EmployeeCode NVARCHAR(100) = NULL, @EmployeeID INT = NULL,
+    @Exposure NVARCHAR(MAX) = NULL, @IsClosed BIT = 0,
+    @IsSystemDefault BIT = NULL, @JdId INT = NULL,
+    @Justification NVARCHAR(MAX) = NULL, @JustificationBy NVARCHAR(100) = NULL,
+    @JustificationDate DATETIME = NULL, @KeyDeliverables NVARCHAR(MAX) = NULL,
+    @ModuleId INT = NULL, @NewPublishNotifiedToAll BIT = NULL,
+    @ObjectId INT = NULL, @PublishStatus NVARCHAR(50) = NULL,
+    @PublishedBy NVARCHAR(100) = NULL, @PublishedDate DATETIME = NULL,
+    @Replacement BIT = NULL, @ReplacementEmpType NVARCHAR(100) = NULL,
+    @ReportingPersonCode NVARCHAR(100) = NULL, @RequestId INT = NULL,
+    @RequiredExperiences NVARCHAR(MAX) = NULL,
+    @RequiredExperiencesDesirable NVARCHAR(MAX) = NULL,
+    @RequiredTrainings NVARCHAR(MAX) = NULL,
+    @RequiredTrainingsDesirable NVARCHAR(MAX) = NULL,
+    @Salary DECIMAL(18,2) = NULL, @SpecialAttributes NVARCHAR(MAX) = NULL,
+    @Status NVARCHAR(50) = NULL, @TechnicalCompetencies NVARCHAR(MAX) = NULL,
+    @ToExternal BIT = NULL, @ToInternal BIT = NULL, @ToThirdParty BIT = NULL,
+
+    @NewID     INT           OUTPUT,
+    @IsSuccess BIT           OUTPUT,
+    @Message   NVARCHAR(500) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @StatusID INT, @StatusCode NVARCHAR(50), @StatusName NVARCHAR(100);
+
+    SELECT TOP 1 @StatusID = StatusID, @StatusCode = StatusCode, @StatusName = StatusName
+    FROM ruc.Tbl_Status
+    WHERE StatusCode = CASE WHEN @IsPublished = 1 THEN 'PUBLISHED' ELSE 'DRAFT' END;
+
+    DECLARE @MinExp INT = NULL, @MaxExp INT = NULL;
+    IF @ExperienceYears IS NOT NULL
+    BEGIN
+        DECLARE @digits TABLE (Seq INT IDENTITY(1,1), Val INT);
+        INSERT INTO @digits (Val)
+        SELECT TRY_CAST(value AS INT)
+        FROM STRING_SPLIT(
+                 REPLACE(REPLACE(REPLACE(REPLACE(@ExperienceYears, '-', ' '),
+                         '+', ' '), 'years', ' '), 'yrs', ' '), ' ')
+        WHERE TRY_CAST(value AS INT) IS NOT NULL;
+
+        SELECT @MinExp = MIN(Val), @MaxExp = MAX(Val) FROM @digits;
+        IF @MinExp = @MaxExp SET @MaxExp = NULL;
+    END
+
+    INSERT INTO dbo.Tbl_Ruc_RecruitmentRequisition
+    (
+        CompanyID, JobTitle, JobSummary, KeyResponsibilities, Skills, Qualifications,
+        Benefits, Location, Vacancies, MinExperience, MaxExperience,
+        EmploymentTypeID, GradeID, DepartmentID, DesignationID, JobCategoryID,
+        IsPublished, PublishedDate, ClosingDate,
+        StatusID, StatusCode, StatusName, IsActive, CreatedBy, CreatedOn
+    )
+    VALUES
+    (
+        @CompanyID,
+        ISNULL(@RecruitmentRequisitionName, 'AI Generated Requisition'),
+        @JobSummary,
+        @KeyResponsibilities,
+        @SkillsRequired,
+        @QualificationsEntryRequirments,
+        @OtherRequirments,
+        @Location,
+        ISNULL(@Vacancies, 1),
+        @MinExp, @MaxExp,
+        @EmploymentTypeID, @GradeID, @DepartmentID, @DesignationID, @JobCategoryID,
+
+        @IsPublished,
+        CASE WHEN @IsPublished = 1 THEN GETDATE() ELSE NULL END,
+        @RecruitmentRequisitionClosingDate,
+
+        @StatusID, @StatusCode, @StatusName,
+        1,
+        ISNULL(@EmployeeCode, 'System'),
+        GETDATE()
+    );
+
+    SET @NewID = SCOPE_IDENTITY();
+    SET @IsSuccess = 1;
+    SET @Message = CASE WHEN @IsPublished = 1
+                        THEN 'Requisition created and published'
+                        ELSE 'Requisition saved as draft' END;
+
+    SELECT
+        RequisitionID, RequisitionCode, CompanyID, JobTitle, JobSummary,
+        DepartmentID, DepartmentName, DesignationID, EmploymentTypeID, Vacancies,
+        Location, MinExperience, MaxExperience,
+        KeyResponsibilities, Skills, Qualifications, Benefits,
+        IsPublished, PublishedDate, ClosingDate,
+        StatusID, StatusCode, StatusName, IsActive, CreatedBy, CreatedOn
+    FROM dbo.Tbl_Ruc_RecruitmentRequisition
+    WHERE RequisitionID = @NewID;
+END
+GO
