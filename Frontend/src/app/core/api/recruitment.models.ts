@@ -56,9 +56,11 @@ export interface JobRequisition {
   statusName: string | null;
   isActive: boolean;
   createdBy: string | null;
-  createdDate: string | null;
+  /** Backend serializes this field as createdOn (not createdDate) for requisitions — see JobRequisitionResponseDto. */
+  createdOn: string | null;
 
-  applicationCount?: number | null;
+  /** Backend serializes this field as totalApplications (not applicationCount) for requisitions. */
+  totalApplications?: number | null;
 }
 
 export interface JobRequisitionListResult extends PagedResult<JobRequisition> {
@@ -73,13 +75,6 @@ export interface JobRequisitionListQuery {
   statusID?: number | null;
   isActive?: boolean | null;
   departmentID?: number | null;
-}
-
-export interface PublicRequisitionQuery {
-  companyID: number;
-  searchText?: string | null;
-  departmentID?: number | null;
-  location?: string | null;
 }
 
 export interface PublishResult {

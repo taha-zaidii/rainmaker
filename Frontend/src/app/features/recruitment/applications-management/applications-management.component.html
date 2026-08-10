@@ -43,7 +43,7 @@
           <rm-icon [name]="$any(c.icon)" [size]="19" />
         </div>
         <div class="mt-4 text-sm text-ink-muted">{{ c.label }}</div>
-        <div class="mt-0.5 text-[28px] font-semibold leading-9 text-ink tabular">
+        <div class="mt-0.5 text-28 font-semibold leading-9 text-ink tabular">
           {{ c.value }}
         </div>
       </div>
@@ -102,7 +102,7 @@
           >
             <rm-icon name="user-plus" [size]="22" />
           </div>
-          <h3 class="mt-4 text-[15px] font-semibold text-ink">
+          <h3 class="mt-4 text-15 font-semibold text-ink">
             @if (applications().length === 0) {
               No applications yet
             } @else {
@@ -124,8 +124,7 @@
           }
         </div>
       } @else {
-        <div class="overflow-x-auto">
-          <table class="rm-table">
+        <rm-table>
             <thead>
               <tr>
                 <th>Candidate</th>
@@ -167,7 +166,7 @@
                     }
                   </td>
                   <td><span [class]="statusTone(a)">{{ a.statusName || 'Applied' }}</span></td>
-                  <td class="text-ink-muted text-[13px]">
+                  <td class="text-ink-muted text-13">
                     {{ a.applicationDate ? (a.applicationDate | date: 'dd MMM yyyy') : '—' }}
                   </td>
                   <td>
@@ -225,8 +224,7 @@
                 </tr>
               }
             </tbody>
-          </table>
-        </div>
+        </rm-table>
       }
     </section>
 
@@ -234,25 +232,13 @@
          Orange throughout: everything in here came from the model and is a
          suggestion a recruiter confirms. -->
     @if (parsedFor(); as target) {
-      <aside class="rm-card w-[420px] shrink-0 overflow-hidden sticky top-6">
-        <div class="rm-ai-surface px-5 py-4 flex items-start gap-2.5">
-          <rm-icon name="sparkles" [size]="18" class="text-ai shrink-0 mt-0.5" />
-          <div class="flex-1 min-w-0">
-            <div class="text-sm font-semibold text-ai-deep">AI Extracted Profile</div>
-            <div class="text-xs text-ai-deep/80 truncate">
-              {{ target.fullName }} · {{ target.applicationCode }}
-            </div>
-          </div>
-          <button
-            class="p-1.5 rounded text-ai-deep/70 hover:bg-ai-border"
-            (click)="closeDrawer()"
-            aria-label="Close"
-          >
-            <rm-icon name="x" [size]="16" />
-          </button>
-        </div>
-
-        <div class="p-5">
+      <rm-drawer
+        variant="ai"
+        icon="sparkles"
+        title="AI Extracted Profile"
+        [subtitle]="target.fullName + ' · ' + target.applicationCode"
+        (closed)="closeDrawer()"
+      >
           @if (parsingId() === target.applicationID) {
             <div class="py-10 text-center">
               <rm-icon name="sparkles" [size]="26" class="text-ai animate-pulse mx-auto" />
@@ -262,7 +248,7 @@
               </p>
             </div>
           } @else if (parseError()) {
-            <div class="flex gap-2.5 text-[13px] text-ink-soft">
+            <div class="flex gap-2.5 text-13 text-ink-soft">
               <rm-icon name="alert-triangle" [size]="16" class="text-warning shrink-0 mt-0.5" />
               <span>{{ parseError() }}</span>
             </div>
@@ -293,11 +279,11 @@
               @if (p.summary) {
                 <div>
                   <div class="rm-label !mb-1">Summary</div>
-                  <p class="text-[13px] text-ink-soft leading-5">{{ p.summary }}</p>
+                  <p class="text-13 text-ink-soft leading-5">{{ p.summary }}</p>
                 </div>
               }
 
-              @if (p.skills?.length) {
+              @if (p.skills.length) {
                 <div>
                   <div class="rm-label !mb-1.5">Skills</div>
                   <div class="flex flex-wrap gap-1.5">
@@ -308,12 +294,12 @@
                 </div>
               }
 
-              @if (p.experience?.length) {
+              @if (p.experience.length) {
                 <div>
                   <div class="rm-label !mb-1.5">Experience</div>
                   <div class="space-y-2.5">
                     @for (e of p.experience; track $index) {
-                      <div class="text-[13px]">
+                      <div class="text-13">
                         <div class="font-medium text-ink">{{ e.role || e.jobTitle }}</div>
                         <div class="text-ink-muted">
                           {{ e.company }}@if (e.duration) { · {{ e.duration }} }
@@ -324,12 +310,12 @@
                 </div>
               }
 
-              @if (p.education?.length) {
+              @if (p.education.length) {
                 <div>
                   <div class="rm-label !mb-1.5">Education</div>
                   <div class="space-y-2">
                     @for (ed of p.education; track $index) {
-                      <div class="text-[13px]">
+                      <div class="text-13">
                         <div class="font-medium text-ink">{{ ed.degree }}</div>
                         <div class="text-ink-muted">{{ ed.institution }}</div>
                       </div>
@@ -344,8 +330,7 @@
               </div>
             </div>
           }
-        </div>
-      </aside>
+      </rm-drawer>
     }
   </div>
 </div>

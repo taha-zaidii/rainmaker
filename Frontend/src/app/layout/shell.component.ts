@@ -42,7 +42,7 @@ interface ModuleNavItem {
             [attr.title]="item.route ? item.label : item.label + ' — not part of this module'"
           >
             <rm-icon [name]="item.icon" [size]="22" />
-            <span class="text-[10px] leading-tight text-center px-1">{{ item.label }}</span>
+            <span class="text-10 leading-tight text-center px-1">{{ item.label }}</span>
           </a>
         }
       </nav>
@@ -53,8 +53,8 @@ interface ModuleNavItem {
         aria-label="Recruitment"
       >
         <div class="px-5 pt-5 pb-4">
-          <div class="text-[17px] font-semibold text-ink leading-6">Recruitment</div>
-          <div class="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted mt-0.5">
+          <div class="text-17 font-semibold text-ink leading-6">Recruitment</div>
+          <div class="text-11 font-semibold uppercase tracking-[0.08em] text-ink-muted mt-0.5">
             Management
           </div>
         </div>
@@ -78,7 +78,7 @@ interface ModuleNavItem {
               <rm-icon name="sparkles" [size]="16" />
               <span class="text-xs font-semibold">AI-assisted</span>
             </div>
-            <p class="mt-1.5 text-[11px] leading-4 text-ai-deep/80">
+            <p class="mt-1.5 text-11 leading-4 text-ai-deep/80">
               Anything marked in orange was suggested by the AI. You review and
               approve it.
             </p>
@@ -101,7 +101,7 @@ interface ModuleNavItem {
           />
           </a>
           <span class="text-line-strong">/</span>
-          <span class="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+          <span class="text-11 font-semibold uppercase tracking-[0.1em] text-ink-muted">
             HRMS Enterprise
           </span>
 
@@ -142,7 +142,7 @@ interface ModuleNavItem {
           <div class="flex items-center gap-2.5">
             <div class="text-right leading-tight">
               <div class="text-sm font-medium text-ink">{{ session.displayName() }}</div>
-              <div class="text-[11px] text-ink-muted">Company {{ session.companyId() }}</div>
+              <div class="text-11 text-ink-muted">Company {{ session.companyId() }}</div>
             </div>
             <div
               class="w-9 h-9 rounded-full bg-primary-tint text-primary grid place-items-center text-sm font-semibold"

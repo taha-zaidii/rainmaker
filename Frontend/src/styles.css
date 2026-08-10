@@ -1,133 +1,13 @@
 @import "tailwindcss";
 
 /* ==========================================================================
-   Rainmaker Protocol — design tokens
-   --------------------------------------------------------------------------
-   THE LOAD-BEARING RULE OF THIS SYSTEM:
-
-     Blue  = a human acting.
-     Orange = the machine thinking.
-
-   Orange is reserved exclusively for AI-generated, AI-suggested or
-   AI-triggered elements. Nothing else may use it. This is not decoration —
-   the AI integration is advisory by law (EU AI Act Annex III, high-risk
-   hiring), which means a person must always be able to tell what a model
-   produced from what a human entered. Encoding that in colour is how the
-   requirement survives contact with the UI.
-
-   If you find yourself reaching for orange on a non-AI element, use
-   --color-warning instead.
+   Rainmaker Protocol — global styles
+   Design tokens live in core/theme/tokens.css (single source of truth).
+   Import that first so all @apply and var() calls resolve correctly.
    ========================================================================== */
 
-@theme {
-  /* ── Brand ─────────────────────────────────────────────────────────── */
-  --color-primary: #1a56db;
-  --color-primary-hover: #1e429f;
-  --color-primary-deep: #003fb1;
-  --color-primary-tint: #ebf2ff;
-  --color-primary-tint-strong: #dbe1ff;
-  --color-on-primary: #ffffff;
+@import "./app/core/theme/tokens.css";
 
-  /* ── AI accent — orange. Reserved. See the note above. ─────────────── */
-  --color-ai: #f97316;
-  --color-ai-hover: #ea580c;
-  --color-ai-deep: #9d4300;
-  --color-ai-tint: #fff3e8;
-  --color-ai-border: #fed7aa;
-
-  /* ── Surfaces ──────────────────────────────────────────────────────── */
-  --color-canvas: #f8f9fb;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f3f4f6;
-  --color-surface-sunken: #edeef0;
-
-  /* ── Lines ─────────────────────────────────────────────────────────── */
-  --color-line: #e5e9f0;
-  --color-line-strong: #c3c5d7;
-
-  /* ── Type ──────────────────────────────────────────────────────────── */
-  --color-ink: #191c1e;
-  --color-ink-soft: #434654;
-  --color-ink-muted: #6b7280;
-  --color-ink-faint: #9ca3af;
-
-  /* ── Semantic ──────────────────────────────────────────────────────── */
-  --color-success: #16a34a;
-  --color-success-tint: #ecfdf3;
-  --color-warning: #d97706;
-  --color-warning-tint: #fffaeb;
-  --color-danger: #ba1a1a;
-  --color-danger-tint: #ffdad6;
-  --color-info: #0284c7;
-  --color-info-tint: #f0f9ff;
-
-  /* ── Typography ────────────────────────────────────────────────────── */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, sans-serif;
-
-  /* ── Shape ─────────────────────────────────────────────────────────── */
-  --radius-card: 0.5rem;
-  --radius-control: 0.5rem;
-  --radius-pill: 9999px;
-}
-
-/* ==========================================================================
-   Dark theme
-   --------------------------------------------------------------------------
-   Every semantic token is redefined here, so components never need a single
-   `dark:` variant. A screen built against `bg-surface` and `text-ink` is
-   already correct in both themes — which is the only way twelve screens stay
-   consistent as they grow.
-
-   Two things are deliberately NOT simple inversions:
-
-   1. The AI orange is LIGHTENED rather than darkened. Orange on a dark
-      surface loses contrast fast, and this hue carries the "a machine wrote
-      this" signal — it has to stay unmistakable, not tasteful.
-   2. Surfaces get lighter as they come forward (canvas → surface → sunken is
-      dark → less dark), the reverse of the light theme. Borrowing the light
-      ramp would make cards recede into the page.
-   ========================================================================== */
-
-@custom-variant dark (&:where(.dark, .dark *));
-
-.dark {
-  --color-canvas: #101215;
-  --color-surface: #181b1f;
-  --color-surface-muted: #1f2329;
-  --color-surface-sunken: #262b32;
-
-  --color-line: #2b3037;
-  --color-line-strong: #3d444e;
-
-  --color-ink: #e8eaed;
-  --color-ink-soft: #b9bec7;
-  --color-ink-muted: #8b939f;
-  --color-ink-faint: #6b7280;
-
-  /* Lifted so it stays legible on a dark surface. */
-  --color-primary: #5b8cf5;
-  --color-primary-hover: #7ba3f8;
-  --color-primary-deep: #3b6fd4;
-  --color-primary-tint: #1a2436;
-  --color-primary-tint-strong: #22304a;
-
-  /* Lightened on purpose — see the note above. */
-  --color-ai: #ff9d4d;
-  --color-ai-hover: #ffb570;
-  --color-ai-deep: #ffc899;
-  --color-ai-tint: #2e2013;
-  --color-ai-border: #4d3421;
-
-  --color-success: #4ade80;
-  --color-success-tint: #12251a;
-  --color-warning: #fbbf24;
-  --color-warning-tint: #2a2113;
-  --color-danger: #f87171;
-  --color-danger-tint: #2e1616;
-  --color-info: #38bdf8;
-  --color-info-tint: #10222e;
-}
 
 /* ==========================================================================
    Base

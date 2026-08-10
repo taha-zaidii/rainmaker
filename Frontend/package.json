@@ -4,9 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "lsof -ti:4200 | xargs kill -9 2>/dev/null || true; ng serve",
-    "build": "ng build",
+    "build": "npm run lint:tokens && ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "lint:tokens": "node scripts/check-design-tokens.js"
   },
   "private": true,
   "dependencies": {
@@ -15,7 +16,6 @@
     "@angular/core": "^19.2.0",
     "@angular/forms": "^19.2.0",
     "@angular/platform-browser": "^19.2.0",
-    "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

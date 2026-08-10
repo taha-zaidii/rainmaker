@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { IconComponent } from '../../../shared/icon.component';
+import { RmTableComponent } from '../../../shared/components/ui/table/table.component';
 import { RecruitmentService } from '../../../core/api/recruitment.service';
 import { JobRequisition } from '../../../core/api/recruitment.models';
 import { SessionService } from '../../../core/auth/session.service';
@@ -20,7 +21,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'rm-job-requisitions',
   standalone: true,
-  imports: [IconComponent, FormsModule, RouterLink, DatePipe],
+  imports: [IconComponent, FormsModule, RouterLink, DatePipe, RmTableComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './job-requisitions.component.html',
 })

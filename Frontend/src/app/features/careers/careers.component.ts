@@ -68,7 +68,7 @@ export class CareersComponent {
 
   /** "3 days ago" reads better than a date on a job board. */
   protected postedAgo(job: JobRequisition): string {
-    const raw = job.publishedDate ?? job.createdDate;
+    const raw = job.publishedDate ?? job.createdOn;
     if (!raw) {
       return '';
     }

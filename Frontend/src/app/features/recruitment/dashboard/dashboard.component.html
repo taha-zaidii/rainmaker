@@ -30,7 +30,7 @@
             <rm-icon [name]="s.icon" [size]="20" />
           </div>
           <div class="mt-4 text-sm text-ink-muted">{{ s.label }}</div>
-          <div class="mt-0.5 text-[28px] font-semibold leading-9 text-ink tabular">
+          <div class="mt-0.5 text-28 font-semibold leading-9 text-ink tabular">
             {{ s.value }}
           </div>
         </div>
@@ -42,7 +42,7 @@
       <rm-icon name="alert-triangle" [size]="18" class="text-warning shrink-0 mt-0.5" />
       <div>
         <div class="text-sm font-medium text-ink">Hiring figures unavailable</div>
-        <p class="mt-1 text-[13px] text-ink-muted leading-5">
+        <p class="mt-1 text-13 text-ink-muted leading-5">
           These counts come from stored procedures that arrive with the production
           database. Rather than show sample numbers that would be believed and acted on,
           this panel stays empty until the real data is there.
@@ -67,9 +67,9 @@
         @for (a of activity(); track a.id) {
           <div class="px-6 py-4 border-b border-line last:border-0 flex items-start gap-4">
             @if (isAiActivity(a.activityType)) {
-              <span class="rm-chip-ai shrink-0 mt-0.5 font-semibold !text-[10px]">AI</span>
+              <span class="rm-chip-ai shrink-0 mt-0.5 font-semibold !text-10">AI</span>
             } @else {
-              <span class="rm-chip-neutral shrink-0 mt-0.5 font-semibold !text-[10px]">LOG</span>
+              <span class="rm-chip-neutral shrink-0 mt-0.5 font-semibold !text-10">LOG</span>
             }
             <div class="flex-1 min-w-0">
               <div class="text-sm text-ink">
@@ -148,7 +148,7 @@
             </div>
           }
         } @else {
-          <p class="mt-2 text-[13px] text-ink-muted leading-5">{{ s.error }}</p>
+          <p class="mt-2 text-13 text-ink-muted leading-5">{{ s.error }}</p>
           <a routerLink="/recruitment/ai-settings" class="rm-btn-secondary mt-4 !h-9">
             Open AI Settings
           </a>

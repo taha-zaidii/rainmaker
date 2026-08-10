@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { IconComponent } from '../../../shared/icon.component';
+import { RmTableComponent } from '../../../shared/components/ui/table/table.component';
+import { RmDrawerComponent } from '../../../shared/components/ui/drawer/drawer.component';
 import { RecruitmentService } from '../../../core/api/recruitment.service';
 import { RecruitmentAiService } from '../../../core/api/recruitment-ai.service';
 import { JobApplication, RecruitmentStatus } from '../../../core/api/recruitment.models';
@@ -21,7 +23,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'rm-applications-management',
   standalone: true,
-  imports: [IconComponent, FormsModule, RouterLink, DatePipe],
+  imports: [IconComponent, FormsModule, RouterLink, DatePipe, RmTableComponent, RmDrawerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './applications-management.component.html',
 })

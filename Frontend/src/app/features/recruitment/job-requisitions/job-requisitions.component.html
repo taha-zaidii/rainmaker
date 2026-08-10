@@ -55,7 +55,7 @@
     </div>
 
 
-    <div class="flex gap-1 p-1 rounded-[var(--radius-control)] bg-surface-muted">
+    <div class="flex gap-1 p-1 rounded-control bg-surface-muted">
       @for (opt of [{ k: 'all', l: 'All' }, { k: 'published', l: 'Published' }, { k: 'draft', l: 'Drafts' }]; track opt.k) {
         <button
           class="h-8 px-3 rounded-md text-sm transition-colors"
@@ -95,7 +95,7 @@
         >
           <rm-icon name="file-text" [size]="22" />
         </div>
-        <h3 class="mt-4 text-[15px] font-semibold text-ink">
+        <h3 class="mt-4 text-15 font-semibold text-ink">
           @if (requisitions().length === 0) {
             No requisitions yet
           } @else {
@@ -116,8 +116,7 @@
         }
       </div>
     } @else {
-      <div class="overflow-x-auto">
-        <table class="rm-table">
+      <rm-table>
           <thead>
             <tr>
               <th>Job Title</th>
@@ -143,21 +142,21 @@
                   <span class="rm-chip-blue">{{ r.vacancies || 1 }}</span>
                 </td>
                 <td class="text-center">
-                  <span class="rm-chip-neutral">{{ r.applicationCount ?? 0 }}</span>
+                  <span class="rm-chip-neutral">{{ r.totalApplications ?? 0 }}</span>
                 </td>
                 <td>
                   <span [class]="statusTone(r)">
                     {{ r.isPublished ? 'Published' : r.statusName || 'Draft' }}
                   </span>
                 </td>
-                <td class="text-ink-muted text-[13px]">
-                  {{ r.createdDate ? (r.createdDate | date: 'dd MMM yyyy') : '—' }}
+                <td class="text-ink-muted text-13">
+                  {{ r.createdOn ? (r.createdOn | date: 'dd MMM yyyy') : '—' }}
                 </td>
                 <td>
                   <div class="flex items-center justify-end gap-1">
                     @if (!r.isPublished) {
                       <button
-                        class="rm-btn-primary !h-8 !px-3 !text-[13px]"
+                        class="rm-btn-primary !h-8 !px-3 !text-13"
                         (click)="publish(r)"
                         [disabled]="publishing() === r.requisitionID"
                         title="Make this role visible on the public careers page"
@@ -188,8 +187,7 @@
               </tr>
             }
           </tbody>
-        </table>
-      </div>
+      </rm-table>
     }
   </section>
 </div>

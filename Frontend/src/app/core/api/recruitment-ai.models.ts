@@ -235,15 +235,6 @@ export interface DashboardData {
 
 /* ── Capability slugs reported by /auth/verify ──────────────────────────── */
 
-export const AI_CAPABILITY = {
-  parserExtract: 'parser.extract',
-  jobRequisitionGenerate: 'recruitment.jobreq.generate',
-  screeningScreen: 'recruitment.screening.screen',
-  interviewQuestions: 'recruitment.interview.questions',
-  matchingRank: 'matching.rank',
-  scoringScore: 'scoring.score',
-} as const;
-
 export const AI_CAPABILITY_LABEL: Record<string, string> = {
   'parser.extract': 'Resume Parsing',
   'recruitment.jobreq.generate': 'JD Generation',

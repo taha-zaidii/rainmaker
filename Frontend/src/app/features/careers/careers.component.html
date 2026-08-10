@@ -17,10 +17,10 @@
   <header class="bg-surface border-b border-line">
     <div class="max-w-[1180px] mx-auto px-6 pt-10 pb-14 text-center">
 
-      <h1 class="mt-5 text-[38px] font-bold tracking-[-0.02em] text-ink leading-tight">
+      <h1 class="mt-5 text-38 font-bold tracking-[-0.02em] text-ink leading-tight">
         Career Opportunities
       </h1>
-      <p class="mt-3 text-[15px] text-ink-muted max-w-[560px] mx-auto leading-6">
+      <p class="mt-3 text-15 text-ink-muted max-w-[560px] mx-auto leading-6">
         Find your next professional chapter in a space designed for growth,
         transparency and high-impact career development.
       </p>
@@ -65,7 +65,7 @@
         >
           <rm-icon name="search" [size]="22" />
         </div>
-        <h2 class="mt-4 text-[17px] font-semibold text-ink">
+        <h2 class="mt-4 text-17 font-semibold text-ink">
           @if (search()) {
             No roles match "{{ search() }}"
           } @else {
@@ -102,7 +102,7 @@
               </div>
               <div class="flex items-center gap-1.5">
                 @if (job.vacancies) {
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-surface-muted text-ink-muted border border-line">
+                  <span class="px-2.5 py-0.5 rounded-full text-11 font-semibold bg-surface-muted text-ink-muted border border-line">
                     {{ job.vacancies }} {{ job.vacancies === 1 ? 'opening' : 'openings' }}
                   </span>
                 }
@@ -110,7 +110,7 @@
               </div>
             </div>
 
-            <h2 class="mt-4 text-[18px] font-bold text-ink leading-snug group-hover:text-primary transition-colors">
+            <h2 class="mt-4 text-lg font-bold text-ink leading-snug group-hover:text-primary transition-colors">
               {{ job.jobTitle }}
             </h2>
 
@@ -144,7 +144,7 @@
 
             <!-- Job Summary -->
             @if (job.jobSummary) {
-              <p class="mt-3.5 text-[13px] text-ink-muted leading-relaxed line-clamp-3">
+              <p class="mt-3.5 text-13 text-ink-muted leading-relaxed line-clamp-3">
                 {{ job.jobSummary }}
               </p>
             }
@@ -152,10 +152,10 @@
             <!-- Required Skills Chips Preview -->
             @if (skillsPreview(job).length) {
               <div class="mt-4 pt-3 border-t border-line/60 space-y-1.5">
-                <div class="text-[11px] font-bold uppercase tracking-wider text-ink-faint">Key Technologies</div>
+                <div class="text-11 font-bold uppercase tracking-wider text-ink-faint">Key Technologies</div>
                 <div class="flex flex-wrap gap-1.5">
                   @for (s of skillsPreview(job); track s) {
-                    <span class="rm-chip-blue !h-6 !text-[11px] !px-2">{{ s }}</span>
+                    <span class="rm-chip-blue !h-6 !text-11 !px-2">{{ s }}</span>
                   }
                 </div>
               </div>
@@ -173,7 +173,7 @@
               >
             </div>
 
-            <div class="mt-3.5 flex items-center justify-between text-[11px] text-ink-muted">
+            <div class="mt-3.5 flex items-center justify-between text-11 text-ink-muted">
               <span class="font-mono text-ink-faint">{{ job.requisitionCode || ('REQ-' + job.requisitionID) }}</span>
               <div class="flex items-center gap-2">
                 <span>{{ postedAgo(job) }}</span>
@@ -198,8 +198,8 @@
         <rm-icon name="file-text" [size]="20" />
       </div>
       <div class="flex-1 text-center sm:text-left">
-        <h3 class="text-[15px] font-semibold text-ink">Don't see the right role?</h3>
-        <p class="mt-0.5 text-[13px] text-ink-muted">
+        <h3 class="text-15 font-semibold text-ink">Don't see the right role?</h3>
+        <p class="mt-0.5 text-13 text-ink-muted">
           Leave your CV and we will reach out when something matching opens up.
         </p>
       </div>
