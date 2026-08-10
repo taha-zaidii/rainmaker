@@ -2,7 +2,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 
-namespace Digi.Recruitment.Module.Domain.Services
+namespace Digi.Recruitment.Module.Middleware
 {
     public class SwaggerFileUploadFilter : IOperationFilter
     {

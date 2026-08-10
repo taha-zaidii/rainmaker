@@ -11,6 +11,16 @@ using System.Threading.Tasks;
 
 namespace Digi.Shared.SharedLibrary.Services
 {
+    /// <summary>
+    /// IFormFile-oriented upload service for the Recruitment AI pipeline.
+    /// Handles upload validation, entity-scoped path organisation, and byte-array
+    /// retrieval for resume parsing. Registered as <see cref="IFileStorageService"/>.
+    /// <para>
+    /// Intentional split: this service owns the <em>upload contract</em> (entity name,
+    /// document name, metadata). <see cref="Digi.Shared.Services.FileService"/> owns
+    /// low-level disk I/O, deduplication, and path resolution.
+    /// </para>
+    /// </summary>
     public class FileStorageService : IFileStorageService
     {
         private readonly ILogger<FileStorageService> _logger;

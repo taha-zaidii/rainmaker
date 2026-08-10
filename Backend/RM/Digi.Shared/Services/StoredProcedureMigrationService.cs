@@ -15,6 +15,8 @@ namespace Digi.Shared.Services
         Task<List<string>> GetStoredProcedureScriptsAsync();
     }
 
+    /// <remarks>DEPRECATED — use AdvancedStoredProcedureMigrationService. Kept for startup compatibility.</remarks>
+    [Obsolete("Use AdvancedStoredProcedureMigrationService. This class will be removed in a future cleanup pass.")]
     public class StoredProcedureMigrationService : IStoredProcedureMigrationService
     {
         private readonly string _connectionString;

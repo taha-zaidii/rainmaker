@@ -22,14 +22,18 @@ export const environment = {
   companyId: 133,
 
   /**
-   * Valid 30 days from 2026-08-05. Carries ADMIN_RECRUITMENT.
+   * Local-only dev bearer token. NEVER commit a real token here.
    *
-   * That claim is load-bearing: without it the list endpoints silently scope
-   * to "rows this user created" and every grid renders empty with a 200 and
-   * no error anywhere — which cost real time to track down once already.
+   * To generate a fresh token:
+   *   cd Backend/RM/Digi.Recruitment.Module
+   *   dotnet run --generate-dev-token
+   * (or use the /api/auth/dev-token endpoint in local mode)
+   *
+   * Required claims: ADMIN_RECRUITMENT, RECRUITMENT_VIEW/CREATE/EDIT/DELETE/
+   * APPROVE, RECRUITMENT_AI_SETTINGS, RECRUITMENT_AI_GENERATE
+   * CompanyID: 133  |  Valid: 30 days
    */
-  devAuthToken:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZWlkIjoiMSIsInVuaXF1ZV9uYW1lIjoic3VwZXJhZG1pbiIsIlVzZXJOYW1lIjoic3VwZXJhZG1pbiIsIkNvbXBhbnlJRCI6IjEzMyIsIkVtcGxveWVlSUQiOiIxIiwiRW1wbG95ZWVDb2RlIjoiU3lzdGVtIiwiUGVybWlzc2lvbiI6WyJBRE1JTl9SRUNSVUlUTUVOVCIsIlJFQ1JVSVRNRU5UX1ZJRVciLCJSRUNSVUlUTUVOVF9DUkVBVEUiLCJSRUNSVUlUTUVOVF9FRElUIiwiUkVDUlVJVE1FTlRfREVMRVRFIiwiUkVDUlVJVE1FTlRfQVBQUk9WRSIsIlJFQ1JVSVRNRU5UX0FJX1NFVFRJTkdTIiwiUkVDUlVJVE1FTlRfQUlfR0VORVJBVEUiXSwiTW9kdWxlcyI6IltcIkhSTVwiLFwiUkVDUlVJVE1FTlRcIl0iLCJpc3MiOiJEaWdpU29mdEVSUCIsImF1ZCI6IkRpZ2lTb2Z0RVJQVXNlcnMiLCJpYXQiOjE3ODU5MDIxNzcsIm5iZiI6MTc4NTkwMjE3NywiZXhwIjoxNzg4NDk0MTc3fQ.tV2eXyi0r1W6oSBUkTg96ScEwoil2DHS9fjitfkXDvg',
+  devAuthToken: 'REPLACE_ME_WITH_LOCAL_DEV_TOKEN',
 
   /**
    * The AI service takes ~13 s warm and up to ~35 s cold. The browser must be

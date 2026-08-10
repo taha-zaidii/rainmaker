@@ -15,6 +15,8 @@ namespace Digi.Shared.Services
         Task<bool> CreateDatabaseAsync();
     }
 
+    /// <remarks>DEPRECATED — use AdvancedStoredProcedureMigrationService. Kept for startup migration compatibility.</remarks>
+    [Obsolete("Use AdvancedStoredProcedureMigrationService. This class will be removed in a future cleanup pass.")]
     public class DatabaseMigrationService : IDatabaseMigrationService
     {
         private readonly string _connectionString;

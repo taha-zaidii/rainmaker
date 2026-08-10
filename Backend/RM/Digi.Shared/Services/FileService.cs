@@ -6,6 +6,16 @@ using System.Text;
 
 namespace Digi.Shared.Services
 {
+    /// <summary>
+    /// Low-level disk I/O service. Handles path resolution, directory creation, hash-based
+    /// deduplication, and secure file deletion. Used by any feature that stores arbitrary
+    /// binary data to the configured <c>FileStorage:RootPath</c>.
+    /// <para>
+    /// Intentional split: this service owns <em>how</em> files land on disk.
+    /// <see cref="Digi.Shared.SharedLibrary.Services.FileStorageService"/> owns the
+    /// IFormFile upload contract used by the AI recruitment pipeline.
+    /// </para>
+    /// </summary>
     public class FileService : IFileService
     {
         private readonly IConfiguration _configuration;

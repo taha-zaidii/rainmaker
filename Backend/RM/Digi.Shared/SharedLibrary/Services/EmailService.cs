@@ -1,4 +1,4 @@
-﻿using Digi.Shared.Helper;
+using Digi.Shared.Helper;
 using Digi.Shared.Services;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
@@ -6,6 +6,11 @@ using MimeKit;
 
 namespace Digi.Shared.SharedLibrary.Services
 {
+    /// <summary>
+    /// DEPRECATED legacy wrapper. All methods delegate to <see cref="Digi.Shared.Services.ICentralizedEmailService"/>.
+    /// Inject <see cref="Digi.Shared.Services.ICentralizedEmailService"/> directly instead.
+    /// </summary>
+    [Obsolete("Use ICentralizedEmailService directly. This class is a thin wrapper kept for compatibility only.")]
     public class EmailService
     {
         private readonly SmtpSettings _smtpSettings;

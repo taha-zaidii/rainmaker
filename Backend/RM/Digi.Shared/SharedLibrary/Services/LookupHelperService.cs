@@ -1,4 +1,4 @@
-﻿using Digi.Shared.DTOs.admin.module;
+using Digi.Shared.DTOs.admin.module;
 using Digi.Shared.DTOs.gen.module;
 using Digi.Shared.DTOs.hrm.module;
 using Digi.Shared.Helper;
@@ -12,7 +12,7 @@ namespace Digi.Shared.SharedLibrary.Services
     {
         #region Fields
 
-        private readonly IDapperServices _dapperService;
+        private readonly IDapperService _dapperService;
 
         private string spExecute = StoredProcedureNames.sp_Db_Generic_CRUD.ToProcedureName();
         private readonly string ModuleTable = TableNames.Tbl_Gen_Module;
@@ -33,7 +33,7 @@ namespace Digi.Shared.SharedLibrary.Services
 
         #region Constructor
 
-        public LookupHelperService(IDapperServices dapperService)
+        public LookupHelperService(IDapperService dapperService)
         {
             _dapperService = dapperService;
         }
