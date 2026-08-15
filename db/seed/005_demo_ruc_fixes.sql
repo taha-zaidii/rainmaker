@@ -582,6 +582,8 @@ CREATE OR ALTER PROCEDURE ruc.SP_Ruc_RecruitmentAI_Settings_Save
     @AutoMatching BIT,
     @GenerateQuestions BIT,
     @EmailNotifications BIT,
+    @AutoParse BIT = 0,
+    @AutoShortlistThreshold INT = 80,
     @CreatedBy NVARCHAR(100),
     @UpdatedBy NVARCHAR(100),
     @Id INT OUTPUT
@@ -602,6 +604,8 @@ BEGIN
             AutoMatching = @AutoMatching,
             GenerateQuestions = @GenerateQuestions,
             EmailNotifications = @EmailNotifications,
+            AutoParse = @AutoParse,
+            AutoShortlistThreshold = @AutoShortlistThreshold,
             UpdatedBy = @UpdatedBy,
             UpdatedOn = GETDATE()
         WHERE CompanyID = @CompanyID AND IsActive = 1;
@@ -613,10 +617,12 @@ BEGIN
         INSERT INTO Tbl_Ruc_RecruitmentAI_Settings 
         (CompanyID, Provider, ApiKey, ApiEndpoint, Model, MaxTokens, Temperature, 
          AutoScreening, AutoMatching, GenerateQuestions, EmailNotifications, 
+         AutoParse, AutoShortlistThreshold,
          CreatedBy, CreatedOn, UpdatedBy, UpdatedOn, IsActive)
         VALUES 
         (@CompanyID, @Provider, @ApiKey, @ApiEndpoint, @Model, @MaxTokens, @Temperature,
          @AutoScreening, @AutoMatching, @GenerateQuestions, @EmailNotifications,
+         @AutoParse, @AutoShortlistThreshold,
          @CreatedBy, GETDATE(), @UpdatedBy, GETDATE(), 1);
         
         SET @Id = CAST(SCOPE_IDENTITY() AS INT);

@@ -165,8 +165,13 @@ export class AiSettingsComponent {
   /* ── Async state ──────────────────────────────────────────────────────── */
   protected loading = signal(true);
   protected saving = signal(false);
+  /** Tracks the feature-toggle save independently of the API-key save. */
+  protected savingFeatures = signal(false);
   protected testing = signal(false);
   protected saveMessage = signal<{ ok: boolean; text: string } | null>(null);
+  /** Separate message for the feature-toggle section so the two save flows
+   *  don't overwrite each other's feedback. */
+  protected featureSaveMessage = signal<{ ok: boolean; text: string } | null>(null);
   protected testResult = signal<TestApiKeyResult | null>(null);
   protected hasStoredKey = signal(false);
 
@@ -233,6 +238,37 @@ export class AiSettingsComponent {
 
   protected toggleFeature(key: keyof FeatureSettings): void {
     this.features.update((f) => ({ ...f, [key]: !f[key] }));
+    // Clear any stale feedback whenever the user touches a toggle.
+    this.featureSaveMessage.set(null);
+  }
+
+  /**
+   * Saves ONLY the five feature toggles and the auto-shortlist threshold.
+   *
+   * Uses the dedicated POST /SaveSettings endpoint, which never requires the
+   * API key to be present in the request body — so the user never has to
+   * re-enter it just to flip a toggle. The backend will return a clear error
+   * if no API key row exists yet (configure the provider first).
+   */
+  protected saveFeatures(): void {
+    this.savingFeatures.set(true);
+    this.featureSaveMessage.set(null);
+
+    this.api
+      .saveFeatureSettings(
+        environment.companyId,
+        this.features(),
+        this.autoShortlistThreshold(),
+      )
+      .subscribe((response) => {
+        this.savingFeatures.set(false);
+        this.featureSaveMessage.set({
+          ok: response.isSuccess,
+          text: response.isSuccess
+            ? 'Feature settings saved.'
+            : response.errors?.[0] || response.message,
+        });
+      });
   }
 
   protected save(): void {

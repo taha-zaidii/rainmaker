@@ -199,7 +199,11 @@ export class JobDetailComponent {
   private parse(path: string): void {
     this.parsing.set(true);
 
-    this.ai.parseResume({ companyId: this.companyId, resumeFilePath: path }).subscribe({
+    // This runs the instant a candidate picks a file, before they have
+    // submitted anything or asked for AI in any explicit way — the one
+    // genuinely "automatic" resume parse in the product, and the only call
+    // site that should respect the company's Auto Resume Parse setting.
+    this.ai.parseResume({ companyId: this.companyId, resumeFilePath: path, isAutoProcessed: true }).subscribe({
       next: (response) => {
         this.parsing.set(false);
 

@@ -197,7 +197,7 @@
             <rm-icon name="plug" [size]="16" />
             {{ testing() ? 'Testing…' : 'Test Connection' }}
           </button>
-          <button class="rm-btn-primary" (click)="save()" [disabled]="saving()">
+          <button class="rm-btn-hero" (click)="save()" [disabled]="saving()">
             {{ saving() ? 'Saving…' : 'Save Settings' }}
           </button>
 
@@ -258,7 +258,7 @@
          Three distinct outcomes, never collapsed into one. "Your key is wrong"
          and "we could not reach the service" need opposite actions.          -->
     @if (testResult(); as result) {
-      <section class="mb-6">
+      <section class="mb-6 rm-anim-spring-in">
         @if (result.status === 'valid') {
           <div class="rm-card border-l-4 border-l-success p-5">
             <div class="flex items-center gap-2 text-success font-semibold text-sm">
@@ -370,9 +370,37 @@
         }
       </div>
 
-      <div class="rm-card-pad pt-4">
-        <button class="rm-btn-primary" (click)="save()" [disabled]="saving()">
-          {{ saving() ? 'Saving…' : 'Save Feature Settings' }}
+      <div class="px-6 pb-5">
+        @if (!hasStoredKey()) {
+          <!-- Guard: feature toggles cannot be saved without an API key row -->
+          <div class="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning-tint px-4 py-3 text-13 text-ink-soft mb-4">
+            <rm-icon name="alert-triangle" [size]="16" class="text-warning shrink-0 mt-0.5" />
+            <span>
+              Configure and save an <strong>API Key</strong> in the section above before enabling
+              features — the AI service needs a provider row to attach toggles to.
+            </span>
+          </div>
+        }
+
+        @if (featureSaveMessage(); as msg) {
+          <div
+            class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-13 mb-4"
+            [class.bg-success-tint]="msg.ok"
+            [class.text-success]="msg.ok"
+            [class.bg-danger-tint]="!msg.ok"
+            [class.text-danger]="!msg.ok"
+          >
+            <rm-icon [name]="msg.ok ? 'check-circle' : 'x-circle'" [size]="16" />
+            {{ msg.text }}
+          </div>
+        }
+
+        <button
+          class="rm-btn-primary"
+          (click)="saveFeatures()"
+          [disabled]="savingFeatures() || !hasStoredKey()"
+        >
+          {{ savingFeatures() ? 'Saving…' : 'Save Feature Settings' }}
         </button>
       </div>
     </section>

@@ -1104,7 +1104,12 @@ namespace Digi.Recruitment.Module.Domain.Services
                 if (result == null)
                     return ApiResponse<JobApplicationResponseDto>.Fail("Failed to retrieve created job application");
 
-              
+                // "Auto Resume Screening" — scored the instant the application
+                // exists, the same "when they arrive" moment its own settings-page
+                // description promises. Runs after the application is already
+                // saved and successful, so a screening problem can only ever cost
+                // the score, never the application itself.
+                await TryAutoScreenAsync(result);
 
                 return ApiResponse<JobApplicationResponseDto>.Success(result, message);
 
@@ -1114,6 +1119,77 @@ namespace Digi.Recruitment.Module.Domain.Services
                 _logger.LogError(ex, "Error in CreateJobApplicationAsync");
                 return ApiResponse<JobApplicationResponseDto>.Fail($"Error creating job application: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Best-effort auto-screen for a just-created application, gated by the
+        /// company's "Auto Resume Screening" toggle. Writes the score, the
+        /// matched/missing skills and the resulting shortlist/screening/reject
+        /// status exactly the way the recruiter's own manual "Screen Profile with
+        /// AI" button does — both paths end at the same ScreenResumeAsync, so
+        /// there is exactly one place that owns what a screening result means.
+        /// Never throws outward: a candidate's application must not fail to save
+        /// because the scoring step had a problem, and this only ever runs after
+        /// the application has already been saved successfully.
+        /// </summary>
+        private async Task TryAutoScreenAsync(JobApplicationResponseDto application)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(application.ResumePath))
+                {
+                    return; // Nothing to screen.
+                }
+
+                var settingsResponse = await _aiService.GetApiKeySettingsAsync(application.CompanyID);
+                if (settingsResponse.Data is not ApiKeySettingsResponseDto settings || settings.Settings?.AutoScreening != true)
+                {
+                    return; // Off, or AI is not configured for this company yet.
+                }
+
+                var requisitionResponse = await _repo.GetJobRequisitionByIdAsync(application.RequisitionID);
+
+                var screenRequest = new ScreenResumeRequestDto
+                {
+                    CompanyId = application.CompanyID,
+                    ApplicationID = application.ApplicationID,
+                    ApplicantID = application.ApplicantID,
+                    ResumeFilePath = application.ResumePath,
+                    JobRequirements = new JobRequirementsDto
+                    {
+                        JobTitle = requisitionResponse?.JobTitle ?? application.RequisitionJobTitle,
+                        RequiredSkills = SplitSkillsList(requisitionResponse?.Skills),
+                        Experience = requisitionResponse?.MinExperience.HasValue == true
+                            ? $"{requisitionResponse.MinExperience}-{requisitionResponse.MaxExperience ?? requisitionResponse.MinExperience} years"
+                            : null,
+                        Education = requisitionResponse?.Qualifications,
+                    },
+                };
+
+                var screenResult = await _aiService.ScreenResumeAsync(screenRequest);
+                if (!screenResult.IsSuccess)
+                {
+                    _logger.LogWarning(
+                        "Auto screening did not complete for ApplicationID {ApplicationID}: {Message}",
+                        application.ApplicationID, screenResult.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Auto screening failed for ApplicationID {ApplicationID}", application.ApplicationID);
+            }
+        }
+
+        private static List<string> SplitSkillsList(string? skills)
+        {
+            if (string.IsNullOrWhiteSpace(skills))
+            {
+                return new List<string>();
+            }
+
+            return skills
+                .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
         }
 
         public async Task<ApiResponse<JobApplicationResponseDto>> GetJobApplicationByIdAsync(int applicationID)

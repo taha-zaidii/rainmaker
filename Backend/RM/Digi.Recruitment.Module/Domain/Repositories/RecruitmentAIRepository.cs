@@ -148,6 +148,8 @@ namespace Digi.Recruitment.Module.Domain.Repositories
                 parameters.Add("@AutoMatching", request.Settings?.AutoMatching ?? false);
                 parameters.Add("@GenerateQuestions", request.Settings?.GenerateQuestions ?? false);
                 parameters.Add("@EmailNotifications", request.Settings?.EmailNotifications ?? true);
+                parameters.Add("@AutoParse", request.Settings?.AutoParse ?? false);
+                parameters.Add("@AutoShortlistThreshold", request.Settings?.AutoShortlistThreshold ?? 80);
                 parameters.Add("@CreatedBy", userId);
                 parameters.Add("@UpdatedBy", userId);
                 parameters.Add("@Id", dbType: DbType.Int32, direction: ParameterDirection.Output);

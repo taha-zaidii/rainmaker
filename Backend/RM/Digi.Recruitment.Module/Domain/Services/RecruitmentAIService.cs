@@ -807,6 +807,17 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<ScreenResumeResponseDto>.Fail("API key not configured. Please configure your AI provider settings first.");
                 }
 
+                // Unlike AutoParse (which only gates the system-initiated call),
+                // Auto Resume Screening gates every screening call, including the
+                // recruiter's own "Run AI Screening" button — there is no
+                // system-initiated screening call site today, so this toggle
+                // would otherwise control nothing.
+                if (settings.Settings?.AutoScreening == false)
+                {
+                    return ApiResponse<ScreenResumeResponseDto>.Fail(
+                        "AI Resume Screening is currently disabled. Enable it in AI Settings to score this candidate.");
+                }
+
                 // Get actual encrypted API key from database
                 var encryptedApiKey = await _repository.GetEncryptedApiKeyAsync(request.CompanyId);
                 if (string.IsNullOrWhiteSpace(encryptedApiKey))
@@ -1080,6 +1091,17 @@ namespace Digi.Recruitment.Module.Domain.Services
                 if (settings == null)
                 {
                     return ApiResponse<GenerateInterviewQuestionsResponseDto>.Fail("API key not configured");
+                }
+
+                // "Generate Interview Questions" has no manual/automatic split
+                // like resume parsing does — there is no button anywhere yet
+                // that calls this, so unlike ParseResumeAsync there is no
+                // legitimate "a person explicitly asked for this" case to
+                // exempt. The whole feature is off when the setting is off.
+                if (settings.Settings?.GenerateQuestions == false)
+                {
+                    return ApiResponse<GenerateInterviewQuestionsResponseDto>.Fail(
+                        "Interview question generation is turned off for this company.");
                 }
 
                 // Get actual encrypted API key from database
@@ -1645,6 +1667,17 @@ namespace Digi.Recruitment.Module.Domain.Services
                     return ApiResponse<ParseResumeResponseDto>.Fail("API key settings not found. Please configure your AI provider settings first.");
                 }
 
+                // The "Auto Resume Parse" toggle gates the feature itself, not
+                // just its automatic trigger — a recruiter's manual "Extract
+                // with AI" button is still the AI doing the extraction, so it
+                // is gated identically to the system-initiated call from the
+                // careers apply form.
+                if (settings.Settings?.AutoParse == false)
+                {
+                    return ApiResponse<ParseResumeResponseDto>.Fail(
+                        "AI Resume Parsing is currently disabled. Please fill in the form below.");
+                }
+
                 var encryptedKey = await _repository.GetEncryptedApiKeyAsync(request.CompanyId);
                 if (string.IsNullOrWhiteSpace(encryptedKey))
                 {
@@ -1797,9 +1830,9 @@ namespace Digi.Recruitment.Module.Domain.Services
                             {
                                 fileBytes = await _fileStorageService.GetFileAsync(resolvedPath);
                             }
-                            catch
+                            catch (Exception storageEx)
                             {
-                                // Storage service fallback
+                                _logger.LogWarning(storageEx, "Storage service could not read resume file for AI stream upload: {Path}", resolvedPath);
                             }
                         }
                     }
@@ -1816,6 +1849,7 @@ namespace Digi.Recruitment.Module.Domain.Services
                         stream,
                         fileName,
                         apiKey: apiKey,
+                        baseUriOverride: resolution.BaseUri,
                         model: settings.Model);
                 }
                 else
@@ -2433,6 +2467,17 @@ namespace Digi.Recruitment.Module.Domain.Services
                 if (settings == null)
                 {
                     return ApiResponse<RankCandidatesResponseDto>.Fail("API key settings not found");
+                }
+
+                // "Auto Candidate Matching" — no UI calls this endpoint today
+                // (the AI team has confirmed /matching/rank returns an empty
+                // list regardless, so it is deliberately not wired up yet —
+                // see CLAUDE.md), but the setting should already be honoured
+                // for the day it is.
+                if (settings.Settings?.AutoMatching == false)
+                {
+                    return ApiResponse<RankCandidatesResponseDto>.Fail(
+                        "Candidate matching is turned off for this company.");
                 }
 
                 // Get job requirements (you may need to fetch from database)

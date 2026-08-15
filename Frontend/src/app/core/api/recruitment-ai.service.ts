@@ -8,6 +8,7 @@ import {
   ApiKeyStatus,
   ApiResponse,
   DashboardData,
+  FeatureSettings,
   GenerateJobDescriptionRequest,
   GenerateJobDescriptionResult,
   SaveApiKeySettingsRequest,
@@ -113,6 +114,35 @@ export class RecruitmentAiService {
       .pipe(catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e))));
   }
 
+  /**
+   * Saves ONLY the feature toggles (auto-screening, auto-matching, auto-parse,
+   * generate-questions, email-notifications, auto-shortlist threshold).
+   *
+   * Deliberately separate from saveApiKeySettings: this endpoint never touches
+   * Provider/ApiKey/ApiEndpoint/Model, so calling it never requires the user to
+   * re-enter the API key. The backend's SP_Ruc_RecruitmentAI_FeatureSettings_Save
+   * will return an error if no API key row exists yet (the key must be saved first).
+   */
+  saveFeatureSettings(
+    companyId: number,
+    features: FeatureSettings,
+    autoShortlistThreshold: number,
+  ): Observable<ApiResponse<unknown>> {
+    return this.http
+      .post<ApiResponse<unknown>>(`${this.base}/SaveSettings`, {
+        companyId,
+        settings: {
+          autoScreening: features.autoScreening,
+          autoMatching: features.autoMatching,
+          generateQuestions: features.generateQuestions,
+          emailNotifications: features.emailNotifications,
+          autoParse: features.autoParse,
+          autoShortlistThreshold,
+        },
+      })
+      .pipe(catchError((e: HttpErrorResponse) => of(this.envelopeFrom(e))));
+  }
+
   /* ── Dashboard ────────────────────────────────────────────────────────── */
 
   /**
@@ -170,6 +200,14 @@ export class RecruitmentAiService {
     jobRequisitionId?: number;
     jobApplicationId?: number;
     resumeFilePath: string;
+    /** True only when this call happened without a person explicitly asking
+     *  for it right now (the careers apply form parses on upload, before
+     *  the candidate submits anything) — lets the backend honour the
+     *  company's "Auto Resume Parse" setting for that case specifically,
+     *  without blocking a recruiter's own manual "Extract with AI" click
+     *  elsewhere in the portal, which should always work regardless of
+     *  that setting. Omit for every manually-triggered call. */
+    isAutoProcessed?: boolean;
   }): Observable<ApiResponse<ParsedResume>> {
     const companyId = payload.companyId ?? environment.companyId;
     return this.http
@@ -181,6 +219,7 @@ export class RecruitmentAiService {
         applicationID: payload.jobApplicationId ?? 1,
         resumePath: payload.resumeFilePath,
         resumeFilePath: payload.resumeFilePath,
+        isAutoProcessed: payload.isAutoProcessed ?? false,
       })
       .pipe(
         timeout(environment.aiRequestTimeoutMs),
