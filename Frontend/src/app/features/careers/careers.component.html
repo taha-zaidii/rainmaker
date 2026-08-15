@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-canvas">
+<div class="min-h-screen">
   <!-- Brand bar. The careers site is public-facing, so it leads with the
        company mark rather than the module chrome candidates never see. -->
   <div class="bg-surface border-b border-line">
@@ -61,7 +61,7 @@
     } @else if (filtered().length === 0) {
       <div class="rm-card p-14 text-center">
         <div
-          class="w-12 h-12 mx-auto rounded-xl bg-surface-muted text-ink-muted grid place-items-center"
+          class="w-12 h-12 mx-auto rounded-2xl bg-surface-muted text-ink-muted grid place-items-center"
         >
           <rm-icon name="search" [size]="22" />
         </div>
@@ -97,7 +97,9 @@
         @for (job of filtered(); track job.requisitionID) {
           <article class="rm-card p-6 flex flex-col hover:border-primary hover:shadow-lg transition-all duration-200 group">
             <div class="flex items-start justify-between gap-3">
-              <div class="w-11 h-11 rounded-xl bg-primary-tint text-primary grid place-items-center shrink-0 group-hover:scale-105 transition-transform">
+              <div
+                class="w-11 h-11 rounded-2xl bg-primary-tint text-primary grid place-items-center shrink-0 group-hover:scale-105 transition-transform duration-[var(--duration-base)]"
+              >
                 <rm-icon name="briefcase" [size]="20" />
               </div>
               <div class="flex items-center gap-1.5">
@@ -136,7 +138,7 @@
                 </span>
               }
               @if (salaryText(job); as sal) {
-                <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 flex items-center gap-1">
+                <span class="rm-chip-success font-semibold">
                   💵 {{ sal }}
                 </span>
               }
@@ -179,7 +181,7 @@
                 <span>{{ postedAgo(job) }}</span>
                 @if (closingText(job); as closeTxt) {
                   <span>•</span>
-                  <span class="text-amber-700 font-medium">{{ closeTxt }}</span>
+                  <span class="text-warning font-medium">{{ closeTxt }}</span>
                 }
               </div>
             </div>
@@ -194,7 +196,7 @@
     <section
       class="rm-card mt-8 p-6 flex flex-col sm:flex-row items-center gap-5 border-dashed"
     >
-      <div class="w-11 h-11 rounded-lg bg-surface-muted text-ink-muted grid place-items-center shrink-0">
+      <div class="w-11 h-11 rounded-2xl bg-surface-muted text-ink-muted grid place-items-center shrink-0">
         <rm-icon name="file-text" [size]="20" />
       </div>
       <div class="flex-1 text-center sm:text-left">

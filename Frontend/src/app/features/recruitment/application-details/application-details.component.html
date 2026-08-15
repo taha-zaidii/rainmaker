@@ -1,26 +1,26 @@
     <div class="max-w-[1360px] mx-auto px-6 py-6">
       <!-- Top Action Bar -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-border-light">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-line">
         <div>
           <a
             routerLink="/recruitment/applications"
-            class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary-tint/60 hover:bg-primary-tint px-3 py-1.5 rounded-lg mb-3 transition"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary-tint/60 hover:bg-primary-tint px-3 py-1.5 rounded-full mb-3 transition-colors duration-[var(--duration-fast)]"
           >
             ← Back to Applications
           </a>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-surface-alt border border-border grid place-items-center text-ink shadow-sm">
+            <div class="w-10 h-10 rounded-2xl bg-surface-muted border border-line grid place-items-center text-ink shadow-xs shrink-0">
               <rm-icon name="file-text" [size]="20" />
             </div>
             <div>
               <div class="flex items-center gap-3">
                 <h1 class="text-xl font-bold text-ink">Application Details</h1>
                 <span
-                  class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm"
+                  class="rm-chip font-bold uppercase tracking-wider"
                   [ngClass]="{
-                    'bg-emerald-100 text-emerald-800 border border-emerald-300': (appData().status || '').toUpperCase() === 'SHORTLISTED',
-                    'bg-rose-100 text-rose-800 border border-rose-300': (appData().status || '').toUpperCase() === 'REJECTED',
-                    'bg-sky-100 text-sky-800 border border-sky-300': (appData().status || '').toUpperCase() === 'APPLIED' || (appData().status || '').toUpperCase() === 'SCREENING'
+                    'rm-chip-success': (appData().status || '').toUpperCase() === 'SHORTLISTED',
+                    'rm-chip-danger': (appData().status || '').toUpperCase() === 'REJECTED',
+                    'rm-chip-blue': (appData().status || '').toUpperCase() === 'APPLIED' || (appData().status || '').toUpperCase() === 'SCREENING'
                   }"
                 >
                   {{ appData().status || 'Applied' }}
@@ -37,7 +37,7 @@
           <button
             (click)="screenWithAi()"
             [disabled]="screening()"
-            class="px-4 py-2.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-primary text-white hover:opacity-95 flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50"
+            class="rm-btn-ai-hero !h-10 text-xs"
           >
             @if (screening()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -51,7 +51,7 @@
           <button
             (click)="updateStatus('Shortlisted')"
             [disabled]="(appData().status || '').toUpperCase() === 'SHORTLISTED'"
-            class="px-4 py-2.5 text-xs font-semibold rounded-xl border border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white flex items-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-40"
+            class="rm-btn-success !h-10 text-xs"
           >
             <rm-icon name="check" [size]="15" />
             <span>{{ (appData().status || '').toUpperCase() === 'SHORTLISTED' ? 'Shortlisted' : 'Shortlist Candidate' }}</span>
@@ -60,7 +60,7 @@
           <button
             (click)="updateStatus('Rejected')"
             [disabled]="(appData().status || '').toUpperCase() === 'REJECTED'"
-            class="px-4 py-2.5 text-xs font-semibold rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-600 hover:text-white flex items-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-40"
+            class="rm-btn-danger !h-10 text-xs border border-danger/40 hover:border-danger"
           >
             <rm-icon name="x" [size]="15" />
             <span>{{ (appData().status || '').toUpperCase() === 'REJECTED' ? 'Rejected' : 'Reject Application' }}</span>
@@ -70,16 +70,13 @@
 
       <!-- AI Screening Card Banner (If Screened) -->
       @if (screenResult()) {
-        <div class="mt-6 rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 shadow-xl border border-indigo-500/20 space-y-6 relative overflow-hidden">
-          <!-- Background Glow Effect -->
-          <div class="absolute -top-24 -right-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
+        <div class="mt-6 rm-card border-ai-border shadow-ai rm-card-pad space-y-6 rm-anim-spring-in">
           <!-- Hero Banner Top Grid -->
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-indigo-500/20">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-line">
             <div class="flex items-center gap-4">
               <!-- Circular Score Gauge -->
               <div
-                class="w-16 h-16 rounded-2xl grid place-items-center font-black text-xl shadow-xl transition-all"
+                class="w-16 h-16 rounded-full grid place-items-center font-bold text-xl shrink-0"
                 [ngClass]="getScoreGaugeClass(screenResult()?.matchScore ?? null)"
               >
                 {{ screenResult()?.matchScore }}%
@@ -87,69 +84,63 @@
 
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-2.5">
-                  <h3 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                    <rm-icon name="sparkles" [size]="18" class="text-indigo-400" />
+                  <h3 class="text-lg font-bold tracking-tight text-ink flex items-center gap-2">
+                    <rm-icon name="sparkles" [size]="18" class="text-ai" />
                     AI Candidate Screening Analysis
                   </h3>
                   <span
-                    class="px-3 py-1 rounded-full text-xs font-extrabold border shadow-sm"
+                    class="rm-chip font-bold"
                     [ngClass]="getScoreBadgeClass(screenResult()?.matchScore ?? null)"
                   >
                     {{ getScoreRatingLabel(screenResult()?.matchScore ?? null) }}
                   </span>
                 </div>
-                <p class="text-xs text-slate-300 flex items-center gap-2">
-                  <span>Threshold: <strong class="text-white">{{ screenResult()?.thresholdUsed ?? 80 }}%</strong></span>
+                <p class="text-xs text-ink-muted flex items-center gap-2">
+                  <span>Threshold: <strong class="text-ink">{{ screenResult()?.thresholdUsed ?? 80 }}%</strong></span>
                   <span>•</span>
                   <span>Screened on {{ screenResult()?.screenedOn | date:'mediumDate' }} at {{ screenResult()?.screenedOn | date:'shortTime' }}</span>
                 </p>
               </div>
             </div>
 
-            <!-- Advisory Badge & Actions -->
-            <div class="flex items-center gap-3">
-              <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-300">
-                <rm-icon name="info" [size]="14" class="text-indigo-400" />
-                <span>Advisory AI Match Rating</span>
-              </span>
-            </div>
+            <!-- Advisory Badge -->
+            <span class="rm-chip-ai font-semibold">
+              <rm-icon name="info" [size]="14" />
+              Advisory AI match rating — not the decision of record
+            </span>
           </div>
 
           <!-- Matched vs Missing Skills Cards -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
             <!-- Matched Skills -->
-            <div class="space-y-2.5 p-4 rounded-xl bg-slate-800/60 border border-emerald-500/30 backdrop-blur-sm">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-emerald-400 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                  <rm-icon name="check" [size]="15" class="text-emerald-400" /> Matched Skills ({{ screenResult()?.matchedSkills?.length || 0 }})
-                </span>
-              </div>
+            <div class="space-y-2.5 p-4 rounded-card bg-success-tint border border-success/25">
+              <span class="font-bold text-success flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                <rm-icon name="check" [size]="15" /> Matched Skills ({{ screenResult()?.matchedSkills?.length || 0 }})
+              </span>
               <div class="flex flex-wrap gap-1.5 pt-1">
                 @for (skill of screenResult()?.matchedSkills; track skill) {
-                  <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 font-medium text-xs flex items-center gap-1">
-                    <span>✓</span> {{ skill }}
+                  <span class="rm-chip bg-surface border border-success/30 text-success font-medium">
+                    <rm-icon name="check" [size]="11" /> {{ skill }}
                   </span>
                 } @empty {
-                  <span class="text-slate-400 italic">No skills matched directly</span>
+                  <span class="text-ink-muted italic">No skills matched directly</span>
                 }
               </div>
             </div>
 
             <!-- Missing Skills -->
-            <div class="space-y-2.5 p-4 rounded-xl bg-slate-800/60 border border-rose-500/30 backdrop-blur-sm">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-rose-400 flex items-center gap-1.5 text-xs uppercase tracking-wider">
-                  <rm-icon name="alert-triangle" [size]="15" class="text-rose-400" /> Missing / Unmentioned Skills ({{ screenResult()?.missingSkills?.length || 0 }})
-                </span>
-              </div>
+            <div class="space-y-2.5 p-4 rounded-card bg-warning-tint border border-warning/25">
+              <span class="font-bold text-warning flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                <rm-icon name="alert-triangle" [size]="15" /> Missing / Unmentioned Skills ({{ screenResult()?.missingSkills?.length || 0 }})
+              </span>
               <div class="flex flex-wrap gap-1.5 pt-1">
                 @for (skill of screenResult()?.missingSkills; track skill) {
-                  <span class="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-200 font-medium text-xs flex items-center gap-1">
-                    <span>⚠</span> {{ skill }}
+                  <span class="rm-chip bg-surface border border-warning/30 text-warning font-medium">
+                    <rm-icon name="alert-triangle" [size]="11" /> {{ skill }}
                   </span>
                 } @empty {
-                  <span class="text-emerald-400 font-semibold flex items-center gap-1">
-                    <span>✓</span> Complete Skill Match Requirement Satisfied!
+                  <span class="text-success font-semibold flex items-center gap-1">
+                    <rm-icon name="check" [size]="13" /> Complete skill match requirement satisfied
                   </span>
                 }
               </div>
@@ -159,32 +150,32 @@
           <!-- Rationale & Evidence Statements -->
           @if (screenResult()?.reasons?.length) {
             <div class="space-y-3 pt-2">
-              <h4 class="text-xs font-bold text-indigo-300 uppercase tracking-widest flex items-center gap-1.5">
+              <h4 class="text-xs font-bold text-ink-muted uppercase tracking-widest flex items-center gap-1.5">
                 <rm-icon name="file-text" [size]="14" /> AI Evaluation Rationale & Evidence
               </h4>
               <div class="grid grid-cols-1 gap-2.5">
                 @for (reason of screenResult()?.reasons; track reason.detail) {
                   <div
-                    class="p-3.5 rounded-xl border text-xs space-y-1.5 transition-all"
+                    class="p-3.5 rounded-card border text-xs space-y-1.5"
                     [ngClass]="{
-                      'bg-emerald-950/40 border-emerald-500/30 text-emerald-100': reason.kind === 'match',
-                      'bg-amber-950/40 border-amber-500/30 text-amber-100': reason.kind !== 'match'
+                      'bg-success-tint border-success/25': reason.kind === 'match',
+                      'bg-warning-tint border-warning/25': reason.kind !== 'match'
                     }"
                   >
                     <div class="flex items-center gap-2">
                       <span
-                        class="font-extrabold uppercase px-2 py-0.5 rounded-md text-10 tracking-wider"
+                        class="rm-chip font-extrabold uppercase !text-10 tracking-wider"
                         [ngClass]="{
-                          'bg-emerald-500/30 text-emerald-300 border border-emerald-500/40': reason.kind === 'match',
-                          'bg-amber-500/30 text-amber-300 border border-amber-500/40': reason.kind !== 'match'
+                          'bg-success/15 text-success border border-success/30': reason.kind === 'match',
+                          'bg-warning/15 text-warning border border-warning/30': reason.kind !== 'match'
                         }"
                       >
                         {{ reason.kind === 'match' ? 'CONFIRMED MATCH' : 'GAP / PROBE' }}
                       </span>
-                      <span class="font-semibold text-white text-13">{{ reason.detail }}</span>
+                      <span class="font-semibold text-ink text-13">{{ reason.detail }}</span>
                     </div>
                     @if (reason.evidence) {
-                      <p class="text-slate-300 italic pl-3 border-l-2 border-indigo-400/40 text-xs leading-relaxed">
+                      <p class="text-ink-muted italic pl-3 border-l-2 border-line-strong text-xs leading-relaxed">
                         "{{ reason.evidence }}"
                       </p>
                     }
@@ -197,7 +188,7 @@
       }
 
       @if (screenError()) {
-        <div class="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2 shadow-sm">
+        <div class="mt-6 p-4 rounded-card bg-danger-tint border border-danger/25 text-xs text-danger flex items-center gap-2">
           <rm-icon name="alert-triangle" [size]="16" />
           <span class="font-semibold">{{ screenError() }}</span>
         </div>
@@ -210,34 +201,25 @@
         <!-- Left / Main Details Column (8 Cols) -->
         <div class="lg:col-span-8 space-y-6">
           <!-- Tab Navigation Bar (Details | Resume | Timeline) -->
-          <div class="flex items-center gap-2 border-b border-border pb-1">
+          <div class="flex items-center gap-1 p-1 rounded-full bg-surface-muted w-fit">
             <button
               (click)="activeTab.set('details')"
-              class="px-4 py-2 text-sm font-semibold rounded-t-lg transition flex items-center gap-2"
-              [ngClass]="{
-                'bg-primary text-white': activeTab() === 'details',
-                'text-ink-muted hover:text-ink': activeTab() !== 'details'
-              }"
+              class="px-4 h-9 text-sm font-semibold rounded-full transition-colors duration-[var(--duration-fast)] flex items-center gap-2"
+              [ngClass]="activeTab() === 'details' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink-soft'"
             >
               <rm-icon name="file-text" [size]="16" /> Details
             </button>
             <button
               (click)="activeTab.set('resume')"
-              class="px-4 py-2 text-sm font-semibold rounded-t-lg transition flex items-center gap-2"
-              [ngClass]="{
-                'bg-primary text-white': activeTab() === 'resume',
-                'text-ink-muted hover:text-ink': activeTab() !== 'resume'
-              }"
+              class="px-4 h-9 text-sm font-semibold rounded-full transition-colors duration-[var(--duration-fast)] flex items-center gap-2"
+              [ngClass]="activeTab() === 'resume' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink-soft'"
             >
               <rm-icon name="file-text" [size]="16" /> Resume
             </button>
             <button
               (click)="activeTab.set('timeline')"
-              class="px-4 py-2 text-sm font-semibold rounded-t-lg transition flex items-center gap-2"
-              [ngClass]="{
-                'bg-primary text-white': activeTab() === 'timeline',
-                'text-ink-muted hover:text-ink': activeTab() !== 'timeline'
-              }"
+              class="px-4 h-9 text-sm font-semibold rounded-full transition-colors duration-[var(--duration-fast)] flex items-center gap-2"
+              [ngClass]="activeTab() === 'timeline' ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink-soft'"
             >
               <rm-icon name="clock" [size]="16" /> Timeline
             </button>
@@ -245,9 +227,9 @@
 
           <!-- TAB 1: DETAILS -->
           @if (activeTab() === 'details') {
-            <div class="bg-surface rounded-2xl border border-border p-6 shadow-sm space-y-8">
+            <div class="rm-card rm-card-pad space-y-8">
               <!-- Top Grid: Application Code, Date, Status -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-border-light">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-line">
                 <div>
                   <span class="block text-xs text-ink-muted">Application Code</span>
                   <span class="text-sm font-bold text-ink mt-0.5 block">{{ appData().applicationCode }}</span>
@@ -258,14 +240,12 @@
                 </div>
                 <div class="md:col-span-2">
                   <span class="block text-xs text-ink-muted mb-1">Status</span>
-                  <span class="px-3 py-1 rounded-full text-xs font-semibold bg-primary-tint text-primary inline-block">
-                    {{ appData().status }}
-                  </span>
+                  <span class="rm-chip-blue font-semibold">{{ appData().status }}</span>
                 </div>
               </div>
 
               <!-- Candidate Information -->
-              <div class="space-y-4 pb-6 border-b border-border-light">
+              <div class="space-y-4 pb-6 border-b border-line">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Candidate Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -288,7 +268,7 @@
               </div>
 
               <!-- Job Information -->
-              <div class="space-y-4 pb-6 border-b border-border-light">
+              <div class="space-y-4 pb-6 border-b border-line">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Job Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -311,7 +291,7 @@
               </div>
 
               <!-- Professional Information -->
-              <div class="space-y-4 pb-6 border-b border-border-light">
+              <div class="space-y-4 pb-6 border-b border-line">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Professional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -342,19 +322,17 @@
               </div>
 
               <!-- Skills -->
-              <div class="space-y-3 pb-6 border-b border-border-light">
+              <div class="space-y-3 pb-6 border-b border-line">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Skills</h3>
                 <div class="flex flex-wrap gap-2">
                   @for (skill of appData().skills; track skill) {
-                    <span class="px-3 py-1 text-xs rounded-full bg-primary-tint/70 text-primary font-medium">
-                      {{ skill }}
-                    </span>
+                    <span class="rm-chip-blue font-medium">{{ skill }}</span>
                   }
                 </div>
               </div>
 
               <!-- Additional Information -->
-              <div class="space-y-4 pb-6 border-b border-border-light">
+              <div class="space-y-4 pb-6 border-b border-line">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Additional Information</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
@@ -375,7 +353,7 @@
               <!-- Experience Summary Box -->
               <div class="space-y-2">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Experience Summary</h3>
-                <div class="p-4 rounded-xl bg-surface-alt border border-border text-sm text-ink leading-relaxed">
+                <div class="p-4 rounded-card bg-surface-muted border border-line text-sm text-ink leading-relaxed">
                   {{ appData().experienceSummary }}
                 </div>
               </div>
@@ -383,7 +361,7 @@
               <!-- Cover Letter Box -->
               <div class="space-y-2">
                 <h3 class="text-xs font-bold text-ink-muted uppercase tracking-wider">Cover Letter</h3>
-                <div class="p-4 rounded-xl bg-surface-alt border border-border text-sm text-ink leading-relaxed">
+                <div class="p-4 rounded-card bg-surface-muted border border-line text-sm text-ink leading-relaxed">
                   {{ appData().coverLetter }}
                 </div>
               </div>
@@ -392,20 +370,20 @@
 
           <!-- TAB 2: RESUME VIEWER -->
           @if (activeTab() === 'resume') {
-            <div class="bg-surface rounded-2xl border border-border p-6 shadow-sm">
-              <div class="flex items-center justify-between pb-4 mb-4 border-b border-border">
+            <div class="rm-card rm-card-pad">
+              <div class="flex items-center justify-between pb-4 mb-4 border-b border-line">
                 <h3 class="text-sm font-semibold text-ink">Candidate Resume Document</h3>
                 <a
                   [href]="appData().resumeUrl"
                   target="_blank"
                   download
-                  class="rm-btn-primary text-xs px-4 py-2 flex items-center gap-1.5"
+                  class="rm-btn-primary !h-9 text-xs"
                 >
                   <rm-icon name="file-text" [size]="14" /> Download Resume
                 </a>
               </div>
 
-              <div class="w-full h-[700px] rounded-xl overflow-hidden border border-border bg-slate-900">
+              <div class="w-full h-[700px] rounded-card overflow-hidden border border-line bg-surface-sunken">
                 <iframe
                   [src]="safeResumeUrl()"
                   class="w-full h-full border-0"
@@ -417,10 +395,10 @@
 
           <!-- TAB 3: TIMELINE -->
           @if (activeTab() === 'timeline') {
-            <div class="bg-surface rounded-2xl border border-border p-6 shadow-sm">
+            <div class="rm-card rm-card-pad">
               <h3 class="text-sm font-semibold text-ink mb-6">Application Timeline</h3>
-              
-              <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
+
+              <div class="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-line">
                 <div class="relative">
                   <div class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-primary ring-4 ring-primary-tint"></div>
                   <div>
@@ -430,7 +408,7 @@
                 </div>
 
                 <div class="relative">
-                  <div class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-amber-500 ring-4 ring-amber-100"></div>
+                  <div class="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-ai ring-4 ring-ai-tint"></div>
                   <div>
                     <h4 class="text-sm font-semibold text-ink">AI Resume Extraction Completed</h4>
                     <p class="text-xs text-ink-muted mt-0.5">Parsed via Multinet AI Engine</p>
@@ -443,8 +421,8 @@
 
         <!-- Right Column: Summary Card (4 Cols) -->
         <div class="lg:col-span-4">
-          <div class="bg-surface rounded-2xl border border-border p-6 shadow-sm sticky top-6 space-y-6">
-            <div class="flex items-center gap-2 pb-4 border-b border-border">
+          <div class="rm-card rm-card-pad sticky top-6 space-y-6">
+            <div class="flex items-center gap-2 pb-4 border-b border-line">
               <rm-icon name="info" [size]="18" class="text-ink-muted" />
               <h3 class="text-sm font-bold text-ink">Summary</h3>
             </div>
@@ -452,9 +430,7 @@
             <div class="space-y-4 text-xs">
               <div>
                 <span class="block text-ink-muted mb-1">Current Status</span>
-                <span class="px-3 py-1 rounded-full font-semibold bg-primary-tint text-primary inline-block">
-                  {{ appData().status }}
-                </span>
+                <span class="rm-chip-blue font-semibold">{{ appData().status }}</span>
               </div>
 
               <div>
@@ -462,13 +438,13 @@
                 <span class="text-sm font-semibold text-ink">{{ appData().appliedDate }}</span>
               </div>
 
-              <div class="pt-4 border-t border-border-light">
+              <div class="pt-4 border-t border-line">
                 <span class="block text-ink-muted mb-2">Resume</span>
                 <a
                   [href]="appData().resumeUrl"
                   target="_blank"
                   download
-                  class="w-full rm-btn-secondary text-xs py-2 flex items-center justify-center gap-1.5"
+                  class="w-full rm-btn-secondary !h-9 text-xs"
                 >
                   <rm-icon name="file-text" [size]="14" /> Download Resume
                 </a>

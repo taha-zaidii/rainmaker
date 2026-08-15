@@ -276,7 +276,7 @@ export class ApplicationsManagementComponent {
       case 'HIRED':
         return 'rm-chip-success';
       case 'SHORTLISTED':
-        return 'rm-chip-success !bg-emerald-500/10 !text-emerald-700 !border-emerald-500/20';
+        return 'rm-chip-success';
       case 'INTERVIEW':
         return 'rm-chip-blue';
       case 'REJECTED':
@@ -297,10 +297,10 @@ export class ApplicationsManagementComponent {
   /** Screening scores are advisory; the colour is a hint, not a verdict. */
   protected scoreTone(score: number | null): string {
     if (score == null) return 'rm-chip-neutral';
-    if (score >= 85) return 'rm-chip-success !bg-emerald-500/10 !text-emerald-700 !border-emerald-500/20';
-    if (score >= 70) return 'rm-chip-blue !bg-sky-500/10 !text-sky-700 !border-sky-500/20';
-    if (score >= 50) return 'rm-chip-warning !bg-amber-500/10 !text-amber-700 !border-amber-500/20';
-    return 'rm-chip-danger !bg-rose-500/10 !text-rose-700 !border-rose-500/20';
+    if (score >= 85) return 'rm-chip-success';
+    if (score >= 70) return 'rm-chip-blue';
+    if (score >= 50) return 'rm-chip-warning';
+    return 'rm-chip-danger';
   }
 
 }

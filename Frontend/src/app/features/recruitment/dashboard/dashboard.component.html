@@ -13,20 +13,22 @@
 
   <!-- ══ Hiring funnel — real counts from the database ══════════════════ -->
   @if (loadingDashboard()) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 rm-gap-density mb-6">
       @for (i of [1, 2, 3, 4]; track i) {
         <div class="rm-card p-5 h-[132px] animate-pulse">
-          <div class="w-10 h-10 rounded-lg bg-surface-sunken"></div>
+          <div class="w-10 h-10 rounded-card bg-surface-sunken"></div>
           <div class="mt-4 h-3 w-24 rounded bg-surface-sunken"></div>
           <div class="mt-2 h-7 w-12 rounded bg-surface-sunken"></div>
         </div>
       }
     </div>
   } @else if (stats().length) {
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 rm-gap-density mb-6">
       @for (s of stats(); track s.label) {
         <div class="rm-card p-5">
-          <div class="w-10 h-10 rounded-lg bg-primary-tint text-primary grid place-items-center">
+          <div
+            class="w-10 h-10 rounded-2xl bg-primary-tint text-primary grid place-items-center"
+          >
             <rm-icon [name]="s.icon" [size]="20" />
           </div>
           <div class="mt-4 text-sm text-ink-muted">{{ s.label }}</div>
@@ -51,7 +53,7 @@
     </div>
   }
 
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-5 mb-6">
+  <div class="grid grid-cols-1 xl:grid-cols-3 rm-gap-density mb-6">
     <!-- ══ AI activity — the real feed from Tbl_Ruc_RecruitmentAI_Activity ══ -->
     <section class="rm-card xl:col-span-2 overflow-hidden">
       <div class="px-6 py-4 border-b border-line flex items-center gap-2">
@@ -87,7 +89,7 @@
       } @else {
         <div class="px-6 py-10 text-center">
           <div
-            class="w-11 h-11 mx-auto rounded-lg bg-ai-tint text-ai grid place-items-center"
+            class="w-11 h-11 mx-auto rounded-2xl bg-ai-tint text-ai grid place-items-center"
           >
             <rm-icon name="sparkles" [size]="20" />
           </div>
@@ -167,7 +169,7 @@
       Generate a complete job requisition from five fields. The draft is yours to edit —
       nothing is saved until you say so.
     </p>
-    <a routerLink="/recruitment/job-create" class="rm-btn-ai mt-4">
+    <a routerLink="/recruitment/job-create" class="rm-btn-ai-hero mt-4">
       <rm-icon name="sparkles" [size]="16" /> Generate a job description
     </a>
   </section>

@@ -31,7 +31,7 @@
   }
 
   <!-- Counters, derived from the rows on screen -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+  <div class="grid grid-cols-2 lg:grid-cols-4 rm-gap-density mb-6">
     @for (c of [
       { label: 'Total Applications', value: counts().total, icon: 'user-plus' },
       { label: 'Shortlisted', value: counts().shortlisted, icon: 'check-circle' },
@@ -39,7 +39,7 @@
       { label: 'Hired', value: counts().hired, icon: 'clipboard-check' }
     ]; track c.label) {
       <div class="rm-card p-5">
-        <div class="w-10 h-10 rounded-lg bg-primary-tint text-primary grid place-items-center">
+        <div class="w-10 h-10 rounded-2xl bg-primary-tint text-primary grid place-items-center">
           <rm-icon [name]="$any(c.icon)" [size]="19" />
         </div>
         <div class="mt-4 text-sm text-ink-muted">{{ c.label }}</div>
@@ -98,7 +98,7 @@
       } @else if (filtered().length === 0) {
         <div class="p-14 text-center">
           <div
-            class="w-12 h-12 mx-auto rounded-xl bg-surface-muted text-ink-muted grid place-items-center"
+            class="w-12 h-12 mx-auto rounded-2xl bg-surface-muted text-ink-muted grid place-items-center"
           >
             <rm-icon name="user-plus" [size]="22" />
           </div>
@@ -172,7 +172,7 @@
                   <td>
                     <div class="flex items-center justify-end gap-1">
                       <button
-                        class="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors disabled:opacity-30"
+                        class="p-1.5 rounded-full text-success hover:bg-success-tint transition-colors disabled:opacity-30"
                         (click)="shortlist(a)"
                         [disabled]="(a.statusCode || '').toUpperCase() === 'SHORTLISTED'"
                         title="Shortlist Candidate"
@@ -180,7 +180,7 @@
                         <rm-icon name="user-plus" [size]="16" />
                       </button>
                       <button
-                        class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
+                        class="p-1.5 rounded-full text-danger hover:bg-danger-tint transition-colors disabled:opacity-30"
                         (click)="reject(a)"
                         [disabled]="(a.statusCode || '').toUpperCase() === 'REJECTED'"
                         title="Reject Candidate"

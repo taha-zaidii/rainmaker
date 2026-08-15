@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-canvas">
+<div class="min-h-screen">
   <header class="bg-surface border-b border-line">
     <div class="max-w-[900px] mx-auto px-6 py-4 flex items-center gap-3">
       <a
@@ -92,7 +92,7 @@
                   }
                   @if (closingDateLabel()) {
                     <span>•</span>
-                    <span class="text-amber-700 font-medium">Closing {{ closingDateLabel() }}</span>
+                    <span class="text-warning font-medium">Closing {{ closingDateLabel() }}</span>
                   }
                 </p>
               </div>
@@ -184,7 +184,7 @@
                 @if (j.benefits) {
                   <section>
                     <h2 class="text-lg font-bold text-ink pb-2 border-b border-line flex items-center gap-2">
-                      <rm-icon name="sparkles" [size]="18" class="text-emerald-600" /> Benefits & Compensation
+                      <rm-icon name="sparkles" [size]="18" class="text-success" /> Benefits & Compensation
                     </h2>
                     <p class="mt-3 text-sm text-ink-soft leading-relaxed whitespace-pre-line">
                       {{ j.benefits }}
@@ -233,7 +233,7 @@
                   @if (salaryLabel()) {
                     <div>
                       <span class="text-ink-muted font-medium">Offered Salary</span>
-                      <p class="text-emerald-700 font-bold text-sm mt-0.5">{{ salaryLabel() }}</p>
+                      <p class="text-success font-bold text-sm mt-0.5">{{ salaryLabel() }}</p>
                     </div>
                   }
 
@@ -247,7 +247,7 @@
                   @if (closingDateLabel()) {
                     <div>
                       <span class="text-ink-muted font-medium">Application Deadline</span>
-                      <p class="text-amber-700 font-bold text-sm mt-0.5">{{ closingDateLabel() }}</p>
+                      <p class="text-warning font-bold text-sm mt-0.5">{{ closingDateLabel() }}</p>
                     </div>
                   }
                 </div>
@@ -290,7 +290,7 @@
                       (change)="onFileSelected($event)"
                     />
                     <div
-                      class="w-11 h-11 mx-auto rounded-lg bg-surface-muted text-ink-muted grid place-items-center"
+                      class="w-11 h-11 mx-auto rounded-2xl bg-surface-muted text-ink-muted grid place-items-center"
                     >
                       <rm-icon name="upload" [size]="20" />
                     </div>
@@ -302,7 +302,7 @@
                 } @else {
                   <div class="rm-card p-4 flex items-center gap-3">
                     <div
-                      class="w-9 h-9 rounded-lg bg-primary-tint text-primary grid place-items-center shrink-0"
+                      class="w-9 h-9 rounded-2xl bg-primary-tint text-primary grid place-items-center shrink-0"
                     >
                       <rm-icon name="file-text" [size]="18" />
                     </div>

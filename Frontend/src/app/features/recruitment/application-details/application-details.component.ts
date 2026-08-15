@@ -236,19 +236,19 @@ export class ApplicationDetailsComponent {
   }
 
   protected getScoreBadgeClass(score: number | null): string {
-    if (score == null) return 'bg-slate-800 text-slate-300 border-slate-700';
-    if (score >= 85) return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
-    if (score >= 70) return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
-    if (score >= 50) return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-    return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
+    if (score == null) return 'bg-surface-sunken text-ink-muted border border-line';
+    if (score >= 85) return 'bg-success-tint text-success border border-success/30';
+    if (score >= 70) return 'bg-info-tint text-info border border-info/30';
+    if (score >= 50) return 'bg-warning-tint text-warning border border-warning/30';
+    return 'bg-danger-tint text-danger border border-danger/30';
   }
 
   protected getScoreGaugeClass(score: number | null): string {
-    if (score == null) return 'bg-slate-800 text-slate-300 border border-slate-700';
-    if (score >= 85) return 'bg-emerald-500 text-white shadow-emerald-500/40 shadow-lg';
-    if (score >= 70) return 'bg-sky-500 text-white shadow-sky-500/40 shadow-lg';
-    if (score >= 50) return 'bg-amber-500 text-white shadow-amber-500/40 shadow-lg';
-    return 'bg-rose-500 text-white shadow-rose-500/40 shadow-lg';
+    if (score == null) return 'bg-surface-sunken text-ink-muted border border-line';
+    if (score >= 85) return 'bg-success text-white shadow-md';
+    if (score >= 70) return 'bg-info text-white shadow-md';
+    if (score >= 50) return 'bg-warning text-white shadow-md';
+    return 'bg-danger text-white shadow-md';
   }
 }
 

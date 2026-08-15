@@ -40,9 +40,9 @@
 
     <p class="rm-label mb-3">Creation Mode</p>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <button class="rm-card p-6 text-left hover:border-primary transition-colors group" (click)="startManual()">
+      <button class="rm-card p-6 text-left hover:border-primary transition-colors duration-[var(--duration-fast)] group" (click)="startManual()">
         <div
-          class="w-11 h-11 rounded-lg bg-primary-tint text-primary grid place-items-center mb-4"
+          class="w-11 h-11 rounded-2xl bg-primary-tint text-primary grid place-items-center mb-4"
         >
           <rm-icon name="pencil" [size]="20" />
         </div>
@@ -53,12 +53,17 @@
         <span class="rm-btn-secondary mt-5 !h-9">Start</span>
       </button>
 
+      <!-- The one featured option on this screen — a touch more elevation on
+           hover is the deliberate exception to "cards don't lift", the same
+           way Apple reserves extra weight for the one standout action. -->
       <button
-        class="rm-card p-6 text-left border-ai-border hover:border-ai transition-colors relative"
+        class="rm-card p-6 text-left border-ai-border hover:border-ai hover:shadow-ai transition-all duration-[var(--duration-base)] relative"
         (click)="startAi()"
       >
         <span class="rm-chip-ai absolute top-5 right-5 font-semibold">Recommended</span>
-        <div class="w-11 h-11 rounded-lg bg-ai-tint text-ai grid place-items-center mb-4">
+        <div
+          class="w-11 h-11 rounded-2xl bg-ai-tint text-ai grid place-items-center mb-4"
+        >
           <rm-icon name="sparkles" [size]="20" />
         </div>
         <div class="text-17 font-semibold text-ink">AI-Assisted Creation</div>
@@ -184,7 +189,7 @@
       </div>
 
       <div class="px-6 py-4 bg-surface-muted/50 border-t border-line flex items-center gap-3">
-        <button class="rm-btn-ai" (click)="generate()" [disabled]="!canGenerate()">
+        <button class="rm-btn-ai-hero" (click)="generate()" [disabled]="!canGenerate()">
           <rm-icon name="sparkles" [size]="16" /> Generate Job Description with AI
         </button>
         <button class="rm-btn-ghost" (click)="startManual()">Switch to manual</button>
@@ -195,8 +200,11 @@
   <!-- ══ Stage 3 — generating ═══════════════════════════════════════════ -->
   @if (stage() === 'generating') {
     <section class="rm-card p-12 text-center">
-      <div class="w-16 h-16 mx-auto rounded-full bg-ai-tint grid place-items-center">
-        <rm-icon name="sparkles" [size]="28" class="text-ai animate-pulse" />
+      <div class="relative w-16 h-16 mx-auto grid place-items-center">
+        <span class="absolute inset-0 rounded-full bg-ai-tint rm-anim-breathe"></span>
+        <span class="absolute inset-0 rounded-full bg-ai-tint grid place-items-center">
+          <rm-icon name="sparkles" [size]="28" class="text-ai" />
+        </span>
       </div>
 
       <h2 class="mt-5 text-xl font-semibold text-ink">Drafting your job requisition…</h2>
