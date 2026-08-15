@@ -199,6 +199,7 @@ namespace Digi.Core.AI.Providers
             Stream content,
             string fileName,
             string? apiKey = null,
+            Uri? baseUriOverride = null, // ignored — stub mode never makes a real network call
             string? model = null, // ignored — stub mode has no real model to select
             CancellationToken cancellationToken = default)
         {

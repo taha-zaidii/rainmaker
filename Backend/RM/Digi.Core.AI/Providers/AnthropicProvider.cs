@@ -73,11 +73,11 @@ namespace Digi.Core.AI.Providers
             => Task.FromResult(AiResult<ServiceVersion>.Ok(new ServiceVersion { Model = DefaultModel }));
 
         public Task<AiResult<ParseResumeResult>> ExtractResumeAsync(
-            Stream content, string fileName, string? apiKey = null, string? model = null, CancellationToken cancellationToken = default)
+            Stream content, string fileName, string? apiKey = null, Uri? baseUriOverride = null, string? model = null, CancellationToken cancellationToken = default)
         {
             using var buffer = new MemoryStream();
             content.CopyTo(buffer);
-            return GenericProviderPipeline.ExtractResumeAsync(buffer.ToArray(), fileName, "Anthropic", Chat(apiKey, null, model), cancellationToken);
+            return GenericProviderPipeline.ExtractResumeAsync(buffer.ToArray(), fileName, "Anthropic", Chat(apiKey, baseUriOverride, model), cancellationToken);
         }
 
         public Task<AiResult<ParseResumeResult>> ExtractResumeByUrlAsync(

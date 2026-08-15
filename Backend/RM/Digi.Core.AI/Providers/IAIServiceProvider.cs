@@ -38,6 +38,7 @@ namespace Digi.Core.AI.Providers
             Stream content,
             string fileName,
             string? apiKey = null,
+            Uri? baseUriOverride = null,
             string? model = null,
             CancellationToken cancellationToken = default);
 

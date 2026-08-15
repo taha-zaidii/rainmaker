@@ -18,8 +18,12 @@ namespace Digi.Core.AI.Configuration
             // Options
             services.Configure<MultinetAiOptions>(configuration.GetSection(MultinetAiOptions.SectionName));
 
-            // Factory/Resolver
-            services.AddSingleton<IAIServiceProviderResolver, AiServiceProviderResolver>();
+            // Factory/Resolver. Scoped, not Singleton: it resolves MultinetAiProvider,
+            // which depends on IOptionsSnapshot<MultinetAiOptions> (a scoped service).
+            // A singleton resolver would capture the root IServiceProvider at startup
+            // and every later Resolve() call would try to pull a scoped dependency out
+            // of the root container, which throws at request time.
+            services.AddScoped<IAIServiceProviderResolver, AiServiceProviderResolver>();
 
             // Generic providers take their base URL and key per call (from the
             // company's own AI settings row), so they need no options section of

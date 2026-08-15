@@ -245,6 +245,7 @@ namespace Digi.Core.AI.Providers
             Stream content,
             string fileName,
             string? apiKey = null,
+            Uri? baseUriOverride = null,
             string? model = null, // ignored — Multinet pins one resident model server-side
             CancellationToken cancellationToken = default)
         {
@@ -297,7 +298,8 @@ namespace Digi.Core.AI.Providers
                     };
                 },
                 apiKey,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                baseUriOverride).ConfigureAwait(false);
 
             if (result.IsFailure)
             {
