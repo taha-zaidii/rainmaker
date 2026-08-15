@@ -8,7 +8,7 @@ import { IconComponent, IconName } from '../../../icon.component';
   imports: [CommonModule, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <aside class="rm-card shrink-0 overflow-hidden sticky top-6 transition-all" [style.width]="width()">
+    <aside class="rm-card shrink-0 overflow-hidden sticky top-6 rm-anim-spring-in shadow-md transition-[width] duration-[var(--duration-base)] ease-[var(--ease-standard)]" [style.width]="width()">
       <div class="px-5 py-4 flex items-start gap-2.5" [ngClass]="headerClass()">
         @if (icon()) {
           <rm-icon [name]="icon()!" [size]="18" class="shrink-0 mt-0.5" [ngClass]="iconColorClass()" />
@@ -48,7 +48,7 @@ export class RmDrawerComponent {
   readonly closed = output<void>();
 
   headerClass() {
-    return this.variant() === 'ai' ? 'rm-ai-surface' : 'bg-surface border-b border-border';
+    return this.variant() === 'ai' ? 'rm-ai-surface' : 'bg-surface border-b border-line';
   }
 
   iconColorClass() {

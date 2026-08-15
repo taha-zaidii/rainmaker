@@ -105,6 +105,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'system-setup',
+        loadComponent: () =>
+          import('./features/admin/system-setup/system-setup.component').then(
+            (m) => m.SystemSetupComponent,
+          ),
+      },
+      {
         path: '**',
         loadComponent: () =>
           import('./features/admin/admin-dashboard.component').then(

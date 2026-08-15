@@ -55,7 +55,12 @@ export type IconName =
   | 'trending-up'
   | 'sun'
   | 'monitor'
-  | 'clock';
+  | 'clock'
+  | 'palette'
+  | 'type'
+  | 'sidebar'
+  | 'top-nav'
+  | 'more-horizontal';
 
 const PATHS: Record<IconName, string> = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',
@@ -113,6 +118,13 @@ const PATHS: Record<IconName, string> = {
   'trending-up': '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>',
   monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>',
+  palette:
+    '<circle cx="13.5" cy="6.5" r=".6" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".6" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".6" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".6" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6h2c3 0 5.5-2.5 5.5-5.6C22 6 17.5 2 12 2Z"/>',
+  type: '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+  sidebar: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>',
+  'top-nav': '<rect x="3" y="4" width="18" height="5" rx="2.5"/><rect x="3" y="14" width="18" height="5" rx="2.5"/>',
+  'more-horizontal':
+    '<circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/>',
 };
 
 @Component({

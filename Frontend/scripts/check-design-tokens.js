@@ -15,7 +15,14 @@ const fs = require("fs");
 const path = require("path");
 
 const SRC_ROOT = path.join(__dirname, "..", "src", "app");
-const EXCLUDED_FILES = new Set([path.join(SRC_ROOT, "core", "theme", "tokens.css")]);
+const EXCLUDED_FILES = new Set([
+  path.join(SRC_ROOT, "core", "theme", "tokens.css"),
+  // Curated brand-colour swatches a tenant picks from in System Setup.
+  // These are user-selectable data, not hardcoded design-system styling —
+  // the thing this script guards against — so they are exempt the same way
+  // tokens.css itself is.
+  path.join(SRC_ROOT, "core", "theme", "appearance.service.ts"),
+]);
 const SCANNED_EXTENSIONS = new Set([".ts", ".html", ".css"]);
 
 // #abc, #abcd, #aabbcc, #aabbccdd — word-boundary guarded so it doesn't

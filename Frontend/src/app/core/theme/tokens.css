@@ -81,9 +81,64 @@
   --text-38: 2.375rem;
 
   /* ── Shape ─────────────────────────────────────────────────────────── */
-  --radius-card: 0.5rem;
-  --radius-control: 0.5rem;
+  /* Generous and capsule-leaning — Liquid Glass's own rule (large/standout
+     controls go capsule, only dense/compact contexts stay rectangular)
+     applied everywhere, not just to one hero button per screen. */
+  --radius-card: 1.25rem;
+  --radius-control: 9999px;
   --radius-pill: 9999px;
+  /* The few things that must stay a soft rectangle: text inputs/textareas
+     (a capsule text field reads as a search box, not a form), and dense
+     table-row controls. */
+  --radius-field: 0.875rem;
+
+  /* ── Elevation ─────────────────────────────────────────────────────── */
+  /* Glass reads through blur and light first, shadow second — but a floating
+     surface still needs enough shadow to look lifted off the page, not
+     printed on it. */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 2px 8px -2px rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 8px 24px -4px rgb(0 0 0 / 0.12), 0 2px 8px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 20px 48px -8px rgb(0 0 0 / 0.18), 0 8px 16px -4px rgb(0 0 0 / 0.10);
+  /* Reserved for AI surfaces — a soft orange-tinted glow instead of a
+     neutral shadow, so a generating/AI-active panel is felt, not just read. */
+  --shadow-ai: 0 8px 28px -4px rgb(249 115 22 / 0.28);
+
+  /* ── Glass material ────────────────────────────────────────────────── */
+  /* Every "surface" (card, sidebar, header, drawer) is translucent over the
+     ambient backdrop below, not flat opaque colour — this is what makes
+     depth and light actually visible instead of implied. Opacity is tuned
+     per-context (see .rm-card / .rm-rail / .rm-scroll-edge) so density-heavy
+     data tables stay legible while chrome gets the fuller glass treatment. */
+  --glass-blur: blur(28px) saturate(1.9);
+  --glass-blur-strong: blur(40px) saturate(2.1);
+  --glass-border-light: color-mix(in srgb, white 55%, transparent);
+  --glass-highlight: color-mix(in srgb, white 60%, transparent);
+
+  /* ── Motion ────────────────────────────────────────────────────────── */
+  /* Two easings, not a physics library: standard for anything that just
+     appears or moves, emphasized for anything the user should notice
+     finishing (a drawer arriving, a banner confirming a save). */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0, 1.3);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* ── Density ───────────────────────────────────────────────────────── */
+  /* Comfortable is the default everywhere. Compact exists for power users
+     scanning long grids (Applications Management, Job Requisitions) who
+     would rather see more rows than more air — set by System Setup, applied
+     via a `.density-compact` class on <html>, same mechanism as .dark. */
+  --control-h: 2.5rem;
+  --row-h: 2.5rem;
+  --density-gap: 1.5rem;
+}
+
+.density-compact {
+  --control-h: 2.25rem;
+  --row-h: 2rem;
+  --density-gap: 1rem;
 }
 
 /* ==========================================================================

@@ -17,10 +17,31 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Set once by AppearanceService (Small/Default/Large in System Setup).
+       Everything else in the app is sized in rem, so scaling the root
+       font-size scales the whole UI proportionally — no per-component work. */
+    font-size: calc(16px * var(--font-scale, 1));
   }
 
   body {
+    /* The ambient backdrop every glass surface in the app blurs over.
+       Fixed so it doesn't scroll away with the content sitting on top of
+       it — the whole point is that panels stay glass no matter where in
+       a long page they end up. Soft, large, low-opacity colour fields in
+       the brand blue and the AI orange (never both saturated at once,
+       never sharp-edged) rather than a busy mesh — this is chrome, not
+       a hero banner. */
+    /* Blue only, deliberately — orange is reserved for AI content (see the
+       header of tokens.css). An ambient background isn't AI-attributable to
+       anything, so it must never borrow the one colour that means "a model
+       produced this". */
     background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(ellipse 900px 600px at 8% -10%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 60%),
+      radial-gradient(ellipse 800px 700px at 100% 15%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 55%),
+      radial-gradient(ellipse 900px 800px at 30% 110%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 60%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -38,6 +59,17 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+
+  /* Appearance changes that swap DOM structure (layout mode) or a class on
+     <html> (theme, density) go through the View Transition API — see
+     AppearanceService/ThemeService. This overrides the browser's default
+     ~250ms cross-fade with the app's own motion tokens, so a layout switch
+     feels like the same product as a drawer opening, not a different one. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--duration-slow);
+    animation-timing-function: var(--ease-standard);
+  }
 }
 
 /* ==========================================================================
@@ -54,18 +86,22 @@
    edits one variant and not the other five. */
 
 @utility rm-btn {
-  @apply inline-flex items-center justify-center gap-2 h-10 px-4
-         rounded-[var(--radius-control)] text-sm font-medium
+  @apply inline-flex items-center justify-center gap-2 px-4
+         rounded-control text-sm font-medium
          transition-colors duration-150 whitespace-nowrap
          disabled:opacity-50 disabled:pointer-events-none;
+  /* Comfortable/Compact from System Setup — a control's height is a density
+     decision, not a fixed 40px everywhere. */
+  height: var(--control-h);
 }
 
 @utility rm-input {
-  @apply w-full h-10 px-3 bg-surface text-ink text-sm
-         border border-line rounded-[var(--radius-control)]
+  @apply w-full px-4 bg-surface text-ink text-sm
+         border border-line rounded-field
          placeholder:text-ink-faint
          focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none
          disabled:bg-surface-muted disabled:text-ink-faint;
+  height: var(--control-h);
 }
 
 @utility rm-chip {
@@ -74,26 +110,60 @@
 }
 
 @layer components {
-  /* ── Surfaces ──────────────────────────────────────────────────────── */
+  /* ── Surfaces — glass, not flat opaque panels ────────────────────────
+     Translucent + blurred + saturated over the ambient backdrop (see
+     .rm-ambient on body), with a soft inset highlight along the top edge —
+     the thing that actually reads as "glass catching light" rather than
+     "slightly see-through". Needs something colourful behind it to blur;
+     that's what the ambient background is for. */
   .rm-card {
-    @apply bg-surface border border-line rounded-[var(--radius-card)];
+    @apply text-ink rounded-card;
+    background-color: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border-light);
+    box-shadow: var(--shadow-sm), inset 0 1px 0 0 var(--glass-highlight);
+    /* Exposes its own radius to anything nested inside via .rm-concentric,
+       so an icon tile or thumbnail can stay geometrically related to its
+       container instead of picking an unrelated rounded-lg by habit. */
+    --radius-parent: var(--radius-card);
   }
 
   .rm-card-pad {
     @apply p-6;
   }
 
-  /* ── Buttons ───────────────────────────────────────────────────────── */
+  /* ── Buttons — capsules, every one ────────────────────────────────────
+     .rm-btn's base radius is now --radius-control (capsule). Secondary and
+     ghost get the same translucent glass treatment as cards instead of a
+     flat fill, so a toolbar full of them reads as one glass material, not
+     a stack of opaque grey rectangles. */
   .rm-btn-primary {
-    @apply rm-btn bg-primary text-white hover:bg-primary-hover;
+    @apply rm-btn text-white hover:bg-primary-hover shadow-sm;
+    background-color: var(--color-primary);
   }
 
   .rm-btn-secondary {
-    @apply rm-btn bg-surface text-ink border border-line hover:bg-surface-muted;
+    @apply rm-btn text-ink;
+    background-color: color-mix(in srgb, var(--color-surface) 65%, transparent);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border-light);
+  }
+
+  .rm-btn-secondary:hover {
+    background-color: color-mix(in srgb, var(--color-surface) 85%, transparent);
   }
 
   .rm-btn-ghost {
     @apply rm-btn bg-transparent text-ink-soft hover:bg-surface-muted;
+  }
+
+  /* A positive, confirming action (Shortlist, Approve) — distinct from
+     primary blue, which means "the normal next step" rather than "a
+     favourable decision about a person". */
+  .rm-btn-success {
+    @apply rm-btn bg-transparent text-success border border-success/40 hover:bg-success hover:text-white hover:border-success;
   }
 
   .rm-btn-danger {
@@ -102,11 +172,15 @@
 
   /* The AI button. Orange ONLY when the click starts a generative process. */
   .rm-btn-ai {
-    @apply rm-btn bg-ai text-white hover:bg-ai-hover;
+    @apply rm-btn text-white hover:bg-ai-hover shadow-ai;
+    background-color: var(--color-ai);
   }
 
   .rm-btn-ai-outline {
-    @apply rm-btn bg-ai-tint text-ai-deep border border-ai-border hover:bg-ai-border;
+    @apply rm-btn text-ai-deep border border-ai-border hover:bg-ai-border;
+    background-color: color-mix(in srgb, var(--color-ai-tint) 75%, transparent);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
   }
 
   /* ── Forms ─────────────────────────────────────────────────────────── */
@@ -132,10 +206,11 @@
   /* A field the AI is FORBIDDEN from filling — HR's decision alone.
      Dashed, never red: this is an invitation, not a validation error. */
   .rm-input-human {
-    @apply w-full h-10 px-3 bg-surface-muted/60 text-ink text-sm
-           border border-dashed border-line-strong rounded-[var(--radius-control)]
+    @apply w-full px-4 bg-surface-muted/60 text-ink text-sm
+           border border-dashed border-line-strong rounded-field
            placeholder:text-ink-muted
            focus:border-primary focus:ring-2 focus:ring-primary/15 focus:outline-none;
+    height: var(--control-h);
   }
 
   /* Standard search input wrapper and icon placement across all screens */
@@ -156,9 +231,9 @@
   }
 
   .rm-search-input {
-    @apply rm-input;
+    @apply rm-input rounded-full;
     padding-left: 2.35rem !important;
-    padding-right: 1rem !important;
+    padding-right: 1.25rem !important;
   }
 
 
@@ -189,18 +264,25 @@
     @apply rm-chip bg-surface-sunken text-ink-soft;
   }
 
-  /* ── Tables — 40px rows, dividers not stripes ──────────────────────── */
+  /* ── Tables — density-aware rows, dividers not stripes ─────────────── */
   .rm-table {
     @apply w-full text-sm text-left;
   }
 
+  /* Reverted from sticky: it clipped/overlapped table rows on screens where
+     the table sits inside a card with its own header content above it —
+     the sticky offset assumed every table starts at a fixed scroll position,
+     which was not true across screens. A static, clearly-opaque header row
+     is worth more than a broken clever one. */
   .rm-table thead th {
-    @apply h-10 px-4 text-[12px] font-semibold uppercase tracking-[0.05em]
-           text-ink-muted bg-surface-muted/60 border-b border-line;
+    @apply px-4 text-[12px] font-semibold uppercase tracking-[0.05em] text-ink-muted bg-surface-muted;
+    height: var(--row-h);
+    border-bottom: 1px solid var(--color-line);
   }
 
   .rm-table tbody td {
-    @apply h-10 px-4 border-b border-line align-middle;
+    @apply px-4 border-b border-line align-middle;
+    height: var(--row-h);
   }
 
   .rm-table tbody tr {
@@ -215,9 +297,31 @@
   .rm-page-title {
     @apply text-[24px] font-semibold leading-8 tracking-[-0.01em] text-ink;
   }
+
+  /* ── Hero actions — capsule, not rounded-rect ───────────────────────
+     Apple's own rule for Liquid Glass controls: dense/repeated controls
+     (table actions, secondary buttons, inputs) stay rounded-rect; the ONE
+     standout action on a screen — "Generate with AI", a wizard's primary
+     submit — earns a capsule and a taller, more confident size. Never use
+     this for more than one action per screen; a row of capsules reads as
+     a toy, not an emphasis. */
+  .rm-btn-hero {
+    @apply rm-btn bg-primary text-white hover:bg-primary-hover rounded-full px-6 text-[15px] font-semibold;
+    height: calc(var(--control-h) + 0.5rem);
+  }
+
+  .rm-btn-ai-hero {
+    @apply rm-btn bg-ai text-white hover:bg-ai-hover rounded-full px-6 text-[15px] font-semibold shadow-ai;
+    height: calc(var(--control-h) + 0.5rem);
+  }
 }
 
 @layer utilities {
+  /* Density-aware gap — comfortable/compact, set by System Setup. */
+  .rm-gap-density {
+    gap: var(--density-gap);
+  }
+
   /* Marks a whole container as AI territory — used by the draft banner and
      the AI insight panels. */
   .rm-ai-surface {
@@ -233,5 +337,91 @@
   .rm-scroll-thin::-webkit-scrollbar-thumb {
     background-color: var(--color-line-strong);
     border-radius: 9999px;
+  }
+
+  /* ── Concentric shape ────────────────────────────────────────────────
+     A nested element's radius, derived from its ancestor's rather than
+     picked to "look about right". --radius-parent is set by .rm-card (see
+     above); --rm-gutter is the element's own inset from that ancestor's
+     edge — override it per use if the actual padding differs from the
+     16px default. Clamped at 0 so a small tightly-nested tile never
+     computes a negative radius. */
+  .rm-concentric {
+    --rm-gutter: 1rem;
+    border-radius: max(calc(var(--radius-parent, var(--radius-card)) - var(--rm-gutter)), 0px);
+  }
+
+  /* ── Scroll-edge material ────────────────────────────────────────────
+     Where a fixed bar (the shell header, a sticky table header) sits over
+     scrolling content, this replaces a hard 1px divider with a soft blur —
+     the boundary reads as "content passes beneath", not "content stops
+     here". Not decorative: only use where something actually scrolls
+     underneath. Falls back to a solid surface on browsers without
+     backdrop-filter, which is still correct, just less soft. */
+  .rm-scroll-edge {
+    background-color: var(--color-surface);
+    background-color: color-mix(in srgb, var(--color-surface) 75%, transparent);
+    backdrop-filter: var(--glass-blur-strong);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    border-bottom: 1px solid var(--glass-border-light);
+    box-shadow: inset 0 -1px 0 0 var(--glass-highlight);
+  }
+
+  /* ── Chrome glass — the rail and secondary nav ───────────────────────
+     The two structural panels of the shell, translucent over the ambient
+     backdrop instead of flat colour fills. .rm-glass-rail keeps the brand
+     blue as a strong TINT (still unmistakably "the blue rail"), not a wash —
+     glass is see-through, not invisible. */
+  .rm-glass-rail {
+    background-color: color-mix(in srgb, var(--color-primary) 85%, transparent);
+    backdrop-filter: var(--glass-blur-strong);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    box-shadow: inset -1px 0 0 0 color-mix(in srgb, white 15%, transparent);
+  }
+
+  .rm-glass-panel {
+    background-color: color-mix(in srgb, var(--color-surface) 68%, transparent);
+    backdrop-filter: var(--glass-blur-strong);
+    -webkit-backdrop-filter: var(--glass-blur-strong);
+    border-right: 1px solid var(--glass-border-light);
+  }
+
+  /* ── Anchored motion ─────────────────────────────────────────────────
+     For anything that opens FROM a trigger — a drawer, a dropdown, a
+     popover — rather than simply fading in from nowhere. The slight
+     overshoot in --ease-emphasized is what makes it read as "arriving",
+     not just appearing. */
+  @keyframes rm-spring-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .rm-anim-spring-in {
+    animation: rm-spring-in var(--duration-slow) var(--ease-emphasized);
+  }
+
+  /* A calm, breathing ring for "the AI is working" waits (job description
+     generation, resume parsing). Deliberately not a spin or a fast pulse —
+     the brief for this state is "calm and deliberate, not stuck". */
+  @keyframes rm-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+
+  .rm-anim-breathe {
+    animation: rm-breathe 2.4s var(--ease-standard) infinite;
   }
 }

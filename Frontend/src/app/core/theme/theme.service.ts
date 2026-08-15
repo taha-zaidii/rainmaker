@@ -65,11 +65,35 @@ export class ThemeService {
       dark: 'system',
       system: 'light',
     };
-    this.preference.set(next[this.preference()]);
+    this.set(next[this.preference()]);
   }
 
   set(value: ThemePreference): void {
-    this.preference.set(value);
+    this.withViewTransition(() => this.preference.set(value));
+  }
+
+  /** Same mechanism as AppearanceService's — see that file for why the
+   *  resolve is delayed two frames rather than immediate. Kept as its own
+   *  copy rather than a shared util: two call sites do not yet justify a
+   *  third file to own a five-line helper. */
+  private withViewTransition(apply: () => void): void {
+    const win = this.document.defaultView as
+      | (Window & { startViewTransition?: (cb: () => void | Promise<void>) => unknown })
+      | null
+      | undefined;
+
+    if (typeof win?.startViewTransition !== 'function') {
+      apply();
+      return;
+    }
+
+    win.startViewTransition(
+      () =>
+        new Promise<void>((resolve) => {
+          apply();
+          win!.requestAnimationFrame(() => win!.requestAnimationFrame(() => resolve()));
+        }),
+    );
   }
 
   private apply(): void {

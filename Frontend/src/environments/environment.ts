@@ -22,18 +22,34 @@ export const environment = {
   companyId: 133,
 
   /**
-   * Local-only dev bearer token. NEVER commit a real token here.
+   * Local-only dev bearer token, signed with the local `Jwt:SecretKey` from
+   * appsettings.Development.json (never with a real/production key).
    *
-   * To generate a fresh token:
-   *   cd Backend/RM/Digi.Recruitment.Module
-   *   dotnet run --generate-dev-token
-   * (or use the /api/auth/dev-token endpoint in local mode)
+   * There is no login endpoint in this tree yet, so this token is hand-signed
+   * HS256, not issued by the API. To mint your own (30-day expiry), run:
    *
-   * Required claims: ADMIN_RECRUITMENT, RECRUITMENT_VIEW/CREATE/EDIT/DELETE/
-   * APPROVE, RECRUITMENT_AI_SETTINGS, RECRUITMENT_AI_GENERATE
-   * CompanyID: 133  |  Valid: 30 days
+   *   python3 -c "
+   *   import base64,hmac,hashlib,json,time
+   *   def b64(d): return base64.urlsafe_b64encode(d).rstrip(b'=').decode()
+   *   secret = '<the Jwt:SecretKey value from your appsettings.Development.json>'
+   *   now = int(time.time())
+   *   payload = {'sub':'1','nameid':'1','unique_name':'superadmin','UserName':'superadmin',
+   *     'CompanyID':'133','EmployeeID':'1','EmployeeCode':'System',
+   *     'Permission':['ADMIN_RECRUITMENT','RECRUITMENT_VIEW','RECRUITMENT_CREATE',
+   *       'RECRUITMENT_EDIT','RECRUITMENT_DELETE','RECRUITMENT_APPROVE',
+   *       'RECRUITMENT_AI_SETTINGS','RECRUITMENT_AI_GENERATE'],
+   *     'Modules':'[\"HRM\",\"RECRUITMENT\"]','iss':'DigiSoftERP','aud':'DigiSoftERPUsers',
+   *     'iat':now,'nbf':now,'exp':now+30*24*3600}
+   *   h = b64(json.dumps({'alg':'HS256','typ':'JWT'},separators=(',',':')).encode())
+   *   p = b64(json.dumps(payload,separators=(',',':')).encode())
+   *   sig = b64(hmac.new(secret.encode(), f'{h}.{p}'.encode(), hashlib.sha256).digest())
+   *   print(f'{h}.{p}.{sig}')"
+   *
+   * Must match Program.cs's TokenValidationParameters: issuer "DigiSoftERP",
+   * audience "DigiSoftERPUsers". CompanyID: 133 | Valid: 30 days from mint time.
    */
-  devAuthToken: 'REPLACE_ME_WITH_LOCAL_DEV_TOKEN',
+  devAuthToken:
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwibmFtZWlkIjoiMSIsInVuaXF1ZV9uYW1lIjoic3VwZXJhZG1pbiIsIlVzZXJOYW1lIjoic3VwZXJhZG1pbiIsIkNvbXBhbnlJRCI6IjEzMyIsIkVtcGxveWVlSUQiOiIxIiwiRW1wbG95ZWVDb2RlIjoiU3lzdGVtIiwiUGVybWlzc2lvbiI6WyJBRE1JTl9SRUNSVUlUTUVOVCIsIlJFQ1JVSVRNRU5UX1ZJRVciLCJSRUNSVUlUTUVOVF9DUkVBVEUiLCJSRUNSVUlUTUVOVF9FRElUIiwiUkVDUlVJVE1FTlRfREVMRVRFIiwiUkVDUlVJVE1FTlRfQVBQUk9WRSIsIlJFQ1JVSVRNRU5UX0FJX1NFVFRJTkdTIiwiUkVDUlVJVE1FTlRfQUlfR0VORVJBVEUiXSwiTW9kdWxlcyI6IltcIkhSTVwiLFwiUkVDUlVJVE1FTlRcIl0iLCJpc3MiOiJEaWdpU29mdEVSUCIsImF1ZCI6IkRpZ2lTb2Z0RVJQVXNlcnMiLCJpYXQiOjE3ODYzMjgxNDksIm5iZiI6MTc4NjMyODE0OSwiZXhwIjoxNzg4OTIwMTQ5fQ._WgOUVO-h5rRL_sHguBepFLtGerz4bbvLAqbSY8Szkw',
 
   /**
    * The AI service takes ~13 s warm and up to ~35 s cold. The browser must be

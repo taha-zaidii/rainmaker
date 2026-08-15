@@ -20,7 +20,7 @@ import { IconComponent } from '../../shared/icon.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-[720px] mx-auto px-6 py-16 text-center">
-      <div class="w-14 h-14 mx-auto rounded-xl bg-primary-tint text-primary grid place-items-center">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-primary-tint text-primary grid place-items-center">
         <rm-icon name="file-text" [size]="26" />
       </div>
       <h1 class="mt-5 rm-page-title capitalize">{{ title() }}</h1>
